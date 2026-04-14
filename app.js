@@ -3516,12 +3516,12 @@ function getKnownUsers() {
 
 function getAllowedViewsForRole(role = getAccessRole()) {
   if (role === "cadre") {
-    return ["cadre", "journal"];
+    return ["cadre", "journal", "timesheet"];
   }
   if (role === "manager" || role === "admin") {
-    return ["cadre", "manager", "resources", "journal"];
+    return ["cadre", "manager", "resources", "journal", "timesheet"];
   }
-  return ["cadre", "journal"];
+  return ["cadre", "journal", "timesheet"];
 }
 
 function getManagedTeamNames() {
@@ -6933,3 +6933,430 @@ async function logoutCurrentUser() {
   }
   render();
 }
+
+// ===== TIMESHEET MODULE =====
+
+const TS_STORAGE_KEY = "mordormore-timesheet-v1";
+
+let tsWeekOffset = 0; // 0 = current week
+let tsCollaboratorFilter = "all";
+let tsRows = []; // [{ id, project, color, days: { "2026-04-14": 1.5, ... } }]
+
+function getTsWeekDates(offset = 0) {
+  const now = new Date();
+  const monday = getStartOfWeek(now);
+  monday.setDate(monday.getDate() + offset * 7);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+function tsDateKey(date) {
+  return formatDateInput(date);
+}
+
+function loadTsRows() {
+  try {
+    const raw = localStorage.getItem(TS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Filter by collaborator key if needed
+      tsRows = parsed || [];
+    }
+  } catch {
+    tsRows = [];
+  }
+  if (!tsRows.length) {
+    // Seed from existing sessions
+    tsRows = seedTsRowsFromSessions();
+  }
+}
+
+function saveTsRows() {
+  try {
+    localStorage.setItem(TS_STORAGE_KEY, JSON.stringify(tsRows));
+  } catch {}
+}
+
+function seedTsRowsFromSessions() {
+  const sessions = loadSessions();
+  const projectMap = new Map();
+  for (const s of sessions) {
+    const key = (s.project || "").trim();
+    if (!key) continue;
+    if (!projectMap.has(key)) {
+      projectMap.set(key, {
+        id: `ts-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        project: key,
+        color: colorForLabel(key),
+        days: {},
+      });
+    }
+  }
+  return Array.from(projectMap.values()).slice(0, 12);
+}
+
+function getTsPersonKey() {
+  return tsCollaboratorFilter === "all" ? "__all__" : tsCollaboratorFilter;
+}
+
+function getTsDayValue(row, dateKey) {
+  const personKey = getTsPersonKey();
+  return row.days?.[personKey]?.[dateKey] ?? "";
+}
+
+function setTsDayValue(row, dateKey, value) {
+  const personKey = getTsPersonKey();
+  if (!row.days) row.days = {};
+  if (!row.days[personKey]) row.days[personKey] = {};
+  if (value === "" || value === null || isNaN(value)) {
+    delete row.days[personKey][dateKey];
+  } else {
+    row.days[personKey][dateKey] = Number(value);
+  }
+}
+
+function tsRowTotal(row, weekDates) {
+  let total = 0;
+  const personKey = getTsPersonKey();
+  for (const d of weekDates) {
+    const v = row.days?.[personKey]?.[tsDateKey(d)];
+    if (v) total += Number(v);
+  }
+  return total;
+}
+
+function tsDayTotal(weekDates, dayIndex) {
+  let total = 0;
+  const personKey = getTsPersonKey();
+  const dateKey = tsDateKey(weekDates[dayIndex]);
+  for (const row of tsRows) {
+    const v = row.days?.[personKey]?.[dateKey];
+    if (v) total += Number(v);
+  }
+  return total;
+}
+
+function formatTsHours(val) {
+  if (!val && val !== 0) return "";
+  const n = Number(val);
+  if (isNaN(n) || n === 0) return "";
+  return n % 1 === 0 ? `${n}h` : `${n.toFixed(1).replace(".", ",")}h`;
+}
+
+function parseTsInput(str) {
+  if (!str || str.trim() === "") return null;
+  // Accept: "1.5", "1,5", "1h30", "1h", "90m"
+  const s = str.trim().toLowerCase().replace(",", ".");
+  const hm = s.match(/^(\d+(?:\.\d+)?)h(\d+)?$/);
+  if (hm) {
+    return parseFloat(hm[1]) + (hm[2] ? parseInt(hm[2]) / 60 : 0);
+  }
+  const mins = s.match(/^(\d+)m$/);
+  if (mins) return parseInt(mins[1]) / 60;
+  const plain = parseFloat(s);
+  return isNaN(plain) ? null : plain;
+}
+
+function renderTimesheetView() {
+  const table = document.querySelector("#timesheet-table");
+  if (!table) return;
+
+  loadTsRows();
+
+  const weekDates = getTsWeekDates(tsWeekOffset);
+  const today = tsDateKey(new Date());
+
+  // --- Header row ---
+  const headerRow = document.querySelector("#ts-header-row");
+  if (headerRow) {
+    // Clear day headers (keep first and last th)
+    const existingDayThs = headerRow.querySelectorAll(".ts-col-day");
+    existingDayThs.forEach(th => th.remove());
+    const totalTh = headerRow.querySelector(".ts-col-total");
+
+    const DAY_LABELS = ["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"];
+    weekDates.forEach((d, i) => {
+      const th = document.createElement("th");
+      th.className = "ts-col-day" + (tsDateKey(d) === today ? " ts-today-col" : "");
+      const dateNum = d.getDate();
+      const monthShort = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+      th.innerHTML = `<span>${DAY_LABELS[i]}</span><br><small>${dateNum} ${monthShort}</small>`;
+      headerRow.insertBefore(th, totalTh);
+    });
+
+    // Week label
+    const wLabel = document.querySelector("#ts-week-label");
+    if (wLabel) {
+      const monday = weekDates[0];
+      const sunday = weekDates[6];
+      const fmt = d => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+      const wNum = getISOWeek(monday);
+      wLabel.textContent = `Semaine ${wNum} · ${fmt(monday)} – ${fmt(sunday)}`;
+    }
+  }
+
+  // --- Body ---
+  const tbody = document.querySelector("#ts-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  for (const row of tsRows) {
+    const tr = document.createElement("tr");
+    tr.className = "ts-project-row";
+    tr.dataset.rowId = row.id;
+
+    // Project name cell
+    const tdProj = document.createElement("td");
+    tdProj.className = "ts-col-project";
+
+    const projCell = document.createElement("div");
+    projCell.className = "ts-project-cell";
+
+    const dot = document.createElement("span");
+    dot.className = "ts-dot";
+    dot.style.background = row.color || colorForLabel(row.project);
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "ts-project-name";
+    nameSpan.textContent = row.project || "Nouveau sujet";
+    nameSpan.title = "Double-cliquer pour renommer";
+    nameSpan.addEventListener("dblclick", () => {
+      nameSpan.classList.add("ts-project-input-active");
+      nameInput.classList.add("ts-project-input-active");
+      nameInput.value = row.project;
+      nameInput.focus();
+      nameInput.select();
+    });
+
+    const nameInput = document.createElement("input");
+    nameInput.className = "ts-project-name-input";
+    nameInput.type = "text";
+    nameInput.value = row.project;
+    nameInput.addEventListener("blur", () => {
+      const v = nameInput.value.trim();
+      if (v) {
+        row.project = v;
+        nameSpan.textContent = v;
+        dot.style.background = colorForLabel(v);
+        saveTsRows();
+      }
+      nameSpan.classList.remove("ts-project-input-active");
+      nameInput.classList.remove("ts-project-input-active");
+    });
+    nameInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") nameInput.blur();
+      if (e.key === "Escape") {
+        nameInput.value = row.project;
+        nameInput.blur();
+      }
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "ts-remove-row";
+    removeBtn.type = "button";
+    removeBtn.title = "Supprimer ce sujet";
+    removeBtn.textContent = "✕";
+    removeBtn.addEventListener("click", () => {
+      tsRows = tsRows.filter(r => r.id !== row.id);
+      saveTsRows();
+      renderTimesheetView();
+    });
+
+    projCell.appendChild(dot);
+    projCell.appendChild(nameSpan);
+    projCell.appendChild(nameInput);
+    projCell.appendChild(removeBtn);
+    tdProj.appendChild(projCell);
+    tr.appendChild(tdProj);
+
+    // Day cells
+    weekDates.forEach((d) => {
+      const dateKey = tsDateKey(d);
+      const isToday = dateKey === today;
+      const td = document.createElement("td");
+      td.className = "ts-hour-cell" + (isToday ? " ts-today-col" : "");
+
+      const input = document.createElement("input");
+      input.className = "ts-hour-input";
+      input.type = "text";
+      input.inputMode = "decimal";
+      const currentVal = getTsDayValue(row, dateKey);
+      input.value = formatTsHours(currentVal);
+      if (currentVal) input.classList.add("has-value");
+      input.placeholder = "–";
+
+      input.addEventListener("focus", () => {
+        input.value = currentVal !== "" ? String(currentVal).replace(".", ",") : "";
+        input.select();
+      });
+
+      input.addEventListener("blur", () => {
+        const parsed = parseTsInput(input.value);
+        setTsDayValue(row, dateKey, parsed);
+        input.value = formatTsHours(parsed);
+        input.classList.toggle("has-value", !!parsed);
+        saveTsRows();
+        updateTsRowTotal(tr, row, weekDates);
+        updateTsFooter(weekDates);
+      });
+
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          input.blur();
+          // Move to next row same day
+          const rows = Array.from(tbody.querySelectorAll(".ts-project-row"));
+          const rowIdx = rows.indexOf(tr);
+          if (rowIdx < rows.length - 1) {
+            const inputs = rows[rowIdx + 1].querySelectorAll(".ts-hour-input");
+            const dayInputs = Array.from(tr.querySelectorAll(".ts-hour-input"));
+            const dayIdx = dayInputs.indexOf(input);
+            if (inputs[dayIdx]) inputs[dayIdx].focus();
+          }
+        }
+        if (e.key === "Tab") {
+          // default tab behavior is fine
+        }
+      });
+
+      td.appendChild(input);
+      tr.appendChild(td);
+    });
+
+    // Row total
+    const tdTotal = document.createElement("td");
+    tdTotal.className = "ts-row-total ts-col-total";
+    const rowTot = tsRowTotal(row, weekDates);
+    tdTotal.textContent = rowTot > 0 ? formatTsHours(rowTot) : "";
+    tr.appendChild(tdTotal);
+
+    tbody.appendChild(tr);
+  }
+
+  // --- Footer ---
+  updateTsFooter(weekDates);
+}
+
+function updateTsRowTotal(tr, row, weekDates) {
+  const totalCell = tr.querySelector(".ts-row-total");
+  if (!totalCell) return;
+  const total = tsRowTotal(row, weekDates);
+  totalCell.textContent = total > 0 ? formatTsHours(total) : "";
+}
+
+function updateTsFooter(weekDates) {
+  const footerRow = document.querySelector("#ts-footer-row");
+  if (!footerRow) return;
+
+  // Remove existing day totals
+  footerRow.querySelectorAll(".ts-footer-day-total").forEach(el => el.remove());
+  const grandTotalCell = document.querySelector("#ts-grand-total");
+
+  let grandTotal = 0;
+  weekDates.forEach((d, i) => {
+    const dayTot = tsDayTotal(weekDates, i);
+    grandTotal += dayTot;
+    const td = document.createElement("td");
+    td.className = "ts-footer-day-total" + (dayTot > 0 ? " has-value" : "");
+    td.textContent = dayTot > 0 ? formatTsHours(dayTot) : "–";
+    footerRow.insertBefore(td, grandTotalCell);
+  });
+
+  if (grandTotalCell) {
+    grandTotalCell.textContent = grandTotal > 0 ? formatTsHours(grandTotal) : "–";
+  }
+}
+
+function populateTsCollaboratorFilter() {
+  const sel = document.querySelector("#ts-collaborator-filter");
+  if (!sel) return;
+  // Clear existing options beyond first
+  while (sel.options.length > 1) sel.remove(1);
+  for (const user of LOCAL_PROFILE_DIRECTORY.filter(u => u.status === "active")) {
+    const opt = document.createElement("option");
+    opt.value = user.user_name;
+    opt.textContent = user.user_name;
+    sel.appendChild(opt);
+  }
+}
+
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function initTimesheetNav() {
+  const prevBtn = document.querySelector("#ts-prev-week");
+  const nextBtn = document.querySelector("#ts-next-week");
+  const currBtn = document.querySelector("#ts-current-week");
+  const colFilter = document.querySelector("#ts-collaborator-filter");
+  const addRow = document.querySelector("#ts-add-row");
+
+  if (prevBtn) prevBtn.addEventListener("click", () => { tsWeekOffset--; renderTimesheetView(); });
+  if (nextBtn) nextBtn.addEventListener("click", () => { tsWeekOffset++; renderTimesheetView(); });
+  if (currBtn) currBtn.addEventListener("click", () => { tsWeekOffset = 0; renderTimesheetView(); });
+
+  if (colFilter) {
+    colFilter.addEventListener("change", () => {
+      tsCollaboratorFilter = colFilter.value;
+      renderTimesheetView();
+    });
+  }
+
+  if (addRow) {
+    addRow.addEventListener("click", () => {
+      tsRows.push({
+        id: `ts-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        project: "Nouveau sujet",
+        color: COLOR_PALETTE[tsRows.length % COLOR_PALETTE.length],
+        days: {},
+      });
+      saveTsRows();
+      renderTimesheetView();
+      // Focus the new row's project name
+      const rows = document.querySelectorAll(".ts-project-row");
+      const lastRow = rows[rows.length - 1];
+      if (lastRow) {
+        const nameSpan = lastRow.querySelector(".ts-project-name");
+        const nameInput = lastRow.querySelector(".ts-project-name-input");
+        if (nameSpan && nameInput) {
+          nameSpan.classList.add("ts-project-input-active");
+          nameInput.classList.add("ts-project-input-active");
+          nameInput.focus();
+          nameInput.select();
+        }
+      }
+    });
+  }
+}
+
+// Hook into Timesheet tab: render when the tab is clicked
+document.addEventListener("DOMContentLoaded", () => {
+  initTimesheetNav();
+  populateTsCollaboratorFilter();
+
+  // Attach to the Timesheet nav button directly
+  const tsTab = document.querySelector("[data-view-target='timesheet']");
+  if (tsTab) {
+    tsTab.addEventListener("click", () => {
+      // Give the existing view switcher time to activate the panel
+      requestAnimationFrame(() => {
+        populateTsCollaboratorFilter();
+        renderTimesheetView();
+      });
+    });
+  }
+
+  // If page loads directly on timesheet hash
+  if (window.location.hash === "#timesheet") {
+    requestAnimationFrame(() => {
+      populateTsCollaboratorFilter();
+      renderTimesheetView();
+    });
+  }
+});

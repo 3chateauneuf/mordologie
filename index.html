@@ -45,6 +45,7 @@
           <button type="button" data-view-target="manager">Manager</button>
           <button type="button" data-view-target="resources">Ressources</button>
           <button type="button" data-view-target="journal">Journal</button>
+          <button type="button" data-view-target="timesheet">Timesheet</button>
         </nav>
       </header>
 
@@ -658,6 +659,55 @@
       </section>
       </section>
     </main>
+
+      <!-- ===== TIMESHEET VIEW ===== -->
+      <section class="app-view" id="timesheet" data-view-panel="timesheet">
+        <section class="panel timesheet-panel">
+          <div class="timesheet-header">
+            <div class="panel-head" style="margin-bottom:0">
+              <div>
+                <p class="eyebrow">Timesheet</p>
+                <h2>Planning par sujet</h2>
+              </div>
+              <p class="panel-copy">Déclarez les heures par sujet et par jour, style Toggl.</p>
+            </div>
+            <div class="timesheet-toolbar">
+              <div class="timesheet-week-nav">
+                <button id="ts-prev-week" type="button" class="period-btn">←</button>
+                <button id="ts-current-week" type="button" class="period-btn">Cette semaine</button>
+                <button id="ts-next-week" type="button" class="period-btn">→</button>
+              </div>
+              <p id="ts-week-label" class="timesheet-week-label"></p>
+              <div class="timesheet-toolbar-actions">
+                <select id="ts-collaborator-filter" class="select-input timesheet-person-filter">
+                  <option value="all">Toute l'équipe</option>
+                </select>
+                <button id="ts-add-row" type="button" class="btn btn-secondary">+ Ajouter un sujet</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-shell timesheet-table-shell">
+            <table id="timesheet-table" class="timesheet-table">
+              <thead>
+                <tr id="ts-header-row">
+                  <th class="ts-col-project">Sujet</th>
+                  <!-- day headers injected by JS -->
+                  <th class="ts-col-total">Total</th>
+                </tr>
+              </thead>
+              <tbody id="ts-body"></tbody>
+              <tfoot>
+                <tr id="ts-footer-row">
+                  <td class="ts-col-project ts-footer-label">TOTAL</td>
+                  <!-- day totals injected by JS -->
+                  <td id="ts-grand-total" class="ts-col-total ts-total-cell"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+      </section>
 
     <dialog id="manual-dialog" class="dialog-shell">
       <form method="dialog" class="dialog-card">
