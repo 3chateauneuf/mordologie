@@ -825,19 +825,14 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  // Solo necesitamos saber quién arranca — sin proyecto ni datos obligatorios
-  const collaborator = getEffectiveCollaboratorValue(collaboratorInput.value);
-  if (!collaborator) {
-    showAuthRequiredMessage();
+  const sessionDraft = await validateAndNormalizeMainForm();
+  if (!sessionDraft) {
     return;
   }
-
-  const sessionDraft = readFormValues();
 
   activeSession = {
     id: createSessionId(),
     ...sessionDraft,
-    collaborator,
     start: new Date().toISOString(),
     pausedAt: null,
     pausedDurationMs: 0,
@@ -1245,13 +1240,6 @@ deleteManualButton?.addEventListener("click", () => {
 });
 
 cancelManualButton.addEventListener("click", () => {
-  // Si el dialog venía de cerrar un timer activo y el usuario cancela,
-  // retomar el timer donde estaba
-  if (manualDialog.dataset.fromTimer === "true") {
-    delete manualDialog.dataset.fromTimer;
-    delete manualDialog.dataset.timerSessionId;
-    startTimerLoopIfNeeded();
-  }
   manualEditingSessionId = null;
   if (deleteManualButton) {
     deleteManualButton.hidden = true;
@@ -3331,26 +3319,6 @@ function stopActiveSession() {
     return;
   }
 
-  // Sincronizar el formulario en el activeSession antes de decidir
-  const draft = { ...activeSession, ...readFormValues() };
-
-  // Si no hay proyecto, pausar el timer y abrir el dialog para completar datos
-  if (!draft.project) {
-    // Pausar el timer visualmente pero sin perder el tiempo
-    stopTimerLoop();
-    const end = getActiveSessionEffectiveEnd(activeSession);
-    const durationMs = getActiveSessionDurationMs(activeSession);
-
-    // Abrir el manualDialog pre-rellenado con los tiempos reales del timer
-    openManualDialogFromTimer({
-      ...draft,
-      end: end.toISOString(),
-      durationMs,
-    });
-    return;
-  }
-
-  // Si hay proyecto, guardar normalmente
   const end = getActiveSessionEffectiveEnd(activeSession);
   const durationMs = getActiveSessionDurationMs(activeSession);
 
@@ -4507,38 +4475,6 @@ function updateActiveSessionStart({ reportValidity = true, closeEditor = true, a
   return true;
 }
 
-// Abre el manualDialog a partir de un timer activo sin proyecto.
-// Fija los tiempos reales del cronómetro y marca que al guardar
-// debe finalizar la sesión activa.
-function openManualDialogFromTimer(timerSession) {
-  manualEditingSessionId = null; // nueva entrada, no edición
-  manualCollaboratorInput.value = timerSession.collaborator ?? collaboratorInput.value.trim();
-  manualProjectInput.value = ""; // obligar al usuario a rellenarlo
-  manualTaskInput.value = timerSession.task ?? taskInput.value.trim();
-  manualCategoriesInput.value = (timerSession.categories ?? currentCategories).join(", ");
-  manualTagsInput.value = (timerSession.tags ?? currentTags).join(", ");
-  manualNotionInput.value = timerSession.notionRef ?? notionInput.value.trim();
-  manualObjectivePoleInput.value = timerSession.objectivePole ?? objectivePoleInput.value.trim();
-  manualObjectiveOkrInput.value = timerSession.objectiveOkr ?? objectiveOkrInput.value.trim();
-  manualObjectiveKrInput.value = timerSession.objectiveKr ?? objectiveKrInput.value.trim();
-  manualNotesInput.value = timerSession.notes ?? notesInput.value.trim();
-  // Los tiempos vienen del cronómetro — no editables por defecto
-  manualStartInput.value = formatDateTimeLocal(new Date(timerSession.start));
-  manualEndInput.value = formatDateTimeLocal(new Date(timerSession.end));
-  saveManualButton.textContent = "Enregistrer la session";
-  if (deleteManualButton) deleteManualButton.hidden = true;
-
-  // Marcar que este dialog está cerrando un timer activo
-  manualDialog.dataset.fromTimer = "true";
-  manualDialog.dataset.timerSessionId = timerSession.id;
-
-  renderObjectiveSelections();
-  manualDialog.showModal();
-
-  // Focus automático en el campo Sujet
-  setTimeout(() => manualProjectInput.focus(), 80);
-}
-
 function openManualDialog(session = null, preset = null) {
   const end = preset?.end ? new Date(preset.end) : new Date();
   const start = preset?.start ? new Date(preset.start) : new Date(end.getTime() - 30 * 60 * 1000);
@@ -4638,18 +4574,6 @@ function saveManualEntry() {
     onSuccess: (sessionToSave) => {
       const previousSession =
         manualEditingSessionId ? findSessionById(manualEditingSessionId) ?? null : null;
-
-      // Si este dialog venía de cerrar un timer activo, limpiar el activeSession
-      const fromTimer = manualDialog.dataset.fromTimer === "true";
-      if (fromTimer) {
-        activeSession = null;
-        persistActiveSession();
-        stopTimerLoop();
-        resetFormAfterStop();
-        delete manualDialog.dataset.fromTimer;
-        delete manualDialog.dataset.timerSessionId;
-      }
-
       upsertSession(sessionToSave);
       persistSessions();
       void logSessionChange(previousSession, sessionToSave, previousSession ? "manual-edit" : "manual-create");
@@ -5008,6 +4932,12 @@ function renderQuickProjects() {
   quickProjects.innerHTML = "";
   const collaborator = getCurrentCollaborator();
   const memories = getOrderedProjectMemories(collaborator).slice(0, QUICK_REPRISES_LIMIT);
+
+  // Garantir que les zones Archiver/Traite sont cachées sauf si un drag est en cours
+  if (!quickProjectsDragState) {
+    repriseActionsShell?.setAttribute("hidden", "");
+    quickProjects.classList.remove("chip-row--sorting");
+  }
 
   if (!memories.length) {
     const message = collaborator
