@@ -3994,7 +3994,7 @@ async function syncPendingStoppedSession({ fromRetry = false } = {}) {
         create_entry: "done",
         stop_active: "pending",
       },
-      errorMessage: "Entrée enregistrée. Réessayez la synchronisation pour finaliser la fermeture distante.",
+      errorMessage: "L'entrée est gardée localement, mais la synchro serveur n'est pas encore finalisée.",
     });
     setAuthStatusMessage("Entrée enregistrée. Fermeture distante de la session à reprendre.", "warning", { persistMs: 3600 });
     render();
@@ -4019,7 +4019,7 @@ async function syncPendingStoppedSession({ fromRetry = false } = {}) {
       create_entry: "pending",
       stop_active: "pending",
     },
-    errorMessage: "Session arrêtée localement. Réessayez la synchronisation.",
+    errorMessage: "L'entrée est gardée localement, mais la synchro serveur n'est pas encore finalisée.",
   });
   setAuthStatusMessage("Session arrêtée localement. Synchronisation à reprendre.", "warning", { persistMs: 3600 });
   renderActiveSession();
@@ -5393,6 +5393,9 @@ async function applyLocalRescueAccess(rawName, { silent = false } = {}) {
   const remoteLoaded = await loadServerBackedState({ silent: true });
   if (window.supabase) {
     startRemoteSyncLoop();
+  }
+  if (remoteLoaded && pendingStoppedSessionState?.state === "pending") {
+    void syncPendingStoppedSession({ fromRetry: true });
   }
   if (!activeSession && preservedLocalActiveSession) {
     activeSession = preservedLocalActiveSession;
@@ -7292,8 +7295,8 @@ function renderActiveSession() {
     if (pendingStop && activeSessionStatusCopy) {
       const syncing = pendingStop.state === "syncing";
       activeSessionStatusCopy.textContent = syncing
-        ? "Synchronisation de la session arrêtée en cours."
-        : pendingStop.errorMessage || "Session arrêtée localement. Réessayez la synchronisation pour finaliser l'enregistrement.";
+        ? "Enregistrement en cours…"
+        : pendingStop.errorMessage || "L'entrée est gardée localement, mais la synchro serveur n'est pas encore finalisée.";
       activeSessionStatusCopy.hidden = false;
       activeSessionStatusCopy.dataset.tone = syncing ? "warning" : "error";
       if (activeSessionStatusActions) {
