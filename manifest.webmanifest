@@ -1,0 +1,16 @@
+{
+  "name": "Mordologie",
+  "short_name": "Mordologie",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff9f2",
+  "theme_color": "#069494",
+  "icons": [
+    {
+      "src": "./icon.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}
