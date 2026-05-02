@@ -94,6 +94,7 @@ button {
     var(--panel);
   position: relative;
   overflow: visible;
+  z-index: 10;
 }
 
 .eyebrow,
@@ -470,7 +471,7 @@ button {
 
 .nav-tooltip {
   position: absolute;
-  bottom: calc(100% + 9px);
+  top: calc(100% + 9px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--text);
@@ -489,11 +490,11 @@ button {
 .nav-tooltip::after {
   content: "";
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: var(--text);
+  border-bottom-color: var(--text);
 }
 
 .topbar-nav button:hover .nav-tooltip {
