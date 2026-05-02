@@ -965,6 +965,7 @@ let fieldManageConfirmMode = false;
 let pendingDecisionResolver = null;
 let quickProjectsDragState = null;
 let agendaDragState = null;
+let agendaLastScrolledWeekStart = null;
 let suppressNextAgendaClick = false;
 let auditTableAvailable = null;
 let remoteActiveSessions = [];
@@ -7782,7 +7783,7 @@ function renderAgenda() {
 
   const startHour = 0;
   const endHour = 24;
-  const hourHeight = 38;
+  const hourHeight = 52;
   agendaBoard.style.setProperty("--agenda-hour-height", `${hourHeight}px`);
 
   const timeRail = document.createElement("div");
@@ -7814,6 +7815,9 @@ function renderAgenda() {
     try {
       const dayCard = document.createElement("article");
       dayCard.className = "agenda-day";
+      if (isSameDay(day, new Date())) {
+        dayCard.classList.add("agenda-day--today");
+      }
 
       const dayRows = scopedRows
         .filter((session) => isSameDay(new Date(session.start), day))
@@ -7937,6 +7941,17 @@ function renderAgenda() {
       agendaBoard.append(fallbackCard);
     }
   }
+
+  const weekKey = range.start.toISOString();
+  if (weekKey !== agendaLastScrolledWeekStart) {
+    agendaLastScrolledWeekStart = weekKey;
+    requestAnimationFrame(() => {
+      const nowEl = agendaBoard.querySelector(".agenda-now-marker");
+      if (nowEl) {
+        nowEl.scrollIntoView({ behavior: "instant", block: "center" });
+      }
+    });
+  }
 }
 
 function layoutAgendaSessions(dayRows, startHour, endHour, hourHeight) {
@@ -7950,7 +7965,9 @@ function layoutAgendaPlannedEvents(dayRows, startHour, endHour, hourHeight) {
 function layoutAgendaTimedRows(dayRows, startHour, endHour, hourHeight, getStart, getEnd) {
   const preparedRows = dayRows.map((session) => {
     const start = new Date(getStart(session));
-    const end = new Date(getEnd(session));
+    const endRaw = getEnd(session);
+    const endParsed = endRaw ? new Date(endRaw) : null;
+    const end = (endParsed && !isNaN(endParsed.getTime())) ? endParsed : new Date();
     const visibleStartMinutes = Math.max(0, (start.getHours() - startHour) * 60 + start.getMinutes());
     const visibleEndMinutes = Math.min((endHour - startHour) * 60, (end.getHours() - startHour) * 60 + end.getMinutes());
     return {

@@ -1682,7 +1682,7 @@ select.select-input {
 
 .agenda-board {
   display: grid;
-  grid-template-columns: 56px repeat(7, minmax(136px, 1fr));
+  grid-template-columns: 52px repeat(7, minmax(148px, 1fr));
   gap: 0;
   align-items: start;
 }
@@ -1776,7 +1776,7 @@ select.select-input {
 .agenda-time-rail {
   display: grid;
   gap: 0;
-  min-width: 56px;
+  min-width: 52px;
 }
 
 .agenda-time-head {
@@ -1857,13 +1857,35 @@ select.select-input {
   background:
     repeating-linear-gradient(
       to bottom,
-      rgba(0, 0, 0, 0.04) 0,
-      rgba(0, 0, 0, 0.04) 1px,
+      rgba(0, 0, 0, 0.05) 0,
+      rgba(0, 0, 0, 0.05) 1px,
       transparent 1px,
-      transparent var(--agenda-hour-height, 44px)
+      transparent var(--agenda-hour-height, 52px)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(var(--agenda-hour-height, 52px) / 2),
+      rgba(0, 0, 0, 0.022) calc(var(--agenda-hour-height, 52px) / 2),
+      rgba(0, 0, 0, 0.022) calc(var(--agenda-hour-height, 52px) / 2 + 1px),
+      transparent calc(var(--agenda-hour-height, 52px) / 2 + 1px),
+      transparent var(--agenda-hour-height, 52px)
     ),
     var(--panel-strong);
   border-left: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.agenda-day--today .agenda-day-head {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-left-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.agenda-day--today .agenda-day-number {
+  color: var(--accent);
+}
+
+.agenda-day--today .agenda-day-track {
+  border-left-color: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .agenda-empty-state {
@@ -1878,7 +1900,7 @@ select.select-input {
   display: grid;
   gap: 3px;
   align-content: start;
-  padding: 5px 6px 6px;
+  padding: 5px 6px 6px 6px;
   border-radius: var(--radius-card);
   background: rgba(45, 106, 102, 0.1);
   border: 1px solid rgba(45, 106, 102, 0.16);
@@ -1889,6 +1911,21 @@ select.select-input {
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
   overflow: hidden;
   --agenda-accent: #2d6a66;
+}
+
+.agenda-event:not(.agenda-event--planned):not(.agenda-event--tiny) {
+  padding-left: 10px;
+}
+
+.agenda-event:not(.agenda-event--planned)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--agenda-accent);
+  pointer-events: none;
 }
 
 .agenda-event--planned {
@@ -1922,6 +1959,10 @@ select.select-input {
   gap: 0;
   padding: 3px 5px;
   align-content: center;
+}
+
+.agenda-event:not(.agenda-event--planned).agenda-event--compact {
+  padding-left: 10px;
 }
 
 .agenda-event--tiny {
@@ -3030,7 +3071,7 @@ select.select-input {
   }
 
   .agenda-board-wide {
-    grid-template-columns: 60px repeat(7, minmax(150px, 1fr));
+    grid-template-columns: 52px repeat(7, minmax(148px, 1fr));
   }
 
   .objective-grid {
