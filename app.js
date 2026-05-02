@@ -1303,9 +1303,11 @@ activeStartDisplay.addEventListener("click", () => {
 for (const input of [manualStartDateInput, manualStartTimeInput, manualEndDateInput, manualEndTimeInput]) {
   input?.addEventListener("input", () => {
     syncManualDurationFromBounds();
+    renderAgendaLivePreview();
   });
   input?.addEventListener("change", () => {
     syncManualDurationFromBounds();
+    renderAgendaLivePreview();
   });
 }
 
@@ -8053,32 +8055,82 @@ function renderAgendaEventContents(element, session, visualSize) {
   element.append(topHandle);
 
   if (visualSize !== "tiny") {
+    const projectLabel = getAgendaEventSecondaryLabel(session);
+    if (projectLabel) {
+      const client = document.createElement("p");
+      client.className = "agenda-event-client";
+      client.textContent = projectLabel;
+      element.append(client);
+    }
+
     const time = document.createElement("p");
     time.className = "agenda-event-time";
-    time.textContent = `${formatTimeRange(session)} · ${formatDurationHours(session.durationMs)}`;
+    time.textContent = visualSize === "compact"
+      ? formatTimeOnly(session.start)
+      : `${formatTimeRange(session)} · ${formatDurationHours(session.durationMs)}`;
     element.append(time);
   }
 
   if (visualSize === "full") {
-    const secondaryLabel = getAgendaEventSecondaryLabel(session);
-    if (secondaryLabel) {
-      const client = document.createElement("p");
-      client.className = "agenda-event-client";
-      client.textContent = secondaryLabel;
-      element.append(client);
+    const categoryLabel = session.categories?.[0];
+    if (categoryLabel) {
+      const cat = document.createElement("p");
+      cat.className = "agenda-event-category";
+      cat.textContent = categoryLabel;
+      element.append(cat);
     }
-
-    const icon = document.createElement("span");
-    icon.className = "agenda-event-icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = "i";
-    element.append(icon);
   }
 
   const bottomHandle = document.createElement("span");
   bottomHandle.className = "agenda-resize-handle agenda-resize-handle--end";
   bottomHandle.setAttribute("aria-hidden", "true");
   element.append(bottomHandle);
+}
+
+function renderAgendaLivePreview() {
+  if (!manualEditingSessionId || currentView !== "cadre") return;
+  const draftStart = readDateTimeFieldValue(manualStartDateInput, manualStartTimeInput);
+  const draftEnd = readDateTimeFieldValue(manualEndDateInput, manualEndTimeInput);
+  if (!draftStart || !draftEnd || isNaN(draftStart.getTime()) || isNaN(draftEnd.getTime()) || draftEnd <= draftStart) return;
+
+  const eventEl = agendaBoard.querySelector(`[data-session-id="${CSS.escape(manualEditingSessionId)}"]`);
+  if (!eventEl) return;
+
+  const track = eventEl.closest(".agenda-day-track");
+  if (!track) return;
+
+  const startHour = Number(track.dataset.startHour);
+  const endHour = Number(track.dataset.endHour);
+  const hourHeight = Number(track.dataset.hourHeight);
+  if (!Number.isFinite(hourHeight)) return;
+
+  if (formatDateInput(draftStart) !== track.dataset.dayDate) {
+    renderAgenda();
+    return;
+  }
+
+  const startMinutes = Math.max(0, (draftStart.getHours() - startHour) * 60 + draftStart.getMinutes());
+  const endClamped = Math.min((endHour - startHour) * 60, (draftEnd.getHours() - startHour) * 60 + draftEnd.getMinutes());
+  const endMinutes = Math.max(endClamped, startMinutes + 15);
+  const topPx = (startMinutes / 60) * hourHeight;
+  const heightPx = Math.max(((endMinutes - startMinutes) / 60) * hourHeight, 4);
+
+  eventEl.style.top = `${topPx}px`;
+  eventEl.style.height = `${heightPx}px`;
+
+  const visualSize = getAgendaEventVisualSize(heightPx);
+  eventEl.classList.toggle("agenda-event--tiny", visualSize === "tiny");
+  eventEl.classList.toggle("agenda-event--compact", visualSize === "compact");
+
+  const session = findSessionById(manualEditingSessionId);
+  if (session) {
+    renderAgendaEventContents(eventEl, {
+      ...session,
+      start: draftStart.toISOString(),
+      end: draftEnd.toISOString(),
+      durationMs: draftEnd.getTime() - draftStart.getTime(),
+    }, visualSize);
+  }
 }
 
 function renderPlannedAgendaEventContents(element, plannedEvent, visualSize) {
@@ -8916,8 +8968,8 @@ function applyAgendaEventColor(element, session) {
     ? getCategoryColor(session.categories[0], label)
     : getAgendaCategoryColor(label);
   element.style.setProperty("--agenda-accent", baseColor);
-  element.style.background = `${baseColor}1F`;
-  element.style.borderColor = `${baseColor}42`;
+  element.style.background = `${baseColor}22`;
+  element.style.borderColor = `${baseColor}30`;
 }
 
 function getAgendaCategoryColor(label) {

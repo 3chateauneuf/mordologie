@@ -1898,16 +1898,17 @@ select.select-input {
 .agenda-event {
   position: absolute;
   display: grid;
-  gap: 3px;
+  gap: 2px;
   align-content: start;
-  padding: 5px 6px 6px 6px;
+  padding: 5px 6px 5px 6px;
   border-radius: var(--radius-card);
   background: rgba(45, 106, 102, 0.1);
-  border: 1px solid rgba(45, 106, 102, 0.16);
+  border: 1px solid rgba(45, 106, 102, 0.14);
   color: var(--text);
   text-align: left;
   cursor: grab;
   touch-action: none;
+  box-shadow: 0 1px 4px rgba(24, 56, 74, 0.06);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
   overflow: hidden;
   --agenda-accent: #2d6a66;
@@ -1956,8 +1957,8 @@ select.select-input {
 }
 
 .agenda-event--compact {
-  gap: 0;
-  padding: 3px 5px;
+  gap: 1px;
+  padding: 4px 5px;
   align-content: center;
 }
 
@@ -1965,22 +1966,31 @@ select.select-input {
   padding-left: 10px;
 }
 
+.agenda-event--compact .agenda-event-client {
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
 .agenda-event--tiny {
   padding: 0;
   border-radius: 4px;
+  box-shadow: none;
+  border-color: transparent;
 }
 
 .agenda-event:not(.agenda-event--planned):hover {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--agenda-accent) 58%, white);
-  box-shadow: 0 10px 24px rgba(24, 56, 74, 0.12);
-  background: color-mix(in srgb, var(--agenda-accent) 18%, white);
+  border-color: color-mix(in srgb, var(--agenda-accent) 46%, transparent);
+  box-shadow: 0 6px 18px rgba(24, 56, 74, 0.14);
+  background: color-mix(in srgb, var(--agenda-accent) 16%, white);
 }
 
 .agenda-event--dragging {
   cursor: grabbing;
-  transform: none;
-  box-shadow: 0 10px 24px rgba(24, 56, 74, 0.18);
+  transform: scale(1.02);
+  opacity: 0.92;
+  box-shadow: 0 12px 32px rgba(24, 56, 74, 0.22);
+  z-index: 10;
 }
 
 .agenda-event p,
@@ -1989,25 +1999,29 @@ select.select-input {
 }
 
 .agenda-event-time {
-  color: var(--text);
-  font-size: 0.64rem;
-  font-weight: 800;
-  line-height: 1.14;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.12;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .agenda-event--compact .agenda-event-time {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   line-height: 1.1;
 }
 
 .agenda-event-client {
   color: var(--text);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  line-height: 1.12;
-  max-width: calc(100% - 16px);
+  line-height: 1.14;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .agenda-event-status {
@@ -2032,20 +2046,6 @@ select.select-input {
   white-space: nowrap;
 }
 
-.agenda-event-icon {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 14px;
-  height: 14px;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--muted);
-  font-size: 0.6rem;
-  font-weight: 800;
-}
 
 .agenda-resize-handle {
   position: absolute;
