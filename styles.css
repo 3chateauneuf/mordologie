@@ -2184,96 +2184,178 @@ select.select-input {
 }
 
 .users-panel {
-  gap: 16px;
+  gap: 14px;
 }
 
 .users-admin-shell {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .users-admin-head {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: end;
-}
-
-.users-admin-copy {
-  display: grid;
-  gap: 4px;
-}
-
-.users-admin-copy h3,
-.users-display-field strong {
-  margin: 0;
-  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
-  letter-spacing: -0.03em;
-}
-
-.users-admin-copy p,
-.users-edit-meta,
-.users-display-label {
-  margin: 0;
-  color: var(--muted);
+  justify-content: flex-end;
 }
 
 .users-admin-list {
   display: grid;
-  gap: 12px;
+  gap: 6px;
 }
 
+/* ── Display row ── */
+
 .users-user-card {
-  display: grid;
-  gap: 14px;
-  padding: 15px 16px;
   border-radius: var(--radius-card);
-  border: 1px solid var(--ink-soft-strong);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0)),
-    var(--panel-strong);
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+}
+
+.users-user-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  min-height: 48px;
 }
 
 .users-user-card--editing {
   background:
-    linear-gradient(180deg, rgba(6, 148, 148, 0.08), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(6, 148, 148, 0.06), rgba(255, 255, 255, 0)),
     var(--panel-strong);
   border-color: rgba(6, 148, 148, 0.2);
-}
-
-.users-user-grid,
-.users-edit-grid {
+  padding: 14px 16px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
-.users-display-field {
-  display: grid;
-  gap: 5px;
+.users-row-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 200px;
   min-width: 0;
 }
 
-.users-display-label {
-  font-size: 0.72rem;
+.users-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid rgba(173, 108, 31, 0.22);
+  background: radial-gradient(circle at 50% 42%, rgba(255, 236, 189, 0.96), rgba(204, 132, 46, 0.88) 58%, rgba(67, 42, 17, 0.92) 100%);
+  color: #fff7ea;
+  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+  font-size: 0.6rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  flex-shrink: 0;
 }
 
-.users-card-actions {
+.users-row-copy {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.users-row-copy strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.users-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.users-status-dot--active {
+  background: var(--success);
+}
+
+.users-status-dot--inactive {
+  background: var(--muted);
+  opacity: 0.5;
+}
+
+.users-row-email {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.84rem;
+}
+
+.users-role-badge {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+}
+
+.users-role-badge--admin {
+  background: rgba(6, 148, 148, 0.1);
+  color: var(--accent-strong);
+  border-color: rgba(6, 148, 148, 0.18);
+}
+
+.users-role-badge--manager {
+  background: rgba(201, 128, 43, 0.1);
+  color: var(--warm);
+  border-color: rgba(201, 128, 43, 0.18);
+}
+
+.users-role-badge--cadre {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--line);
+}
+
+.users-edit-btn {
+  margin-left: auto;
+  min-height: 30px;
+  width: 30px;
+  padding: 0;
+  justify-content: center;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.users-edit-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--line);
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* ── Edit form ── */
+
+.users-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
 }
 
 .users-edit-actions {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .users-role-select {
-  min-width: 170px;
-  background: rgba(255, 255, 255, 0.86);
+  min-width: 150px;
 }
 
 .users-table-shell {
@@ -2832,9 +2914,16 @@ select.select-input {
     width: 100%;
   }
 
-  .users-user-grid,
   .users-edit-grid {
     grid-template-columns: 1fr;
+  }
+
+  .users-user-row {
+    flex-wrap: wrap;
+  }
+
+  .users-row-identity {
+    flex: 1 1 100%;
   }
 }
 
@@ -2976,53 +3065,6 @@ select.select-input {
 }
 
 
-
-.users-admin-list {
-  gap: 10px;
-}
-
-.users-user-card {
-  gap: 10px;
-  padding: 12px 14px;
-}
-
-.users-user-grid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.5fr) auto;
-  align-items: center;
-  gap: 10px 14px;
-}
-
-.users-display-field {
-  gap: 2px;
-}
-
-.users-display-field strong {
-  font-size: 0.98rem;
-  line-height: 1.15;
-}
-
-.users-display-label {
-  font-size: 0.64rem;
-  letter-spacing: 0.08em;
-}
-
-.users-card-actions {
-  align-items: center;
-}
-
-.users-save-button {
-  min-height: 34px;
-  padding-inline: 11px;
-}
-
-.users-edit-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px 12px;
-}
-
-.users-edit-meta {
-  font-size: 0.77rem;
-}
 
 .users-edit-status {
   margin: 0;

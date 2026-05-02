@@ -9131,25 +9131,17 @@ function renderUsersAdmin() {
   const head = document.createElement("div");
   head.className = "users-admin-head";
 
-  const copy = document.createElement("div");
-  copy.className = "users-admin-copy";
-  const title = document.createElement("h3");
-  title.textContent = "Equipe visible";
-  const description = document.createElement("p");
-  description.textContent = "Créer, modifier ou retirer un utilisateur sans quitter Mordologie.";
-  copy.append(title, description);
-
   const addButton = document.createElement("button");
   addButton.type = "button";
   addButton.className = "btn btn-primary";
-  addButton.textContent = "Ajouter un utilisateur";
+  addButton.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11"/></svg> Ajouter`;
   addButton.addEventListener("click", () => {
     usersAdminEditingId = "__new__";
     usersAdminDraft = createUsersAdminDraft();
     renderUsersAdmin();
   });
 
-  head.append(copy, addButton);
+  head.append(addButton);
   usersAdminShell.append(head);
 
   const list = document.createElement("div");
@@ -9193,31 +9185,44 @@ function createUsersAdminDraft(user = null) {
 
 function renderUsersAdminDisplayCard(user) {
   const card = document.createElement("article");
-  card.className = "users-user-card";
+  card.className = "users-user-card users-user-row";
 
-  const grid = document.createElement("div");
-  grid.className = "users-user-grid";
-  grid.append(
-    createUsersAdminDisplayField("Personne", user.user_name ?? "Sans nom", user.status === "active" ? "Actif" : "Inactif"),
-    createUsersAdminDisplayField("Email", user.email || "Aucun email"),
-    createUsersAdminDisplayField("Role", formatUsersRoleLabel(user.role ?? "cadre")),
-  );
+  const identity = document.createElement("div");
+  identity.className = "users-row-identity";
+  const avatar = document.createElement("span");
+  avatar.className = "users-avatar";
+  avatar.textContent = getUserAvatarMonogram(user.user_name ?? "?");
+  const nameCopy = document.createElement("div");
+  nameCopy.className = "users-row-copy";
+  const nameEl = document.createElement("strong");
+  nameEl.textContent = user.user_name ?? "Sans nom";
+  const statusDot = document.createElement("span");
+  statusDot.className = `users-status-dot users-status-dot--${user.status === "active" ? "active" : "inactive"}`;
+  statusDot.title = user.status === "active" ? "Actif" : "Inactif";
+  nameCopy.append(nameEl, statusDot);
+  identity.append(avatar, nameCopy);
 
-  const actions = document.createElement("div");
-  actions.className = "users-card-actions";
+  const emailEl = document.createElement("span");
+  emailEl.className = "users-row-email muted-copy";
+  emailEl.textContent = user.email || "—";
+
+  const roleBadge = document.createElement("span");
+  roleBadge.className = `pill users-role-badge users-role-badge--${user.role ?? "cadre"}`;
+  roleBadge.textContent = formatUsersRoleLabel(user.role ?? "cadre");
 
   const editButton = document.createElement("button");
   editButton.type = "button";
-  editButton.className = "btn btn-secondary users-save-button";
-  editButton.textContent = "Changer";
+  editButton.className = "btn users-edit-btn";
+  editButton.title = `Modifier ${user.user_name ?? ""}`;
+  editButton.setAttribute("aria-label", `Modifier ${user.user_name ?? ""}`);
+  editButton.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z"/></svg>`;
   editButton.addEventListener("click", () => {
     usersAdminEditingId = user.user_id;
     usersAdminDraft = createUsersAdminDraft(user);
     renderUsersAdmin();
   });
 
-  actions.append(editButton);
-  card.append(grid, actions);
+  card.append(identity, emailEl, roleBadge, editButton);
   return card;
 }
 
@@ -9288,10 +9293,6 @@ function renderUsersAdminEditorCard(user, isNew) {
 
   grid.append(nameField.field, emailField.field, roleField);
 
-  const info = document.createElement("p");
-  info.className = "users-edit-meta";
-  info.textContent = `Equipe par defaut: ${draft.team_name}`;
-
   const status = document.createElement("p");
   status.className = "users-edit-status";
   status.hidden = !draft.statusMessage;
@@ -9336,7 +9337,7 @@ function renderUsersAdminEditorCard(user, isNew) {
   });
 
   actions.append(cancelButton, saveButton);
-  card.append(grid, info, status, actions);
+  card.append(grid, status, actions);
   return card;
 }
 
