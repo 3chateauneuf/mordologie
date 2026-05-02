@@ -2872,12 +2872,12 @@ function handleAgendaDragEnd(event) {
       void logSessionChange(state.originalSession, sessionToSave, `agenda-${state.mode}`);
       void (async () => {
         const ok = await syncSessionToSupabase(sessionToSave, "manual", { refreshAfterSuccess: false });
-        const stored = sessions.find((s) => s.id === sessionToSave.id);
-        if (stored?.syncStatus === "pending_update") {
-          upsertSession({ ...stored, syncStatus: "synced" });
-          persistSessions();
-        }
         if (ok) {
+          const stored = sessions.find((s) => s.id === sessionToSave.id);
+          if (stored?.syncStatus === "pending_update") {
+            upsertSession({ ...stored, syncStatus: "synced" });
+            persistSessions();
+          }
           await loadServerBackedState({ silent: true });
           render();
         }
@@ -4306,7 +4306,10 @@ function hydrateRemoteState(historyRows, activeRows) {
     if (isCorruptedPersistedSession(session)) {
       continue;
     }
-    mergedSessions.set(normalizeText(session.id), session);
+    const key = normalizeText(session.id);
+    if (!mergedSessions.has(key)) {
+      mergedSessions.set(key, session);
+    }
   }
 
   for (const session of sessions) {
@@ -6665,8 +6668,13 @@ function saveManualEntry() {
     return;
   }
 
+  const editingSession = manualEditingSessionId
+    ? findSessionById(manualEditingSessionId) ?? null
+    : null;
+
   const manualSession = {
     id: manualEditingSessionId ?? createSessionId(),
+    dbTimeEntryId: editingSession?.dbTimeEntryId ?? null,
     collaborator,
     project,
     task: manualTaskInput.value.trim(),
@@ -6734,12 +6742,21 @@ function saveManualEntry() {
   attemptSaveSession(manualSession, {
     excludeId: manualEditingSessionId,
     onSuccess: (sessionToSave) => {
-      const previousSession =
-        manualEditingSessionId ? findSessionById(manualEditingSessionId) ?? null : null;
-      upsertSession(sessionToSave);
+      upsertSession({ ...sessionToSave, syncStatus: "pending_update" });
       persistSessions();
-      void logSessionChange(previousSession, sessionToSave, previousSession ? "manual-edit" : "manual-create");
-      void syncSessionToSupabase(sessionToSave, previousSession ? "manual" : "manual");
+      void logSessionChange(editingSession, sessionToSave, editingSession ? "manual-edit" : "manual-create");
+      void (async () => {
+        const ok = await syncSessionToSupabase(sessionToSave, "manual", { refreshAfterSuccess: false });
+        if (ok) {
+          const stored = sessions.find((s) => s.id === sessionToSave.id);
+          if (stored?.syncStatus === "pending_update") {
+            upsertSession({ ...stored, syncStatus: "synced" });
+            persistSessions();
+          }
+          await loadServerBackedState({ silent: true });
+          render();
+        }
+      })();
       manualEditingSessionId = null;
       manualDialog.close();
       saveManualButton.textContent = "Enregistrer";
