@@ -182,6 +182,8 @@ const authUserAvatar = document.querySelector("#auth-user-avatar");
 const authAvatarInput = document.querySelector("#auth-avatar-input");
 const authRolePill = document.querySelector("#auth-role-pill");
 const authSignoutButton = document.querySelector("#auth-signout-button");
+const authUserDropdown = document.querySelector("#auth-user-dropdown");
+const authChangeAvatarButton = document.querySelector("#auth-change-avatar-button");
 const authStatusShell = document.querySelector("#auth-status-shell");
 const authStatus = document.querySelector("#auth-status");
 const collaboratorInput = document.querySelector("#collaborator-input");
@@ -1074,10 +1076,25 @@ authSignoutButton?.addEventListener("click", async () => {
 });
 
 authUserAvatar?.addEventListener("click", () => {
-  if (!accessProfile.appUser?.user_name) {
-    return;
-  }
+  if (!authUserDropdown) return;
+  const opening = authUserDropdown.hidden;
+  authUserDropdown.hidden = !opening;
+  authUserAvatar.setAttribute("aria-expanded", String(opening));
+});
+
+authChangeAvatarButton?.addEventListener("click", () => {
   authAvatarInput?.click();
+  if (authUserDropdown) authUserDropdown.hidden = true;
+  authUserAvatar?.setAttribute("aria-expanded", "false");
+});
+
+document.addEventListener("click", (event) => {
+  if (!authUserDropdown || authUserDropdown.hidden) return;
+  const trigger = authUserAvatar?.closest(".auth-identity-trigger") ?? authUserAvatar;
+  if (!trigger?.contains(event.target) && !authUserDropdown.contains(event.target)) {
+    authUserDropdown.hidden = true;
+    authUserAvatar?.setAttribute("aria-expanded", "false");
+  }
 });
 
 authAvatarInput?.addEventListener("change", async (event) => {

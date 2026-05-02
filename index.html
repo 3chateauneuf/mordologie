@@ -75,99 +75,93 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div class="topbar-row">
-          <div class="topbar-context">
-            <section id="auth-panel" class="auth-panel">
-              <div id="auth-guest-shell" class="auth-shell auth-shell-guest">
-                <div class="auth-rescue-shell">
-                  <p class="muted-copy auth-rescue-copy">Entrez simplement avec votre nom pour utiliser Mordologie tout de suite.</p>
-                  <div class="auth-rescue-row">
-                    <label class="auth-field auth-inline-field auth-rescue-field">
-                      <span>Nom</span>
-                      <select id="auth-rescue-select" class="select-input"></select>
-                    </label>
-                    <button id="auth-rescue-button" type="button" class="btn btn-primary">Entrer</button>
-                  </div>
-                </div>
-              </div>
-
-              <div id="auth-user-shell" class="auth-shell auth-shell-user" hidden>
-                <div class="auth-user-identity">
-                  <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Changer la photo de profil" title="Changer la photo de profil">U</button>
-                  <input id="auth-avatar-input" type="file" accept="image/*" hidden />
-                  <div class="auth-user-copy">
-                    <div class="auth-user-summary">
-                      <strong id="auth-user-name">Utilisateur</strong>
-                      <span id="auth-user-email" class="muted-copy auth-user-email"></span>
-                    </div>
-                  </div>
-                </div>
-                <div class="auth-user-meta">
-                  <span id="auth-role-pill" class="pill auth-role-pill">Cargonaute</span>
-                  <button id="auth-signout-button" type="button" class="btn btn-secondary">Se déconnecter</button>
-                </div>
-              </div>
-            </section>
+        <div id="auth-guest-shell" class="auth-shell auth-shell-guest">
+          <div class="auth-rescue-row">
+            <select id="auth-rescue-select" class="select-input auth-rescue-select"></select>
+            <button id="auth-rescue-button" type="button" class="btn btn-primary">Entrer</button>
           </div>
-          <nav class="topbar-nav" aria-label="Navigation principale">
-            <button type="button" data-view-target="cadre" class="active" title="Hobbit" aria-label="Hobbit">
-              <span class="nav-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M6 18V9.5L12 5l6 4.5V18" />
-                  <path d="M9.5 18v-4.5h5V18" />
-                </svg>
-              </span>
-              <span class="visually-hidden">Hobbit</span>
-            </button>
-            <button type="button" data-view-target="manager" title="Gandalf" aria-label="Gandalf">
-              <span class="nav-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M5 18h14" />
-                  <path d="M7 18V8" />
-                  <path d="M12 18V5" />
-                  <path d="M17 18v-6" />
-                </svg>
-              </span>
-              <span class="visually-hidden">Gandalf</span>
-            </button>
-            <button type="button" data-view-target="resources" title="Ressources" aria-label="Ressources">
-              <span class="nav-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M6 7.5h12" />
-                  <path d="M6 12h12" />
-                  <path d="M6 16.5h8" />
-                </svg>
-              </span>
-              <span class="visually-hidden">Ressources</span>
-            </button>
-            <button type="button" data-view-target="users" title="Utilisateurs" aria-label="Utilisateurs">
-              <span class="nav-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M8 11a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 8 11Z" />
-                  <path d="M16.5 10.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" />
-                  <path d="M4.5 18c.5-2.5 2.4-4 5.1-4s4.6 1.5 5.1 4" />
-                  <path d="M13.5 18c.35-1.7 1.7-2.9 3.6-2.9 1.2 0 2.18.42 2.9 1.22" />
-                </svg>
-              </span>
-              <span class="visually-hidden">Utilisateurs</span>
-            </button>
-            <button type="button" data-view-target="journal" title="Journal" aria-label="Journal">
-              <span class="nav-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M7 5.5h8.5A2.5 2.5 0 0 1 18 8v10.5H9A2 2 0 0 0 7 20.5Z" />
-                  <path d="M7 5.5v15" />
-                  <path d="M10 10h5" />
-                  <path d="M10 13.5h5" />
-                </svg>
-              </span>
-              <span class="visually-hidden">Journal</span>
-            </button>
-          </nav>
         </div>
-        <div id="auth-status-shell" class="topbar-status-shell" hidden>
-          <p id="auth-status" class="muted-copy"></p>
+
+        <div id="auth-user-shell" class="auth-shell auth-shell-user" hidden>
+          <div class="auth-identity-trigger">
+            <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Menu profil" aria-expanded="false" aria-controls="auth-user-dropdown">U</button>
+            <strong id="auth-user-name" class="topbar-username">Utilisateur</strong>
+          </div>
+          <div id="auth-user-dropdown" class="auth-dropdown" hidden>
+            <span id="auth-user-email" class="muted-copy auth-dropdown-email"></span>
+            <span id="auth-role-pill" class="pill auth-role-pill">Cargonaute</span>
+            <div class="auth-dropdown-actions">
+              <button id="auth-change-avatar-button" type="button" class="btn btn-secondary">Changer la photo</button>
+              <button id="auth-signout-button" type="button" class="btn btn-ghost-danger">Se déconnecter</button>
+            </div>
+          </div>
+          <input id="auth-avatar-input" type="file" accept="image/*" hidden />
         </div>
+
+        <nav class="topbar-nav" aria-label="Navigation principale">
+          <button type="button" data-view-target="cadre" class="active" aria-label="Hobbit">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M6 18V9.5L12 5l6 4.5V18" />
+                <path d="M9.5 18v-4.5h5V18" />
+              </svg>
+            </span>
+            <span class="nav-tooltip" aria-hidden="true">Hobbit</span>
+            <span class="visually-hidden">Hobbit</span>
+          </button>
+          <button type="button" data-view-target="manager" aria-label="Gandalf">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M5 18h14" />
+                <path d="M7 18V8" />
+                <path d="M12 18V5" />
+                <path d="M17 18v-6" />
+              </svg>
+            </span>
+            <span class="nav-tooltip" aria-hidden="true">Gandalf</span>
+            <span class="visually-hidden">Gandalf</span>
+          </button>
+          <button type="button" data-view-target="resources" aria-label="Ressources">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M6 7.5h12" />
+                <path d="M6 12h12" />
+                <path d="M6 16.5h8" />
+              </svg>
+            </span>
+            <span class="nav-tooltip" aria-hidden="true">Ressources</span>
+            <span class="visually-hidden">Ressources</span>
+          </button>
+          <button type="button" data-view-target="users" aria-label="Utilisateurs">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M8 11a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 8 11Z" />
+                <path d="M16.5 10.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" />
+                <path d="M4.5 18c.5-2.5 2.4-4 5.1-4s4.6 1.5 5.1 4" />
+                <path d="M13.5 18c.35-1.7 1.7-2.9 3.6-2.9 1.2 0 2.18.42 2.9 1.22" />
+              </svg>
+            </span>
+            <span class="nav-tooltip" aria-hidden="true">Utilisateurs</span>
+            <span class="visually-hidden">Utilisateurs</span>
+          </button>
+          <button type="button" data-view-target="journal" aria-label="Journal">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M7 5.5h8.5A2.5 2.5 0 0 1 18 8v10.5H9A2 2 0 0 0 7 20.5Z" />
+                <path d="M7 5.5v15" />
+                <path d="M10 10h5" />
+                <path d="M10 13.5h5" />
+              </svg>
+            </span>
+            <span class="nav-tooltip" aria-hidden="true">Journal</span>
+            <span class="visually-hidden">Journal</span>
+          </button>
+        </nav>
       </header>
+
+      <div id="auth-status-shell" class="status-toast" hidden aria-live="polite">
+        <p id="auth-status"></p>
+      </div>
 
       <section class="app-view is-active" id="cadre" data-view-panel="cadre">
         <section class="cadre-layout">
