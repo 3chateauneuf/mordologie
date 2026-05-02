@@ -90,6 +90,13 @@
           <div id="auth-user-dropdown" class="auth-dropdown" hidden>
             <span id="auth-user-email" class="muted-copy auth-dropdown-email"></span>
             <span id="auth-role-pill" class="pill auth-role-pill">Cargonaute</span>
+            <div class="auth-calendar-section">
+              <label class="auth-section-label" for="auth-calendar-ics-input">Google Calendar (URL iCal)</label>
+              <div class="auth-calendar-row">
+                <input id="auth-calendar-ics-input" type="url" class="auth-calendar-input" placeholder="https://calendar.google.com/calendar/ical/…" />
+                <button id="auth-calendar-ics-save" type="button" class="btn btn-secondary">Sauvegarder</button>
+              </div>
+            </div>
             <div class="auth-dropdown-actions">
               <button id="auth-change-avatar-button" type="button" class="btn btn-secondary">Changer la photo</button>
               <button id="auth-signout-button" type="button" class="btn btn-ghost-danger">Se déconnecter</button>
@@ -441,6 +448,7 @@
               <button id="agenda-next-week" type="button" class="period-btn">Semaine suivante</button>
             </div>
             <p id="agenda-week-label" class="agenda-week-label"></p>
+            <button id="agenda-calendar-sync" type="button" class="btn btn-secondary agenda-calendar-sync-btn">Sync calendrier</button>
           </div>
           <div id="planned-summary" class="planned-summary" hidden></div>
           <div id="agenda-board" class="agenda-board agenda-board-wide"></div>

@@ -11,6 +11,8 @@ const UI_PREFERENCES_TABLE = "user_ui_preferences";
 const DAY_THEMES_PREFERENCE_KEY = "day_themes";
 const REPRISES_ORDER_PREFERENCE_KEY = "reprises_order";
 const PROFILE_AVATAR_PREFERENCE_KEY = "profile_avatar";
+const CALENDAR_ICS_PREFERENCE_KEY = "calendar_ics_url";
+const CALENDAR_ICS_URLS_KEY = "mordologie-calendar-ics-urls-v1";
 const LOCAL_RESCUE_ACCESS_KEY = "mordologie-local-rescue-access-v1";
 const PENDING_STOP_STATE_KEY = "mordologie-pending-stop-v1";
 const RECENTLY_STOPPED_SESSIONS_KEY = "mordologie-recently-stopped-sessions-v1";
@@ -184,6 +186,8 @@ const authRolePill = document.querySelector("#auth-role-pill");
 const authSignoutButton = document.querySelector("#auth-signout-button");
 const authUserDropdown = document.querySelector("#auth-user-dropdown");
 const authChangeAvatarButton = document.querySelector("#auth-change-avatar-button");
+const authCalendarIcsInput = document.querySelector("#auth-calendar-ics-input");
+const authCalendarIcsSave = document.querySelector("#auth-calendar-ics-save");
 const authStatusShell = document.querySelector("#auth-status-shell");
 const authStatus = document.querySelector("#auth-status");
 const collaboratorInput = document.querySelector("#collaborator-input");
@@ -251,6 +255,7 @@ const agendaPrevWeekButton = document.querySelector("#agenda-prev-week");
 const agendaCurrentWeekButton = document.querySelector("#agenda-current-week");
 const agendaNextWeekButton = document.querySelector("#agenda-next-week");
 const agendaWeekLabel = document.querySelector("#agenda-week-label");
+const agendaCalendarSyncButton = document.querySelector("#agenda-calendar-sync");
 const plannedSummary = document.querySelector("#planned-summary");
 const periodSwitch = document.querySelector("#period-switch");
 const analysisStatsSwitch = document.querySelector("#analysis-stats-switch");
@@ -1011,6 +1016,7 @@ if (
 
 let plannedEventOverrides = loadStoredPlannedEventOverrides();
 let plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+let calendarIcsUrlsByCollaborator = loadCalendarIcsUrls();
 let plannedEditingEventId = null;
 let plannedEditingEvent = null;
 let plannedCurrentCategories = [];
@@ -1088,6 +1094,9 @@ authUserAvatar?.addEventListener("click", () => {
   const opening = authUserDropdown.hidden;
   authUserDropdown.hidden = !opening;
   authUserAvatar.setAttribute("aria-expanded", String(opening));
+  if (opening && authCalendarIcsInput) {
+    authCalendarIcsInput.value = getCalendarIcsUrl(getCurrentCollaborator() || "");
+  }
 });
 
 authChangeAvatarButton?.addEventListener("click", () => {
@@ -1742,6 +1751,28 @@ agendaCurrentWeekButton?.addEventListener("click", () => {
 
 agendaNextWeekButton?.addEventListener("click", () => {
   shiftAgendaWeek(1);
+});
+
+authCalendarIcsSave?.addEventListener("click", async () => {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator) {
+    setAuthStatusMessage("Sélectionnez un profil d'abord.", "warning");
+    return;
+  }
+  const url = authCalendarIcsInput?.value.trim() ?? "";
+  if (authUserDropdown) authUserDropdown.hidden = true;
+  authUserAvatar?.setAttribute("aria-expanded", "false");
+  await saveCalendarIcsUrl(collaborator, url);
+  setAuthStatusMessage("URL du calendrier enregistrée.", "success", { persistMs: 2400 });
+});
+
+agendaCalendarSyncButton?.addEventListener("click", () => {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator) {
+    setAuthStatusMessage("Sélectionnez un profil d'abord.", "warning");
+    return;
+  }
+  void syncGoogleCalendar(collaborator);
 });
 
 agendaBoard.addEventListener("click", (event) => {
@@ -3336,8 +3367,15 @@ function hydrateSharedUiPreferences(rows = []) {
         setLocalProfileAvatar(ownerName, dataUrl);
       }
     }
+    if (row?.preference_key === CALENDAR_ICS_PREFERENCE_KEY && typeof value === "string" && value) {
+      const collaborator = row.collaborator_name || row.owner_user_name || "";
+      if (collaborator) {
+        calendarIcsUrlsByCollaborator[normalizeText(collaborator)] = value;
+      }
+    }
   }
 
+  storeCalendarIcsUrls(calendarIcsUrlsByCollaborator);
   storeReprisesOrder(nextLocalReprisesOrder);
   sharedDayThemesByScope = nextDayThemesByScope;
   sharedReprisesOrderByScope = nextReprisesOrderByScope;
@@ -8850,6 +8888,134 @@ function storePlannedCalendarSnapshots(value) {
     window.localStorage.setItem(PLANNED_CALENDAR_SNAPSHOTS_KEY, JSON.stringify(value));
   } catch {
     // ignore local storage errors
+  }
+}
+
+function loadCalendarIcsUrls() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(CALENDAR_ICS_URLS_KEY) ?? "{}");
+    return typeof stored === "object" && stored !== null && !Array.isArray(stored) ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function storeCalendarIcsUrls(urls) {
+  try {
+    window.localStorage.setItem(CALENDAR_ICS_URLS_KEY, JSON.stringify(urls));
+  } catch {
+    // ignore
+  }
+}
+
+function getCalendarIcsUrl(collaborator) {
+  return calendarIcsUrlsByCollaborator[normalizeText(collaborator || "")] ?? "";
+}
+
+async function saveCalendarIcsUrl(collaborator, url) {
+  const key = normalizeText(collaborator || "");
+  if (!key) return;
+  calendarIcsUrlsByCollaborator[key] = url;
+  storeCalendarIcsUrls(calendarIcsUrlsByCollaborator);
+  await syncSharedUiPreference(CALENDAR_ICS_PREFERENCE_KEY, collaborator, url);
+}
+
+async function syncGoogleCalendar(collaborator) {
+  const icsUrl = getCalendarIcsUrl(collaborator);
+  if (!icsUrl) {
+    setAuthStatusMessage("Aucune URL iCal configurée. Collez-la dans votre profil.", "warning", { persistMs: 3500 });
+    return;
+  }
+
+  setAuthStatusMessage("Synchronisation du calendrier…", "neutral");
+
+  try {
+    const proxyUrl = `/api/calendar-proxy?url=${encodeURIComponent(icsUrl)}`;
+    const response = await fetch(proxyUrl);
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+    const { events } = await response.json();
+    if (!Array.isArray(events) || events.length === 0) {
+      setAuthStatusMessage("Aucun événement trouvé dans ce calendrier.", "warning", { persistMs: 3200 });
+      return;
+    }
+
+    // Group events by week
+    const snapshotsByWeek = new Map();
+    for (const event of events) {
+      const startDate = new Date(event.start_at);
+      if (Number.isNaN(startDate.getTime())) continue;
+      const weekStart = formatDateInput(getStartOfWeek(startDate));
+      if (!snapshotsByWeek.has(weekStart)) {
+        snapshotsByWeek.set(weekStart, []);
+      }
+      const durationMs = new Date(event.end_at).getTime() - startDate.getTime();
+      if (durationMs <= 0 || durationMs > 12 * 60 * 60 * 1000) continue;
+      const inferred = inferPlannedSuggestionFromTitle(event.title || "");
+      snapshotsByWeek.get(weekStart).push({
+        id: `gcal-${normalizeComparableText(collaborator)}-${normalizeComparableText(event.uid || event.title || weekStart)}`,
+        source: "google_calendar",
+        source_event_id: event.uid || "",
+        source_calendar_id: icsUrl,
+        collaborator,
+        title: event.title || "Sans titre",
+        description: event.description || "",
+        start_at: event.start_at,
+        end_at: event.end_at,
+        durationMs,
+        day_key: formatDateInput(startDate),
+        all_day: event.all_day || false,
+        suggested_category: inferred.suggested_category ?? "",
+        suggested_tags: inferred.suggested_tags ?? [],
+        validated_category: "",
+        validated_tags: [],
+        matching_confidence: inferred.matching_confidence ?? 0.3,
+        status: inferred.suggested_category ? "suggested" : "pending",
+        updated_at: null,
+      });
+    }
+
+    const newSnapshots = [];
+    for (const [weekStart, weekEvents] of snapshotsByWeek.entries()) {
+      if (weekEvents.length === 0) continue;
+      newSnapshots.push({
+        collaborator,
+        source: "google_calendar",
+        source_calendar_id: icsUrl,
+        week_start: weekStart,
+        imported_at: new Date().toISOString(),
+        events: weekEvents,
+      });
+    }
+
+    // Read raw stored rows (without seeded), replace existing for this collaborator+icsUrl
+    let storedRows = [];
+    try {
+      const raw = JSON.parse(window.localStorage.getItem(PLANNED_CALENDAR_SNAPSHOTS_KEY) ?? "[]");
+      storedRows = sanitizePlannedCalendarSnapshots(Array.isArray(raw) ? raw : []);
+    } catch {
+      storedRows = [];
+    }
+    const filtered = storedRows.filter(
+      (s) => !(normalizeText(s.collaborator) === normalizeText(collaborator) && s.source_calendar_id === icsUrl),
+    );
+    const updated = [...filtered, ...newSnapshots];
+    storePlannedCalendarSnapshots(updated);
+    plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+
+    const eventCount = events.length;
+    const weekCount = snapshotsByWeek.size;
+    setAuthStatusMessage(
+      `${eventCount} événement${eventCount !== 1 ? "s" : ""} importé${eventCount !== 1 ? "s" : ""} (${weekCount} semaine${weekCount !== 1 ? "s" : ""}).`,
+      "success",
+      { persistMs: 3500 },
+    );
+    render();
+  } catch (err) {
+    console.error("Google Calendar sync failed:", err);
+    setAuthStatusMessage("Erreur lors de la synchronisation du calendrier.", "error", { persistMs: 4000 });
   }
 }
 

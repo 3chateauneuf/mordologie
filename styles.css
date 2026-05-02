@@ -272,6 +272,51 @@ button {
   margin-top: 2px;
 }
 
+.auth-calendar-section {
+  display: grid;
+  gap: 5px;
+  padding: 8px 0 6px;
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+}
+
+.auth-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.auth-calendar-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.auth-calendar-input {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+  color: var(--text);
+  padding: 6px 9px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.auth-calendar-input::placeholder {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.agenda-calendar-sync-btn {
+  white-space: nowrap;
+  font-size: 0.82rem;
+  padding: 6px 12px;
+}
+
 .auth-role-pill {
   background: rgba(6, 148, 148, 0.14);
   color: var(--accent-strong);
