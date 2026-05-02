@@ -175,36 +175,19 @@
         <section class="workspace-grid">
         <section class="panel composer-panel">
           <form id="time-form" class="time-form">
+            <section class="day-themes-bar day-themes-panel">
+              <div class="section-minihead section-minihead-compact">
+                <h3>Thèmes du jour</h3>
+              </div>
+              <div id="day-themes-list" class="chip-row"></div>
+              <div class="day-inline-form">
+                <input id="day-theme-input" class="select-input" type="text" placeholder="Ajouter un thème" />
+                <button id="add-day-theme-button" type="button" class="btn btn-secondary">Ajouter</button>
+              </div>
+            </section>
+
             <div class="capture-layout">
               <section class="capture-quick-column focus-rail">
-                <section class="memory-strip day-themes-panel quick-strip">
-                  <div class="section-minihead section-minihead-compact">
-                    <h3>Thèmes du jour</h3>
-                  </div>
-                  <div id="day-themes-list" class="chip-row"></div>
-                  <div class="day-inline-form">
-                    <input id="day-theme-input" class="select-input" type="text" placeholder="Ajouter un thème" />
-                    <button id="add-day-theme-button" type="button" class="btn btn-secondary">Ajouter</button>
-                  </div>
-                </section>
-
-                <section class="memory-strip memory-strip-inline quick-strip">
-                  <div class="section-minihead section-minihead-compact">
-                    <h3>Reprises probables</h3>
-                  </div>
-                  <div id="quick-projects" class="chip-row"></div>
-                  <div id="reprise-actions" class="reprise-actions" hidden>
-                    <div id="reprise-archive-zone" class="reprise-dropzone reprise-dropzone--archive" data-action-kind="archive">
-                      <span class="reprise-dropzone-icon" aria-hidden="true">↓</span>
-                      <span>Archiver</span>
-                    </div>
-                    <div id="reprise-done-zone" class="reprise-dropzone reprise-dropzone--done" data-action-kind="done">
-                      <span class="reprise-dropzone-icon" aria-hidden="true">✓</span>
-                      <span>Traité</span>
-                    </div>
-                  </div>
-                </section>
-
                 <section class="timer-panel">
                   <div class="timer-head">
                     <p id="timer-state-label" class="timer-label">Prêt</p>
@@ -224,6 +207,23 @@
                   <p id="active-session-status-copy" class="timer-status-copy" hidden></p>
                   <div id="active-session-status-actions" class="button-row timer-status-actions" hidden>
                     <button id="retry-pending-stop-button" type="button" class="btn btn-secondary">Réessayer</button>
+                  </div>
+                </section>
+
+                <section class="memory-strip memory-strip-inline quick-strip">
+                  <div class="section-minihead section-minihead-compact">
+                    <h3>Reprises probables</h3>
+                  </div>
+                  <div id="quick-projects" class="chip-row"></div>
+                  <div id="reprise-actions" class="reprise-actions" hidden>
+                    <div id="reprise-archive-zone" class="reprise-dropzone reprise-dropzone--archive" data-action-kind="archive">
+                      <span class="reprise-dropzone-icon" aria-hidden="true">↓</span>
+                      <span>Archiver</span>
+                    </div>
+                    <div id="reprise-done-zone" class="reprise-dropzone reprise-dropzone--done" data-action-kind="done">
+                      <span class="reprise-dropzone-icon" aria-hidden="true">✓</span>
+                      <span>Traité</span>
+                    </div>
                   </div>
                 </section>
               </section>
