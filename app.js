@@ -2867,10 +2867,21 @@ function handleAgendaDragEnd(event) {
   attemptSaveSession(state.previewSession, {
     excludeId: state.originalSession.id,
     onSuccess: (sessionToSave) => {
-      upsertSession(sessionToSave);
+      upsertSession({ ...sessionToSave, syncStatus: "pending_update" });
       persistSessions();
       void logSessionChange(state.originalSession, sessionToSave, `agenda-${state.mode}`);
-      void syncSessionToSupabase(sessionToSave, "manual");
+      void (async () => {
+        const ok = await syncSessionToSupabase(sessionToSave, "manual", { refreshAfterSuccess: false });
+        const stored = sessions.find((s) => s.id === sessionToSave.id);
+        if (stored?.syncStatus === "pending_update") {
+          upsertSession({ ...stored, syncStatus: "synced" });
+          persistSessions();
+        }
+        if (ok) {
+          await loadServerBackedState({ silent: true });
+          render();
+        }
+      })();
       render();
     },
   });
@@ -4303,11 +4314,12 @@ function hydrateRemoteState(historyRows, activeRows) {
       continue;
     }
 
-    const protectRecentLocalSession = ["pending_create", "pending_remote_stop", "synced"].includes(session.syncStatus || "");
+    const protectRecentLocalSession = ["pending_create", "pending_remote_stop", "synced", "pending_update"].includes(session.syncStatus || "");
     if (session.isServerBacked && !protectRecentLocalSession) {
       continue;
     }
 
+    const isPendingUpdate = session.syncStatus === "pending_update";
     const localKey = normalizeText(session.id);
     const localRemoteId = normalizeText(session.dbTimeEntryId ?? "");
     const localCollaborator = normalizeText(session.collaborator ?? "");
@@ -4317,10 +4329,10 @@ function hydrateRemoteState(historyRows, activeRows) {
       : false;
     const alreadyPresentByRemoteId = localRemoteId ? remoteTimeEntryIds.has(localRemoteId) : false;
 
-    if (alreadyPresentByRemoteId || alreadyPresentByStart) {
+    if (!isPendingUpdate && (alreadyPresentByRemoteId || alreadyPresentByStart)) {
       continue;
     }
-    if (!localKey || mergedSessions.has(localKey)) {
+    if (!localKey || (!isPendingUpdate && mergedSessions.has(localKey))) {
       continue;
     }
     mergedSessions.set(localKey, normalizeSession(session));
