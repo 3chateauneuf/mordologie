@@ -462,16 +462,16 @@ button {
 
 .topbar-nav a,
 .topbar-nav button {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   justify-content: center;
   padding: 0;
   color: var(--text);
-  background: rgba(248, 251, 252, 0.82);
-  border: 1px solid var(--ink-soft-strong);
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
   appearance: none;
   font-size: 0.92rem;
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
 
 .topbar-nav button {
@@ -713,11 +713,11 @@ button {
 }
 
 .field span {
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .field-manage-button {
@@ -860,10 +860,10 @@ button {
   width: 100%;
   border-radius: var(--radius-input);
   border: 1px solid var(--line);
-  background: rgba(249, 252, 253, 0.94);
+  background: var(--panel-strong);
   color: var(--text);
-  padding: 14px 15px;
-  min-height: 50px;
+  padding: 10px 12px;
+  min-height: 42px;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
@@ -915,22 +915,21 @@ select.select-input {
 }
 
 .token-field {
-  min-height: 50px;
+  min-height: 42px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-input);
-  background: rgba(249, 252, 253, 0.94);
+  background: var(--panel-strong);
   cursor: text;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .token-field:hover {
   border-color: rgba(15, 118, 110, 0.28);
-  background: rgba(252, 254, 255, 0.98);
 }
 
 .token-field input {
@@ -951,10 +950,10 @@ select.select-input {
 .chip,
 .pill,
 .legend-item {
-  padding: 8px 11px;
-  border: 1px solid var(--ink-soft-strong);
-  background: var(--sky-soft-weak);
-  font-size: 0.87rem;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+  font-size: 0.84rem;
 }
 
 .token-chip {
@@ -1375,32 +1374,33 @@ select.select-input {
 
 .btn,
 .period-btn {
-  min-height: 46px;
-  padding: 12px 16px;
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
   border: 1px solid var(--line);
-  background: rgba(249, 252, 253, 0.94);
+  background: var(--panel-strong);
   color: var(--text);
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, color 160ms ease;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, color 160ms ease;
 }
 
 .btn:hover,
 .period-btn:hover,
 .chip:hover,
 .topbar-nav a:hover {
-  transform: translateY(-1px);
   border-color: rgba(45, 106, 102, 0.28);
-  box-shadow: 0 10px 22px rgba(39, 56, 68, 0.07);
+  box-shadow: 0 2px 8px rgba(39, 56, 68, 0.07);
 }
 
 .btn-primary {
   background: var(--accent);
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 12px 26px rgba(35, 79, 75, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .btn-secondary {
-  background: var(--sky-soft-weak);
+  background: var(--panel-soft);
+  border-color: var(--line);
 }
 
 .btn-ghost-danger {
@@ -3445,16 +3445,7 @@ select.select-input {
 }
 
 .capture-form-panel .field span {
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-.capture-form-panel .field input,
-.capture-form-panel .field textarea,
-.capture-form-panel .token-field input {
-  min-height: 42px;
-  padding: 9px 12px;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
 }
 
 .capture-form-panel .form-grid {
