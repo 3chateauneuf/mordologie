@@ -313,6 +313,12 @@ const resourceKrShell = document.querySelector("#resource-kr-shell");
 const resourceKrList = document.querySelector("#resource-kr-list");
 const resourceObjectivesPanel = document.querySelector("#resource-objectives-panel");
 const resourceObjectivesGrid = document.querySelector("#resource-objectives-grid");
+const reportTotalDelta = document.querySelector("#report-total-delta");
+const reportTopProjectDelta = document.querySelector("#report-top-project-delta");
+const reportTopCategoryDelta = document.querySelector("#report-top-category-delta");
+const resourceTotalDelta = document.querySelector("#resource-total-delta");
+const resourceTopProjectDelta = document.querySelector("#resource-top-project-delta");
+const resourceTopCategoryDelta = document.querySelector("#resource-top-category-delta");
 
 const manualDialog = document.querySelector("#manual-dialog");
 const plannedDialog = document.querySelector("#planned-dialog");
@@ -927,6 +933,7 @@ let currentTags = [];
 let timerIntervalId = null;
 let reportPeriod = "week";
 let statsMode = "categories";
+let evolutionFilterLabel = null;
 let manualTimingSyncLocked = false;
 let dayThemes = loadDayThemes();
 let manualCurrentTags = [];
@@ -1600,6 +1607,7 @@ periodSwitch.addEventListener("click", (event) => {
   }
 
   reportPeriod = button.dataset.period;
+  evolutionFilterLabel = null;
   renderManagerControls();
   renderManagerViews();
 });
@@ -1621,16 +1629,19 @@ analysisStatsSwitch.addEventListener("click", (event) => {
   }
 
   statsMode = button.dataset.statsMode;
+  evolutionFilterLabel = null;
   render();
 });
 
 reportAnchorInput.addEventListener("change", () => {
+  evolutionFilterLabel = null;
   renderCadreViews();
   renderManagerViews();
   renderResourcesViews();
 });
 
 managerCollaboratorFilter.addEventListener("change", () => {
+  evolutionFilterLabel = null;
   renderManagerViews();
 });
 
@@ -8985,6 +8996,7 @@ function syncStatsSwitch(container) {
 function renderManagerViews() {
   const anchor = getReportAnchorDate();
   const range = getPeriodRange(anchor, reportPeriod);
+  const prevRange = getPreviousPeriodRange(anchor, reportPeriod);
   const filterCollaborator = managerCollaboratorFilter.value;
   const allRows = getScopedSessions(getAllSessionsWithActive().filter((session) => isSessionInRange(session, range)));
   const scopedRows =
@@ -8992,11 +9004,39 @@ function renderManagerViews() {
       ? allRows
       : allRows.filter((session) => normalizeText(session.collaborator) === normalizeText(filterCollaborator));
 
+  const allPrevRows = getScopedSessions(getAllSessionsWithActive().filter((session) => isSessionInRange(session, prevRange)));
+  const prevRows =
+    filterCollaborator === "all"
+      ? allPrevRows
+      : allPrevRows.filter((session) => normalizeText(session.collaborator) === normalizeText(filterCollaborator));
+
   const usesObjectives = statsMode === "objectives";
   renderManagerSummary(allRows, scopedRows, range, filterCollaborator);
+
+  const currentTotalMs = scopedRows.reduce((sum, s) => sum + (Number(s.durationMs) || 0), 0);
+  const prevTotalMs = prevRows.reduce((sum, s) => sum + (Number(s.durationMs) || 0), 0);
+  setKpiDelta(reportTotalDelta, currentTotalMs, prevTotalMs);
+
+  const currentProjectRows = buildReportRows(scopedRows, "project");
+  const prevProjectRows = buildReportRows(prevRows, "project");
+  const topProjectLabel = currentProjectRows[0]?.label;
+  setKpiDelta(
+    reportTopProjectDelta,
+    currentProjectRows[0]?.durationMs ?? 0,
+    prevProjectRows.find((r) => r.label === topProjectLabel)?.durationMs ?? 0,
+  );
+
   const managerObjectiveRows = buildObjectiveOkrRows(scopedRows);
   const managerCategoryRows = buildReportRows(scopedRows, "categories");
   const managerDisplayRows = usesObjectives ? managerObjectiveRows : managerCategoryRows;
+  const prevCategoryRows = usesObjectives ? buildObjectiveOkrRows(prevRows) : buildReportRows(prevRows, "categories");
+  const topCategoryLabel = managerDisplayRows[0]?.label;
+  setKpiDelta(
+    reportTopCategoryDelta,
+    managerDisplayRows[0]?.durationMs ?? 0,
+    prevCategoryRows.find((r) => r.label === topCategoryLabel)?.durationMs ?? 0,
+  );
+
   const managerObjectiveTotalMs = managerObjectiveRows.reduce((sum, row) => sum + row.durationMs, 0);
   const managerCategoryTotalMs = scopedRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
   managerDistributionTitle.textContent = usesObjectives ? "Répartition OKR" : "Répartition catégories";
@@ -9012,8 +9052,16 @@ function renderManagerViews() {
     managerDisplayRows,
     usesObjectives ? managerObjectiveTotalMs : managerCategoryTotalMs,
     usesObjectives ? "Aucun OKR renseigné sur cette plage." : "Aucune catégorie disponible sur cette plage.",
+    {
+      onLabelClick: (label) => {
+        evolutionFilterLabel = evolutionFilterLabel === label ? null : label;
+        renderManagerViews();
+        renderResourcesViews();
+      },
+      activeLabel: evolutionFilterLabel,
+    },
   );
-  renderEvolutionGrid(evolutionGrid, anchor, filterCollaborator);
+  renderEvolutionGrid(evolutionGrid, anchor, filterCollaborator, evolutionFilterLabel);
   if (usesObjectives) {
     renderManagerObjectives(scopedRows);
   } else {
@@ -9047,13 +9095,22 @@ function renderManagerViews() {
 function renderResourcesViews() {
   const anchor = getReportAnchorDate();
   const range = getPeriodRange(anchor, reportPeriod);
+  const prevRange = getPreviousPeriodRange(anchor, reportPeriod);
   const allRows = getScopedSessions(getAllSessionsWithActive().filter((session) => isSessionInRange(session, range)));
+  const prevAllRows = getScopedSessions(getAllSessionsWithActive().filter((session) => isSessionInRange(session, prevRange)));
   const usesObjectives = statsMode === "objectives";
   const totalMs = allRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
+  const prevTotalMs = prevAllRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
   const projectTotals = buildReportRows(allRows, "project");
+  const prevProjectTotals = buildReportRows(prevAllRows, "project");
   const objectiveTotals = buildObjectiveOkrRows(allRows);
+  const prevObjectiveTotals = buildObjectiveOkrRows(prevAllRows);
   const categoryTotals = buildReportRows(allRows, "categories");
+  const prevCategoryTotals = buildReportRows(prevAllRows, "categories");
   const krTotals = buildObjectiveKrRowsFromSessions(allRows);
+  const displayRows = usesObjectives ? objectiveTotals : categoryTotals;
+  const prevDisplayRows = usesObjectives ? prevObjectiveTotals : prevCategoryTotals;
+
   resourceTotal.textContent = formatDuration(totalMs);
   resourceRange.textContent = formatPeriodLabel(range.start, range.end, reportPeriod);
   resourceTopProject.textContent = projectTotals[0]?.label ?? "-";
@@ -9074,17 +9131,39 @@ function renderResourcesViews() {
   resourceTopKr.textContent = krTotals[0]?.label ?? "-";
   resourceTopKrTime.textContent = krTotals[0] ? formatDuration(krTotals[0].durationMs) : "0 h 00";
 
+  setKpiDelta(resourceTotalDelta, totalMs, prevTotalMs);
+
+  const topResProjectLabel = projectTotals[0]?.label;
+  setKpiDelta(
+    resourceTopProjectDelta,
+    projectTotals[0]?.durationMs ?? 0,
+    prevProjectTotals.find((r) => r.label === topResProjectLabel)?.durationMs ?? 0,
+  );
+
+  const topResCategoryLabel = displayRows[0]?.label;
+  setKpiDelta(
+    resourceTopCategoryDelta,
+    displayRows[0]?.durationMs ?? 0,
+    prevDisplayRows.find((r) => r.label === topResCategoryLabel)?.durationMs ?? 0,
+  );
+
   renderDistribution(
     resourceDistributionBar,
     resourceDistributionLegend,
-    usesObjectives ? objectiveTotals : categoryTotals,
+    displayRows,
     totalMs,
     usesObjectives ? "Aucun OKR renseigné sur cette plage." : "Aucune catégorie disponible sur cette plage.",
     {
       colorResolver: (row) => (usesObjectives ? colorForLabel(row.label) : colorForPastelDistributionLabel(row.label)),
+      onLabelClick: (label) => {
+        evolutionFilterLabel = evolutionFilterLabel === label ? null : label;
+        renderManagerViews();
+        renderResourcesViews();
+      },
+      activeLabel: evolutionFilterLabel,
     },
   );
-  renderEvolutionGrid(resourceEvolutionGrid, anchor, "all");
+  renderEvolutionGrid(resourceEvolutionGrid, anchor, "all", evolutionFilterLabel);
   if (usesObjectives) {
     renderManagerObjectivesInto(resourceObjectivesGrid, allRows);
   } else {
@@ -9745,6 +9824,21 @@ function shortenObjectiveLegend(value) {
   return content.length <= 42 ? content : `${content.slice(0, 41).trimEnd()}…`;
 }
 
+function setKpiDelta(el, currentMs, previousMs) {
+  if (!el) return;
+  if (!previousMs) {
+    el.hidden = true;
+    return;
+  }
+  const ratio = (currentMs - previousMs) / previousMs;
+  const pct = ratio * 100;
+  const absRounded = Math.round(Math.abs(pct));
+  const sign = pct > 1 ? "+" : pct < -1 ? "−" : "";
+  el.textContent = absRounded < 1 ? "≈ 0 %" : `${sign}${absRounded} %`;
+  el.className = `kpi-delta ${pct > 1 ? "kpi-delta--up" : pct < -1 ? "kpi-delta--down" : "kpi-delta--flat"}`;
+  el.hidden = false;
+}
+
 function renderManagerSummary(allRows, scopedRows, range, filterCollaborator) {
   const usesObjectives = statsMode === "objectives";
   const totalMs = scopedRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
@@ -9839,8 +9933,28 @@ function extractObjectiveKrContent(value) {
     .trim();
 }
 
-function renderEvolutionGrid(container, anchor, filterCollaborator) {
+function renderEvolutionGrid(container, anchor, filterCollaborator, filterLabel) {
   container.innerHTML = "";
+
+  if (filterLabel) {
+    const badge = document.createElement("div");
+    badge.className = "evolution-filter-badge";
+    const text = document.createElement("span");
+    text.textContent = filterLabel;
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "evolution-filter-badge-clear";
+    clear.setAttribute("aria-label", "Effacer le filtre");
+    clear.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+    clear.addEventListener("click", () => {
+      evolutionFilterLabel = null;
+      renderManagerViews();
+      renderResourcesViews();
+    });
+    badge.append(text, clear);
+    container.append(badge);
+  }
+
   const weeks = [];
 
   for (let offset = 5; offset >= 0; offset -= 1) {
@@ -9848,13 +9962,14 @@ function renderEvolutionGrid(container, anchor, filterCollaborator) {
     reference.setDate(reference.getDate() - offset * 7);
     const range = getPeriodRange(reference, "week");
     const rows = getAllSessionsWithActive().filter((session) => {
-      if (!isSessionInRange(session, range)) {
-        return false;
+      if (!isSessionInRange(session, range)) return false;
+      if (filterCollaborator !== "all" && normalizeText(session.collaborator) !== normalizeText(filterCollaborator)) return false;
+      if (filterLabel) {
+        const cats = session.categories?.length ? session.categories : ["Sans catégorie"];
+        const okr = formatObjectiveOkrDisplay(session.objectiveOkr);
+        if (!cats.includes(filterLabel) && okr !== filterLabel) return false;
       }
-      if (filterCollaborator === "all") {
-        return true;
-      }
-      return normalizeText(session.collaborator) === normalizeText(filterCollaborator);
+      return true;
     });
 
     weeks.push({
@@ -9981,20 +10096,34 @@ function renderDistribution(barContainer, legendContainer, rows, totalMs, emptyM
     return;
   }
 
+  const hasClick = typeof options.onLabelClick === "function";
+
   for (const row of rows) {
     const color = options.colorResolver ? options.colorResolver(row) : colorForLabel(row.label);
     const categoryTooltip = formatCategoryTagTooltip(row);
+    const isActive = options.activeLabel === row.label;
+    const isDimmed = options.activeLabel != null && !isActive;
 
     const segment = document.createElement("div");
-    segment.className = "distribution-segment";
+    let segClass = "distribution-segment";
+    if (isActive) segClass += " distribution-segment--active";
+    if (isDimmed) segClass += " distribution-segment--dimmed";
+    segment.className = segClass;
     segment.style.width = `${Math.max((row.durationMs / totalMs) * 100, 2)}%`;
     segment.style.background = color;
+    if (hasClick) segment.style.cursor = "pointer";
     attachHoverTooltip(segment, categoryTooltip || `${row.label} · ${formatShare(row.durationMs, totalMs)}`);
+    if (hasClick) segment.addEventListener("click", () => options.onLabelClick(row.label));
     barContainer.append(segment);
 
     const legend = document.createElement("span");
-    legend.className = "legend-item";
+    let legendClass = "legend-item";
+    if (isActive) legendClass += " legend-item--active";
+    if (isDimmed) legendClass += " legend-item--dimmed";
+    legend.className = legendClass;
+    if (hasClick) legend.style.cursor = "pointer";
     attachHoverTooltip(legend, categoryTooltip || `${row.label} · ${formatDuration(row.durationMs)} · ${formatShare(row.durationMs, totalMs)}`);
+    if (hasClick) legend.addEventListener("click", () => options.onLabelClick(row.label));
 
     const swatch = document.createElement("span");
     swatch.className = "legend-swatch";
@@ -10641,6 +10770,18 @@ function getPeriodRange(anchor, period) {
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
   return { start, end };
+}
+
+function getPreviousPeriodRange(anchor, period) {
+  if (period === "month") {
+    return getPeriodRange(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1), "month");
+  }
+  if (period === "year") {
+    return getPeriodRange(new Date(anchor.getFullYear() - 1, 0, 1), "year");
+  }
+  const prev = new Date(anchor);
+  prev.setDate(prev.getDate() - 7);
+  return getPeriodRange(prev, "week");
 }
 
 function isSessionInRange(session, range) {
