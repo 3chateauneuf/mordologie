@@ -449,42 +449,82 @@
       </section>
 
       <section id="analysis-toolbar-panel" class="panel view-toolbar" hidden>
-        <div class="panel-head panel-head-inline">
-          <div>
-            <h2 id="analysis-toolbar-title">Pilotage manager</h2>
-          </div>
-        </div>
+        <div class="analysis-toolbar-bar">
 
-        <div class="manager-toolbar">
-          <div id="analysis-collaborator-filter-wrap" class="toolbar-primary-focus">
-            <span class="toolbar-group-label">Je m'informe sur</span>
-            <select id="manager-collaborator-filter" class="select-input">
+          <div id="analysis-collaborator-filter-wrap" class="toolbar-seg">
+            <svg class="toolbar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="8" cy="5.5" r="3"/>
+              <path d="M2.5 14c.5-3 2.8-4.5 5.5-4.5s5 1.5 5.5 4.5"/>
+            </svg>
+            <select id="manager-collaborator-filter" class="select-input toolbar-select">
               <option value="all">Toute l'équipe</option>
             </select>
+            <span class="toolbar-sep" aria-hidden="true"></span>
           </div>
-          <div class="toolbar-cluster toolbar-cluster--controls">
-            <div class="toolbar-group toolbar-group--period">
-              <span class="toolbar-group-label">Période</span>
-              <div id="period-switch" class="period-switch">
-                <button type="button" class="period-btn active" data-period="week">Semaine</button>
-                <button type="button" class="period-btn" data-period="month">Mois</button>
-                <button type="button" class="period-btn" data-period="year">Année</button>
-              </div>
-            </div>
-            <div class="toolbar-group toolbar-group--reading">
-              <span class="toolbar-group-label">Lecture</span>
-              <div id="analysis-stats-switch" class="view-switch">
-                <button type="button" class="period-btn" data-stats-mode="objectives">Objectifs</button>
-                <button type="button" class="period-btn active" data-stats-mode="categories">Catégories</button>
-              </div>
-            </div>
+
+          <div id="period-switch" class="period-switch toolbar-seg">
+            <button type="button" class="period-btn active" data-period="week">
+              <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="1" y="2" width="12" height="10" rx="1.5"/>
+                <path d="M1 6h12M4.5 2v2M9.5 2v2"/>
+                <path d="M3.5 8.5h1M6.5 8.5h1M9.5 8.5h1"/>
+              </svg>
+              Sem.
+            </button>
+            <button type="button" class="period-btn" data-period="month">
+              <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="1" y="2" width="12" height="10" rx="1.5"/>
+                <path d="M1 6h12M4.5 2v2M9.5 2v2"/>
+                <path d="M3.5 8.5h1M6.5 8.5h1M9.5 8.5h1M3.5 11h1M6.5 11h1M9.5 11h1"/>
+              </svg>
+              Mois
+            </button>
+            <button type="button" class="period-btn" data-period="year">
+              <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M1.5 12V8M4.5 12V5M7.5 12V7M10.5 12V3M1 12.5h12"/>
+              </svg>
+              An
+            </button>
           </div>
-          <div class="toolbar-cluster toolbar-cluster--utility">
-            <div class="toolbar-meta toolbar-meta--manager">
-              <input id="report-anchor" class="date-input" type="date" />
-              <button id="export-csv-button" type="button" class="btn btn-secondary">Exporter CSV</button>
-            </div>
+
+          <span class="toolbar-sep" aria-hidden="true"></span>
+
+          <div id="analysis-stats-switch" class="view-switch toolbar-seg">
+            <button type="button" class="period-btn active" data-stats-mode="categories">
+              <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="7" cy="7" r="5.5"/>
+                <path d="M7 1.5V7l3.8 2.5"/>
+              </svg>
+              Catégories
+            </button>
+            <button type="button" class="period-btn" data-stats-mode="objectives">
+              <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+                <circle cx="7" cy="7" r="5.5"/>
+                <circle cx="7" cy="7" r="2.5"/>
+                <circle cx="7" cy="7" r="0.7" fill="currentColor" stroke="none"/>
+              </svg>
+              Objectifs
+            </button>
           </div>
+
+          <span class="toolbar-sep" aria-hidden="true"></span>
+
+          <div class="toolbar-seg toolbar-seg--utility">
+            <div class="toolbar-date-wrap">
+              <svg class="toolbar-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="1.5" y="3" width="13" height="11" rx="2"/>
+                <path d="M5 1.5v3M11 1.5v3M1.5 7.5h13"/>
+              </svg>
+              <input id="report-anchor" class="date-input toolbar-date-input" type="date" />
+            </div>
+            <button id="export-csv-button" type="button" class="btn btn-secondary toolbar-export-btn" title="Exporter CSV" aria-label="Exporter CSV">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7 2v8M4 7.5l3 3 3-3M2 13h10"/>
+              </svg>
+              CSV
+            </button>
+          </div>
+
         </div>
       </section>
 

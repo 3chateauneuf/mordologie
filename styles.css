@@ -140,9 +140,6 @@ button {
 
 .topbar-nav,
 .button-row,
-.manager-toolbar,
-.toolbar-group,
-.toolbar-meta,
 .period-switch,
 .view-switch,
 .dialog-actions,
@@ -163,74 +160,6 @@ button {
   gap: 10px;
 }
 
-.manager-toolbar {
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 12px;
-}
-
-.toolbar-group {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
-  min-height: 88px;
-  padding: 9px 11px;
-  border-radius: var(--radius-card);
-  background: var(--panel-soft);
-  border: 1px solid var(--line);
-}
-
-.toolbar-group-label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.toolbar-meta {
-  margin-left: auto;
-  align-items: flex-end;
-  gap: 10px;
-  min-height: 88px;
-  padding: 9px 11px;
-  border-radius: var(--radius-card);
-  background: var(--panel-soft);
-  border: 1px solid var(--line);
-}
-
-.toolbar-primary-focus {
-  display: grid;
-  gap: 7px;
-  min-width: min(320px, 100%);
-  min-height: 88px;
-  padding: 11px 13px;
-  border-radius: var(--radius-card);
-  background:
-    linear-gradient(180deg, rgba(6, 148, 148, 0.12), rgba(255, 255, 255, 0)),
-    var(--panel-strong);
-  border: 1px solid rgba(6, 148, 148, 0.22);
-  box-shadow: 0 14px 28px rgba(24, 56, 74, 0.06);
-}
-
-.toolbar-primary-focus .toolbar-group-label {
-  color: var(--text);
-}
-
-.toolbar-primary-focus .select-input {
-  min-height: 46px;
-  font-size: 1rem;
-  font-weight: 700;
-  background: rgba(249, 252, 253, 0.98);
-  border-color: rgba(6, 148, 148, 0.28);
-}
-
-.toolbar-meta .date-input,
-.toolbar-meta .select-input {
-  min-height: 42px;
-  padding-block: 10px;
-  background: rgba(0, 0, 0, 0.03);
-}
 
 /* ── Auth: guest shell ── */
 
@@ -1256,8 +1185,115 @@ select.select-input {
 }
 
 .view-toolbar {
-  padding-top: 18px;
-  padding-bottom: 18px;
+  padding: 0 16px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+}
+
+.analysis-toolbar-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+.toolbar-seg {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+}
+
+.toolbar-seg--utility {
+  margin-left: auto;
+  gap: 8px;
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  flex-shrink: 0;
+  margin: 0 10px;
+}
+
+.toolbar-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--muted);
+  margin-right: 2px;
+}
+
+.btn-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.toolbar-select {
+  min-height: 32px;
+  height: 32px;
+  padding: 4px 34px 4px 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-color: transparent;
+  background-color: transparent;
+  min-width: 130px;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.toolbar-select:hover,
+.toolbar-select:focus {
+  border-color: var(--line);
+  background-color: var(--panel-strong);
+}
+
+.toolbar-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-date-input {
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 0.82rem;
+  width: 132px;
+}
+
+.toolbar-export-btn {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+  gap: 5px;
+}
+
+.analysis-toolbar-bar .period-btn {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
+  gap: 5px;
+  box-shadow: none;
+}
+
+.analysis-toolbar-bar .period-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.analysis-toolbar-bar .period-btn.active {
+  background: rgba(6, 148, 148, 0.1);
+  color: var(--accent);
+  border-color: rgba(6, 148, 148, 0.2);
 }
 
 .toolbar-filter[hidden] {
@@ -2796,15 +2832,6 @@ select.select-input {
     width: 100%;
   }
 
-  .manager-toolbar {
-    align-items: stretch;
-  }
-
-  .toolbar-meta {
-    margin-left: 0;
-    justify-content: flex-start;
-  }
-
   .users-user-grid,
   .users-edit-grid {
     grid-template-columns: 1fr;
@@ -2949,31 +2976,6 @@ select.select-input {
 }
 
 
-#analysis-toolbar-panel .panel-head-inline {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.toolbar-primary-focus {
-  position: relative;
-}
-
-.toolbar-primary-focus::after {
-  content: "";
-  position: absolute;
-  right: 18px;
-  top: 56px;
-  width: 12px;
-  height: 12px;
-  border-right: 2px solid rgba(38, 61, 71, 0.88);
-  border-bottom: 2px solid rgba(38, 61, 71, 0.88);
-  transform: rotate(45deg);
-  pointer-events: none;
-}
-
-.toolbar-primary-focus .select-input {
-  background-image: none;
-  padding-right: 48px;
-}
 
 .users-admin-list {
   gap: 10px;
@@ -3261,117 +3263,21 @@ select.select-input {
 }
 
 
-#analysis-toolbar-panel {
-  gap: 20px;
-}
-
-#analysis-toolbar-panel .panel-head {
-  gap: 14px;
-  margin-bottom: 2px;
-}
-
-#analysis-toolbar-panel .panel-head h2 {
-  line-height: 0.92;
-}
-
-.manager-toolbar {
-  display: grid;
-  grid-template-columns: minmax(320px, 1.15fr) minmax(420px, 1fr) minmax(260px, 0.72fr);
-  gap: 16px;
-  align-items: stretch;
-}
-
-.toolbar-cluster {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-}
-
-.toolbar-cluster--controls {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.toolbar-cluster--utility {
-  align-content: stretch;
-}
-
-.toolbar-primary-focus,
-.toolbar-group,
-.toolbar-meta--manager {
-  min-height: 112px;
-}
-
-.toolbar-primary-focus {
-  padding: 16px 18px;
-  gap: 10px;
-}
-
-.toolbar-primary-focus::after {
-  top: 60px;
-  right: 20px;
-}
-
-.toolbar-primary-focus .select-input {
-  min-height: 54px;
-  font-size: 1.05rem;
-  padding-left: 18px;
-  padding-right: 52px;
-}
-
-.toolbar-group {
-  justify-content: space-between;
-  padding: 14px 16px;
-}
-
-.toolbar-meta--manager {
-  display: grid;
-  grid-template-columns: 1fr;
-  align-content: start;
-  gap: 14px;
-  padding: 14px 16px;
-}
-
-.toolbar-meta--manager .date-input,
-.toolbar-meta--manager .btn {
-  min-height: 48px;
-}
-
-.toolbar-meta--manager .date-input {
-  width: 100%;
-}
-
-.toolbar-meta--manager .btn {
-  justify-self: start;
-}
-
-.toolbar-group-label {
-  margin-bottom: 1px;
-}
-
-.period-switch,
-.view-switch {
-  gap: 10px;
-}
-
-.period-switch .period-btn,
-.view-switch .period-btn {
-  min-height: 48px;
-  padding-inline: 18px;
-}
-
-@media (max-width: 1180px) {
-  .manager-toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar-cluster--controls {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 @media (max-width: 780px) {
-  .toolbar-cluster--controls {
-    grid-template-columns: 1fr;
+  .analysis-toolbar-bar {
+    flex-wrap: wrap;
+    height: auto;
+    padding-block: 10px;
+    gap: 6px;
+  }
+
+  .view-toolbar {
+    height: auto;
+  }
+
+  .toolbar-seg--utility {
+    margin-left: 0;
+    width: 100%;
   }
 }
 
