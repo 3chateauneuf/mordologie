@@ -7812,7 +7812,7 @@ function renderAgenda() {
   visiblePlannedEvents = plannedRows;
   renderPlannedSummary(plannedRows, range);
 
-  const startHour = 0;
+  const startHour = 7;
   const endHour = 24;
   const hourHeight = 52;
   agendaBoard.style.setProperty("--agenda-hour-height", `${hourHeight}px`);
