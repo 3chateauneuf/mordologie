@@ -3375,10 +3375,13 @@ select.select-input {
 }
 
 .btn-tag-action {
+  display: inline-flex;
+  align-items: center;
   min-height: auto;
   padding: 2px 6px;
   font-size: 0.7rem;
   font-weight: 700;
+  font-family: inherit;
   letter-spacing: 0.01em;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -3422,14 +3425,17 @@ select.select-input {
 }
 
 .btn-tag-confirm {
+  display: inline-flex;
+  align-items: center;
   min-height: 26px;
   height: 26px;
   padding: 0 9px;
   font-size: 0.72rem;
   font-weight: 700;
+  font-family: inherit;
+  border: 1px solid transparent;
   border-radius: 4px;
   background: var(--accent);
-  border-color: transparent;
   color: #fff;
   flex-shrink: 0;
   line-height: 1;
@@ -3438,6 +3444,8 @@ select.select-input {
 .btn-tag-confirm:hover {
   opacity: 0.88;
   transform: none;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .btn-tag-confirm:disabled {
@@ -3445,12 +3453,15 @@ select.select-input {
 }
 
 .btn-tag-cancel {
+  display: inline-flex;
+  align-items: center;
   min-height: 26px;
   height: 26px;
   padding: 0 6px;
   font-size: 0.72rem;
   font-weight: 700;
-  border: none;
+  font-family: inherit;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--muted);
   flex-shrink: 0;
@@ -3461,6 +3472,8 @@ select.select-input {
   color: var(--text);
   transform: none;
   border-color: transparent;
+  box-shadow: none;
+  background: rgba(39, 56, 68, 0.06);
 }
 
 .tag-merge-source {

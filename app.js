@@ -7518,6 +7518,7 @@ function renderQuickProjects() {
 
 function renderTagManager() {
   const el = document.getElementById("tag-manager-list");
+  const cleanupBtn = document.getElementById("tag-cleanup-btn");
   if (!el) return;
 
   const tagCounts = new Map();
@@ -7535,7 +7536,16 @@ function renderTagManager() {
 
   if (!sorted.length) {
     el.append(createEmptyState("Aucun tag enregistré."));
+    if (cleanupBtn) cleanupBtn.hidden = true;
     return;
+  }
+
+  const needsCleanup = getSessionsWithPendingStopped().some((s) =>
+    (s.tags ?? []).some((t) => t !== normalizeTag(t)),
+  );
+  if (cleanupBtn) {
+    cleanupBtn.hidden = !needsCleanup;
+    cleanupBtn.onclick = () => cleanupHistoricalTags(cleanupBtn);
   }
 
   const allTags = sorted.map(([tag]) => tag);
@@ -7554,7 +7564,7 @@ function buildTagItem(tag, count, allTags) {
 
 function showTagDefault(item, tag, count, allTags) {
   item.classList.remove("is-editing");
-  item.innerHTML = "";
+  while (item.firstChild) item.removeChild(item.firstChild);
 
   const hash = document.createElement("span");
   hash.className = "tag-hash";
@@ -7575,13 +7585,19 @@ function showTagDefault(item, tag, count, allTags) {
   renameBtn.type = "button";
   renameBtn.className = "btn-tag-action";
   renameBtn.textContent = "Renommer";
-  renameBtn.addEventListener("click", () => showTagRenameForm(item, tag, count, allTags));
+  renameBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showTagRenameForm(item, tag, count, allTags);
+  });
 
   const mergeBtn = document.createElement("button");
   mergeBtn.type = "button";
   mergeBtn.className = "btn-tag-action is-merge";
   mergeBtn.textContent = "Fusionner";
-  mergeBtn.addEventListener("click", () => showTagMergeForm(item, tag, count, allTags));
+  mergeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showTagMergeForm(item, tag, count, allTags);
+  });
 
   actions.append(renameBtn, mergeBtn);
   item.append(hash, label, countEl, actions);
@@ -7589,7 +7605,7 @@ function showTagDefault(item, tag, count, allTags) {
 
 function showTagRenameForm(item, tag, count, allTags) {
   item.classList.add("is-editing");
-  item.innerHTML = "";
+  while (item.firstChild) item.removeChild(item.firstChild);
 
   const input = document.createElement("input");
   input.type = "text";
@@ -7605,11 +7621,13 @@ function showTagRenameForm(item, tag, count, allTags) {
   cancelBtn.type = "button";
   cancelBtn.className = "btn-tag-cancel";
   cancelBtn.textContent = "✕";
-  cancelBtn.title = "Annuler";
-  cancelBtn.addEventListener("click", () => showTagDefault(item, tag, count, allTags));
+  cancelBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showTagDefault(item, tag, count, allTags);
+  });
 
-  confirmBtn.addEventListener("click", async () => {
-    const newTag = input.value.trim().toLowerCase().replace(/\s+/g, "-");
+  const doConfirm = async () => {
+    const newTag = normalizeTag(input.value);
     if (!newTag || newTag === tag) {
       showTagDefault(item, tag, count, allTags);
       return;
@@ -7618,11 +7636,12 @@ function showTagRenameForm(item, tag, count, allTags) {
     cancelBtn.disabled = true;
     confirmBtn.textContent = "…";
     await applyTagRename(tag, newTag);
-  });
+  };
 
+  confirmBtn.addEventListener("click", (e) => { e.stopPropagation(); doConfirm(); });
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") confirmBtn.click();
-    if (e.key === "Escape") cancelBtn.click();
+    if (e.key === "Enter") { e.preventDefault(); doConfirm(); }
+    if (e.key === "Escape") { e.stopPropagation(); showTagDefault(item, tag, count, allTags); }
   });
 
   item.append(input, confirmBtn, cancelBtn);
@@ -7631,7 +7650,7 @@ function showTagRenameForm(item, tag, count, allTags) {
 
 function showTagMergeForm(item, tag, count, allTags) {
   item.classList.add("is-editing");
-  item.innerHTML = "";
+  while (item.firstChild) item.removeChild(item.firstChild);
 
   const sourceLabel = document.createElement("span");
   sourceLabel.className = "tag-merge-source";
@@ -7661,11 +7680,13 @@ function showTagMergeForm(item, tag, count, allTags) {
   cancelBtn.type = "button";
   cancelBtn.className = "btn-tag-cancel";
   cancelBtn.textContent = "✕";
-  cancelBtn.title = "Annuler";
-  cancelBtn.addEventListener("click", () => showTagDefault(item, tag, count, allTags));
+  cancelBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showTagDefault(item, tag, count, allTags);
+  });
 
-  confirmBtn.addEventListener("click", async () => {
-    const targetTag = input.value.trim().toLowerCase().replace(/\s+/g, "-");
+  const doConfirm = async () => {
+    const targetTag = normalizeTag(input.value);
     if (!targetTag || targetTag === tag) {
       showTagDefault(item, tag, count, allTags);
       return;
@@ -7674,11 +7695,12 @@ function showTagMergeForm(item, tag, count, allTags) {
     cancelBtn.disabled = true;
     confirmBtn.textContent = "…";
     await applyTagRename(tag, targetTag);
-  });
+  };
 
+  confirmBtn.addEventListener("click", (e) => { e.stopPropagation(); doConfirm(); });
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") confirmBtn.click();
-    if (e.key === "Escape") cancelBtn.click();
+    if (e.key === "Enter") { e.preventDefault(); doConfirm(); }
+    if (e.key === "Escape") { e.stopPropagation(); showTagDefault(item, tag, count, allTags); }
   });
 
   item.append(sourceLabel, input, datalist, confirmBtn, cancelBtn);
@@ -7689,20 +7711,39 @@ async function applyTagRename(oldTag, newTag) {
   if (!window.supabase) return;
 
   const affected = getSessionsWithPendingStopped().filter(
-    (s) => s.tags?.includes(oldTag) && s.dbTimeEntryId,
+    (s) => (s.tags ?? []).includes(oldTag) && s.dbTimeEntryId,
   );
 
-  if (affected.length) {
-    const updates = affected.map((session) => {
-      const tags = (session.tags ?? [])
-        .map((t) => (t === oldTag ? newTag : t))
-        .filter((t, i, arr) => t && arr.indexOf(t) === i);
-      return window.supabase
-        .from("time_entries")
-        .update({ tags_text: tags.join(", "), updated_at: new Date().toISOString() })
-        .eq("time_entry_id", session.dbTimeEntryId);
-    });
-    await Promise.all(updates);
+  for (const session of affected) {
+    const tags = dedupePreservingOrder(
+      (session.tags ?? []).map((t) => (t === oldTag ? newTag : t)).filter(Boolean),
+    );
+    await window.supabase
+      .from("time_entries")
+      .update({ tags_text: tags.join(", "), updated_at: new Date().toISOString() })
+      .eq("time_entry_id", session.dbTimeEntryId);
+  }
+
+  await loadServerBackedState({ silent: false });
+}
+
+async function cleanupHistoricalTags(btn) {
+  if (!window.supabase) return;
+  if (btn) { btn.disabled = true; btn.textContent = "…"; }
+
+  const affected = getSessionsWithPendingStopped().filter((s) => {
+    const normalized = (s.tags ?? []).map(normalizeTag).filter(Boolean);
+    const deduped = dedupePreservingOrder(normalized);
+    const original = (s.tags ?? []).join(",");
+    return deduped.join(",") !== original && s.dbTimeEntryId;
+  });
+
+  for (const session of affected) {
+    const tags = dedupePreservingOrder((session.tags ?? []).map(normalizeTag).filter(Boolean));
+    await window.supabase
+      .from("time_entries")
+      .update({ tags_text: tags.join(", "), updated_at: new Date().toISOString() })
+      .eq("time_entry_id", session.dbTimeEntryId);
   }
 
   await loadServerBackedState({ silent: false });
