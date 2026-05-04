@@ -3300,8 +3300,8 @@ select.select-input {
 
 .tag-manager-divider {
   height: 1px;
-  background: rgba(39, 56, 68, 0.08);
-  margin: 12px 0 4px;
+  background: rgba(39, 56, 68, 0.07);
+  margin: 14px 0 6px;
 }
 
 .tag-manager-list {
@@ -3313,64 +3313,162 @@ select.select-input {
 .tag-manager-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 6px;
-  border-radius: 6px;
-  min-height: 30px;
+  gap: 5px;
+  padding: 3px 4px;
+  border-radius: 5px;
+  min-height: 28px;
+  transition: background 80ms;
 }
 
 .tag-manager-item:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(39, 56, 68, 0.04);
 }
 
 .tag-manager-item.is-editing {
-  background: rgba(0, 0, 0, 0.03);
-  flex-wrap: wrap;
+  background: rgba(6, 148, 148, 0.04);
+  padding: 4px 4px;
+  gap: 5px;
+}
+
+.tag-hash {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--accent);
+  opacity: 0.55;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .tag-manager-label {
   flex: 1;
   font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--muted);
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tag-manager-count {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
   color: var(--muted);
-  opacity: 0.45;
-  min-width: 20px;
-  text-align: right;
+  background: rgba(39, 56, 68, 0.08);
+  padding: 1px 5px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  line-height: 1.6;
 }
 
 .tag-manager-actions {
   display: flex;
-  gap: 8px;
+  gap: 3px;
   opacity: 0;
   transition: opacity 100ms;
+  flex-shrink: 0;
 }
 
 .tag-manager-item:hover .tag-manager-actions {
   opacity: 1;
 }
 
+.btn-tag-action {
+  min-height: auto;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  transition: background 80ms, color 80ms, border-color 80ms;
+  line-height: 1;
+}
+
+.btn-tag-action:hover {
+  background: rgba(39, 56, 68, 0.07);
+  border-color: rgba(39, 56, 68, 0.1);
+  color: var(--text);
+  transform: none;
+}
+
+.btn-tag-action.is-merge:hover {
+  background: rgba(6, 148, 148, 0.07);
+  border-color: rgba(6, 148, 148, 0.14);
+  color: var(--accent-strong);
+}
+
 .tag-edit-input {
   flex: 1;
   font-size: 0.82rem;
   padding: 3px 7px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(6, 148, 148, 0.28);
   border-radius: 4px;
-  background: rgba(249, 252, 253, 0.98);
+  background: #fff;
   font-family: inherit;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
   min-width: 0;
-  height: 30px;
+  height: 26px;
 }
 
 .tag-edit-input:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(6, 148, 148, 0.1);
+}
+
+.btn-tag-confirm {
+  min-height: 26px;
+  height: 26px;
+  padding: 0 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 4px;
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.btn-tag-confirm:hover {
+  opacity: 0.88;
+  transform: none;
+}
+
+.btn-tag-confirm:disabled {
+  opacity: 0.5;
+}
+
+.btn-tag-cancel {
+  min-height: 26px;
+  height: 26px;
+  padding: 0 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.btn-tag-cancel:hover {
+  color: var(--text);
+  transform: none;
+  border-color: transparent;
+}
+
+.tag-merge-source {
+  font-size: 0.79rem;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .session-list {

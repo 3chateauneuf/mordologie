@@ -7556,31 +7556,35 @@ function showTagDefault(item, tag, count, allTags) {
   item.classList.remove("is-editing");
   item.innerHTML = "";
 
+  const hash = document.createElement("span");
+  hash.className = "tag-hash";
+  hash.textContent = "#";
+
   const label = document.createElement("span");
   label.className = "tag-manager-label";
-  label.textContent = "#" + tag;
+  label.textContent = tag;
 
   const countEl = document.createElement("span");
   countEl.className = "tag-manager-count";
-  countEl.textContent = count + "×";
+  countEl.textContent = count;
 
   const actions = document.createElement("span");
   actions.className = "tag-manager-actions";
 
   const renameBtn = document.createElement("button");
   renameBtn.type = "button";
-  renameBtn.className = "btn btn-ghost-danger";
+  renameBtn.className = "btn-tag-action";
   renameBtn.textContent = "Renommer";
   renameBtn.addEventListener("click", () => showTagRenameForm(item, tag, count, allTags));
 
   const mergeBtn = document.createElement("button");
   mergeBtn.type = "button";
-  mergeBtn.className = "btn btn-ghost-danger";
+  mergeBtn.className = "btn-tag-action is-merge";
   mergeBtn.textContent = "Fusionner";
   mergeBtn.addEventListener("click", () => showTagMergeForm(item, tag, count, allTags));
 
   actions.append(renameBtn, mergeBtn);
-  item.append(label, countEl, actions);
+  item.append(hash, label, countEl, actions);
 }
 
 function showTagRenameForm(item, tag, count, allTags) {
@@ -7594,13 +7598,14 @@ function showTagRenameForm(item, tag, count, allTags) {
 
   const confirmBtn = document.createElement("button");
   confirmBtn.type = "button";
-  confirmBtn.className = "btn btn-secondary btn-compact";
+  confirmBtn.className = "btn-tag-confirm";
   confirmBtn.textContent = "Valider";
 
   const cancelBtn = document.createElement("button");
   cancelBtn.type = "button";
-  cancelBtn.className = "btn btn-ghost-danger";
-  cancelBtn.textContent = "Annuler";
+  cancelBtn.className = "btn-tag-cancel";
+  cancelBtn.textContent = "✕";
+  cancelBtn.title = "Annuler";
   cancelBtn.addEventListener("click", () => showTagDefault(item, tag, count, allTags));
 
   confirmBtn.addEventListener("click", async () => {
@@ -7628,9 +7633,9 @@ function showTagMergeForm(item, tag, count, allTags) {
   item.classList.add("is-editing");
   item.innerHTML = "";
 
-  const arrowLabel = document.createElement("span");
-  arrowLabel.className = "tag-manager-label";
-  arrowLabel.textContent = "#" + tag + " →";
+  const sourceLabel = document.createElement("span");
+  sourceLabel.className = "tag-merge-source";
+  sourceLabel.textContent = "#" + tag + " →";
 
   const datalistId = "tag-merge-dl";
   const input = document.createElement("input");
@@ -7649,13 +7654,14 @@ function showTagMergeForm(item, tag, count, allTags) {
 
   const confirmBtn = document.createElement("button");
   confirmBtn.type = "button";
-  confirmBtn.className = "btn btn-secondary btn-compact";
+  confirmBtn.className = "btn-tag-confirm";
   confirmBtn.textContent = "Fusionner";
 
   const cancelBtn = document.createElement("button");
   cancelBtn.type = "button";
-  cancelBtn.className = "btn btn-ghost-danger";
-  cancelBtn.textContent = "Annuler";
+  cancelBtn.className = "btn-tag-cancel";
+  cancelBtn.textContent = "✕";
+  cancelBtn.title = "Annuler";
   cancelBtn.addEventListener("click", () => showTagDefault(item, tag, count, allTags));
 
   confirmBtn.addEventListener("click", async () => {
@@ -7675,7 +7681,7 @@ function showTagMergeForm(item, tag, count, allTags) {
     if (e.key === "Escape") cancelBtn.click();
   });
 
-  item.append(arrowLabel, input, datalist, confirmBtn, cancelBtn);
+  item.append(sourceLabel, input, datalist, confirmBtn, cancelBtn);
   requestAnimationFrame(() => input.focus());
 }
 
