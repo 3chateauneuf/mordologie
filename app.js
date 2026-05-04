@@ -6228,7 +6228,16 @@ async function createTimeEntry(data, options = {}) {
     errorMessage: "Enregistrement serveur impossible pour le moment.",
     unexpectedErrorMessage: "Erreur inattendue pendant l'enregistrement serveur.",
     refreshAfterSuccess: options.refreshAfterSuccess ?? true,
+    onSuccess: () => syncEntryToNotion(data),
   });
+}
+
+function syncEntryToNotion(entry) {
+  fetch("/api/notion-sync", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entry }),
+  }).catch(() => {});
 }
 
 async function buildActiveSessionPayload(session) {
