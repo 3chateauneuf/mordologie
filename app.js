@@ -7215,6 +7215,7 @@ function render() {
   renderSuggestions();
   renderQuickProjects();
   renderProjectMemoryList();
+  renderTagManager();
   renderSessionList();
   renderCadreViews();
   renderManagerControls();
@@ -7513,6 +7514,192 @@ function renderQuickProjects() {
     applyCategorySurface(button, getMemoryAccentColor(memory));
     quickProjects.append(button);
   }
+}
+
+function renderTagManager() {
+  const el = document.getElementById("tag-manager-list");
+  if (!el) return;
+
+  const tagCounts = new Map();
+  for (const session of getSessionsWithPendingStopped()) {
+    for (const tag of session.tags ?? []) {
+      if (tag) tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    }
+  }
+
+  const sorted = Array.from(tagCounts.entries()).sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"),
+  );
+
+  el.innerHTML = "";
+
+  if (!sorted.length) {
+    el.append(createEmptyState("Aucun tag enregistré."));
+    return;
+  }
+
+  const allTags = sorted.map(([tag]) => tag);
+  for (const [tag, count] of sorted) {
+    el.append(buildTagItem(tag, count, allTags));
+  }
+}
+
+function buildTagItem(tag, count, allTags) {
+  const item = document.createElement("div");
+  item.className = "tag-manager-item";
+  item.dataset.tag = tag;
+  showTagDefault(item, tag, count, allTags);
+  return item;
+}
+
+function showTagDefault(item, tag, count, allTags) {
+  item.classList.remove("is-editing");
+  item.innerHTML = "";
+
+  const label = document.createElement("span");
+  label.className = "tag-manager-label";
+  label.textContent = "#" + tag;
+
+  const countEl = document.createElement("span");
+  countEl.className = "tag-manager-count";
+  countEl.textContent = count + "×";
+
+  const actions = document.createElement("span");
+  actions.className = "tag-manager-actions";
+
+  const renameBtn = document.createElement("button");
+  renameBtn.type = "button";
+  renameBtn.className = "btn btn-ghost-danger";
+  renameBtn.textContent = "Renommer";
+  renameBtn.addEventListener("click", () => showTagRenameForm(item, tag, count, allTags));
+
+  const mergeBtn = document.createElement("button");
+  mergeBtn.type = "button";
+  mergeBtn.className = "btn btn-ghost-danger";
+  mergeBtn.textContent = "Fusionner";
+  mergeBtn.addEventListener("click", () => showTagMergeForm(item, tag, count, allTags));
+
+  actions.append(renameBtn, mergeBtn);
+  item.append(label, countEl, actions);
+}
+
+function showTagRenameForm(item, tag, count, allTags) {
+  item.classList.add("is-editing");
+  item.innerHTML = "";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "tag-edit-input";
+  input.value = tag;
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "btn btn-secondary btn-compact";
+  confirmBtn.textContent = "Valider";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "btn btn-ghost-danger";
+  cancelBtn.textContent = "Annuler";
+  cancelBtn.addEventListener("click", () => showTagDefault(item, tag, count, allTags));
+
+  confirmBtn.addEventListener("click", async () => {
+    const newTag = input.value.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!newTag || newTag === tag) {
+      showTagDefault(item, tag, count, allTags);
+      return;
+    }
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "…";
+    await applyTagRename(tag, newTag);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") confirmBtn.click();
+    if (e.key === "Escape") cancelBtn.click();
+  });
+
+  item.append(input, confirmBtn, cancelBtn);
+  requestAnimationFrame(() => { input.focus(); input.select(); });
+}
+
+function showTagMergeForm(item, tag, count, allTags) {
+  item.classList.add("is-editing");
+  item.innerHTML = "";
+
+  const arrowLabel = document.createElement("span");
+  arrowLabel.className = "tag-manager-label";
+  arrowLabel.textContent = "#" + tag + " →";
+
+  const datalistId = "tag-merge-dl";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.list = datalistId;
+  input.className = "tag-edit-input";
+  input.placeholder = "tag cible";
+
+  const datalist = document.createElement("datalist");
+  datalist.id = datalistId;
+  for (const t of allTags.filter((t) => t !== tag)) {
+    const opt = document.createElement("option");
+    opt.value = t;
+    datalist.append(opt);
+  }
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "btn btn-secondary btn-compact";
+  confirmBtn.textContent = "Fusionner";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "btn btn-ghost-danger";
+  cancelBtn.textContent = "Annuler";
+  cancelBtn.addEventListener("click", () => showTagDefault(item, tag, count, allTags));
+
+  confirmBtn.addEventListener("click", async () => {
+    const targetTag = input.value.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!targetTag || targetTag === tag) {
+      showTagDefault(item, tag, count, allTags);
+      return;
+    }
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "…";
+    await applyTagRename(tag, targetTag);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") confirmBtn.click();
+    if (e.key === "Escape") cancelBtn.click();
+  });
+
+  item.append(arrowLabel, input, datalist, confirmBtn, cancelBtn);
+  requestAnimationFrame(() => input.focus());
+}
+
+async function applyTagRename(oldTag, newTag) {
+  if (!window.supabase) return;
+
+  const affected = getSessionsWithPendingStopped().filter(
+    (s) => s.tags?.includes(oldTag) && s.dbTimeEntryId,
+  );
+
+  if (affected.length) {
+    const updates = affected.map((session) => {
+      const tags = (session.tags ?? [])
+        .map((t) => (t === oldTag ? newTag : t))
+        .filter((t, i, arr) => t && arr.indexOf(t) === i);
+      return window.supabase
+        .from("time_entries")
+        .update({ tags_text: tags.join(", "), updated_at: new Date().toISOString() })
+        .eq("time_entry_id", session.dbTimeEntryId);
+    });
+    await Promise.all(updates);
+  }
+
+  await loadServerBackedState({ silent: false });
 }
 
 function renderProjectMemoryList() {

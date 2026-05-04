@@ -3298,6 +3298,81 @@ select.select-input {
   margin-bottom: 2px;
 }
 
+.tag-manager-divider {
+  height: 1px;
+  background: rgba(39, 56, 68, 0.08);
+  margin: 12px 0 4px;
+}
+
+.tag-manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tag-manager-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  min-height: 30px;
+}
+
+.tag-manager-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.tag-manager-item.is-editing {
+  background: rgba(0, 0, 0, 0.03);
+  flex-wrap: wrap;
+}
+
+.tag-manager-label {
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.tag-manager-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+  opacity: 0.45;
+  min-width: 20px;
+  text-align: right;
+}
+
+.tag-manager-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 100ms;
+}
+
+.tag-manager-item:hover .tag-manager-actions {
+  opacity: 1;
+}
+
+.tag-edit-input {
+  flex: 1;
+  font-size: 0.82rem;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(249, 252, 253, 0.98);
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 0;
+  height: 30px;
+}
+
+.tag-edit-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .session-list {
   margin-top: 0;
 }
