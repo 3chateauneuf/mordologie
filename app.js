@@ -8774,6 +8774,12 @@ function getPlannedEventsForCollaborator(collaborator, range) {
     return importedRows;
   }
 
+  // If the user has a real calendar configured, never show mock suggestions —
+  // only real imports should appear (or nothing if not yet synced for this week).
+  if (getCalendarIcsUrl(collaborator)) {
+    return [];
+  }
+
   const currentWeekStart = getStartOfWeek(new Date());
   if (range.end <= currentWeekStart) {
     return [];
@@ -9195,7 +9201,7 @@ async function syncGoogleCalendar(collaborator) {
         snapshotsByWeek.set(weekStart, []);
       }
       const durationMs = new Date(event.end_at).getTime() - startDate.getTime();
-      if (durationMs <= 0 || durationMs > 12 * 60 * 60 * 1000) continue;
+      if (durationMs <= 0) continue;
       const inferred = inferPlannedSuggestionFromTitle(event.title || "");
       snapshotsByWeek.get(weekStart).push({
         id: `gcal-${normalizeComparableText(collaborator)}-${normalizeComparableText(event.uid || event.title || weekStart)}`,
