@@ -1039,7 +1039,7 @@ setupTokenInput(categoriesInput, {
 setupTokenInput(tagsInput, {
   getValues: () => currentTags,
   setValues: (values) => {
-    currentTags = values;
+    currentTags = dedupePreservingOrder(values.map(normalizeTag));
     renderTagTokens();
     syncActiveSessionDraftFromForm({ audit: true, source: "active-session-tags" });
   },
@@ -1048,7 +1048,7 @@ setupTokenInput(tagsInput, {
 setupTokenInput(manualTagsInput, {
   getValues: () => manualCurrentTags,
   setValues: (values) => {
-    manualCurrentTags = dedupePreservingOrder(values);
+    manualCurrentTags = dedupePreservingOrder(values.map(normalizeTag));
     renderManualTagTokens();
   },
 });
@@ -1068,7 +1068,7 @@ setupTokenInput(plannedCategoryInput, {
 setupTokenInput(plannedTagsInput, {
   getValues: () => plannedCurrentTags,
   setValues: (values) => {
-    plannedCurrentTags = dedupePreservingOrder(values);
+    plannedCurrentTags = dedupePreservingOrder(values.map(normalizeTag));
     renderPlannedTagTokens();
   },
 });
@@ -4262,7 +4262,7 @@ function mapTimeEntryRowToSession(row) {
     project: row.project_name ?? "",
     task: row.task_label ?? "",
     categories: row.activity_category_label ? [row.activity_category_label] : [],
-    tags: parseCsvTokens(row.tags_text),
+    tags: parseCsvTokens(row.tags_text).map(normalizeTag).filter(Boolean),
     notionRef: row.notion_ref ?? "",
     objectivePole: row.objective_pole ?? "",
     objectiveOkr: row.objective_okr ?? "",
@@ -4289,7 +4289,7 @@ function mapActiveSessionRowToSession(row) {
     project: row.project_name ?? "",
     task: row.task_label ?? "",
     categories: row.activity_category_label ? [row.activity_category_label] : [],
-    tags: parseCsvTokens(row.tags_text),
+    tags: parseCsvTokens(row.tags_text).map(normalizeTag).filter(Boolean),
     notionRef: row.notion_ref ?? "",
     objectivePole: row.objective_pole ?? "",
     objectiveOkr: row.objective_okr ?? "",
@@ -6144,7 +6144,7 @@ async function buildTimeEntryPayloadFromSession(session, source = "manual") {
     duration_minutes: Math.max(1, Math.round(durationMs / 60000)),
     duration_hours: Number((durationMs / 3600000).toFixed(2)),
     task_label: session.task || "",
-    tags_text: (session.tags ?? []).join(", "),
+    tags_text: dedupePreservingOrder((session.tags ?? []).map(normalizeTag)).join(", "),
     notion_ref: session.notionRef || "",
     objective_pole: session.objectivePole || "",
     objective_okr: session.objectiveOkr || "",
@@ -6263,7 +6263,7 @@ async function buildActiveSessionPayload(session) {
       normalizeCategorySelection(references?.category?.activity_category_label ?? session.categories?.[0] ?? "").category || null,
     kpi_category_label: references?.category?.kpi_category_label ?? session.dbKpiCategoryLabel ?? null,
     task_label: session.task || "",
-    tags_text: (session.tags ?? []).join(", "),
+    tags_text: dedupePreservingOrder((session.tags ?? []).map(normalizeTag)).join(", "),
     notion_ref: session.notionRef || "",
     objective_pole: session.objectivePole || "",
     objective_okr: session.objectiveOkr || "",
@@ -11743,6 +11743,14 @@ function isSameDay(left, right) {
 
 function normalizeText(value) {
   return String(value ?? "").trim().toLowerCase();
+}
+
+function normalizeTag(tag) {
+  return String(tag ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .toLowerCase();
 }
 
 function normalizeComparableText(value) {
