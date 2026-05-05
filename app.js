@@ -2993,7 +2993,7 @@ function scheduleAutocompleteHide() {
 
 function getInitialView() {
   const hash = window.location.hash.replace("#", "");
-  return ["cadre", "manager", "resources", "users", "journal"].includes(hash) ? hash : "cadre";
+  return ["cadre", "manager", "resources", "users", "journal", "guide"].includes(hash) ? hash : "cadre";
 }
 
 function initializeObjectiveSelections() {
@@ -5577,15 +5577,15 @@ function getKnownUsers() {
 
 function getAllowedViewsForRole(role = getAccessRole()) {
   if (role === "cadre") {
-    return ["cadre", "journal"];
+    return ["cadre", "journal", "guide"];
   }
   if (role === "admin") {
-    return ["cadre", "manager", "resources", "users", "journal"];
+    return ["cadre", "manager", "resources", "users", "journal", "guide"];
   }
   if (role === "manager" || role === "admin") {
-    return ["cadre", "manager", "resources", "journal"];
+    return ["cadre", "manager", "resources", "journal", "guide"];
   }
-  return ["cadre", "journal"];
+  return ["cadre", "journal", "guide"];
 }
 
 function getManagedTeamNames() {
