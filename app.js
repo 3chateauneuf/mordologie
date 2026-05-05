@@ -7222,6 +7222,7 @@ function render() {
   renderManagerViews();
   renderResourcesViews();
   renderUsersAdmin();
+  renderGuideView();
 }
 
 function renderCurrentUserContext() {
@@ -9705,6 +9706,240 @@ function renderResourcesViews() {
   } else {
     resourceKrList.innerHTML = "";
   }
+}
+
+function renderGuideView() {
+  const shell = document.querySelector("#guide-shell");
+  if (!shell) return;
+  while (shell.firstChild) shell.removeChild(shell.firstChild);
+
+  const collaborator = getCurrentCollaborator();
+  const isLoggedIn = Boolean(accessProfile.appUser?.user_name);
+  const sessionCount = isLoggedIn ? getSessionsForCollaborator(collaborator).length : 0;
+  const hasCalendar = isLoggedIn && Boolean(getCalendarIcsUrl(collaborator));
+  const isNew = isLoggedIn && sessionCount < 5;
+
+  if (!isLoggedIn) {
+    shell.append(buildGuideForGuest());
+  } else if (isNew) {
+    shell.append(buildGuideForNewUser(sessionCount, hasCalendar));
+  } else {
+    shell.append(buildGuideForExistingUser(hasCalendar));
+  }
+}
+
+function buildGuideForGuest() {
+  const root = document.createElement("div");
+  root.className = "guide-guest";
+
+  const hero = document.createElement("div");
+  hero.className = "guide-hero";
+  const title = document.createElement("h1");
+  title.textContent = "Bienvenue sur Mordologie";
+  const sub = document.createElement("p");
+  sub.className = "guide-hero-sub";
+  sub.textContent = "Suivi du temps précis pour les équipes terrain. Chaque session est un contexte — projet, tâche, catégorie — qui alimente les analyses et les objectifs.";
+  hero.append(title, sub);
+
+  const cta = document.createElement("div");
+  cta.className = "guide-cta";
+  const ctaIcon = document.createElement("span");
+  ctaIcon.className = "guide-cta-icon";
+  ctaIcon.setAttribute("aria-hidden", "true");
+  ctaIcon.textContent = "↑";
+  const ctaText = document.createElement("p");
+  ctaText.textContent = "Sélectionnez votre nom dans la liste en haut à gauche pour commencer.";
+  cta.append(ctaIcon, ctaText);
+
+  const features = document.createElement("div");
+  features.className = "guide-features";
+
+  const featureData = [
+    {
+      icon: "⏱",
+      title: "Chrono précis",
+      desc: "Démarre et arrête à tout moment. Remplis le contexte avant ou pendant — la saisie manuelle permet de corriger après coup.",
+    },
+    {
+      icon: "📅",
+      title: "Agenda intégré",
+      desc: "Vue semaine avec tes sessions tracées et tes réunions Google Calendar superposées. Glisse un bloc pour ajuster les horaires.",
+    },
+    {
+      icon: "📊",
+      title: "Analyses d'équipe",
+      desc: "Rapports hebdo / mensuel / annuel par collaborateur, catégorie, projet ou objectif OKR. Zéro export manuel.",
+    },
+  ];
+
+  for (const f of featureData) {
+    const card = document.createElement("div");
+    card.className = "guide-feature-card";
+    const icon = document.createElement("span");
+    icon.className = "guide-feature-icon";
+    icon.textContent = f.icon;
+    const h = document.createElement("h3");
+    h.textContent = f.title;
+    const p = document.createElement("p");
+    p.textContent = f.desc;
+    card.append(icon, h, p);
+    features.append(card);
+  }
+
+  root.append(hero, cta, features);
+  return root;
+}
+
+function buildGuideForNewUser(sessionCount, hasCalendar) {
+  const root = document.createElement("div");
+  root.className = "guide-onboarding";
+
+  const head = document.createElement("div");
+  head.className = "guide-onboarding-head";
+  const title = document.createElement("h2");
+  title.textContent = "Premiers pas";
+  const sub = document.createElement("p");
+  sub.className = "guide-onboarding-sub";
+  sub.textContent = "Suis ces étapes pour tirer le meilleur de l'outil dès le premier jour.";
+  head.append(title, sub);
+
+  const steps = [
+    {
+      done: true,
+      label: "Profil sélectionné",
+      detail: "Tu es connecté. Tes sessions sont enregistrées à ton nom et visibles par le manager.",
+    },
+    {
+      done: sessionCount > 0,
+      label: "Lancer ton premier chrono",
+      detail: "Remplis le Sujet et la Catégorie, puis clique Démarrer. Arrête quand tu finis. C'est tout.",
+      action: { label: "Aller saisir", view: "cadre" },
+    },
+    {
+      done: hasCalendar,
+      label: "Connecter Google Calendar",
+      detail: "Dans ton profil (en haut à droite), colle l'URL iCal secrète de ton agenda Google. Tes réunions apparaîtront dans la vue Agenda comme suggestions à valider.",
+    },
+    {
+      done: sessionCount >= 3,
+      label: "Explorer les analyses",
+      detail: "La vue Gandalf (barres verticales) montre la répartition du temps par catégorie, par projet et par collaborateur.",
+      action: { label: "Voir les analyses", view: "manager" },
+    },
+  ];
+
+  const list = document.createElement("ol");
+  list.className = "guide-steps";
+
+  for (const step of steps) {
+    const li = document.createElement("li");
+    li.className = "guide-step" + (step.done ? " guide-step--done" : "");
+
+    const check = document.createElement("span");
+    check.className = "guide-step-check";
+    check.setAttribute("aria-hidden", "true");
+    check.textContent = step.done ? "✓" : "";
+
+    const body = document.createElement("div");
+    body.className = "guide-step-body";
+
+    const label = document.createElement("strong");
+    label.textContent = step.label;
+
+    const detail = document.createElement("p");
+    detail.textContent = step.detail;
+
+    body.append(label, detail);
+
+    if (step.action && !step.done) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn btn-secondary guide-step-btn";
+      btn.textContent = step.action.label;
+      const targetView = step.action.view;
+      btn.addEventListener("click", () => {
+        const tab = document.querySelector(`[data-view-target="${targetView}"]`);
+        tab?.click();
+      });
+      body.append(btn);
+    }
+
+    li.append(check, body);
+    list.append(li);
+  }
+
+  root.append(head, list);
+  return root;
+}
+
+function buildGuideForExistingUser(hasCalendar) {
+  const root = document.createElement("div");
+  root.className = "guide-tips";
+
+  const head = document.createElement("div");
+  head.className = "guide-tips-head";
+  const title = document.createElement("h2");
+  title.textContent = "Astuces & raccourcis";
+  const sub = document.createElement("p");
+  sub.className = "guide-tips-sub";
+  sub.textContent = "Ce que la plupart des utilisateurs découvrent trop tard.";
+  head.append(title, sub);
+
+  const tips = [
+    {
+      icon: "↕",
+      title: "Drag & drop dans l'agenda",
+      desc: "Glisse un bloc de session pour déplacer, ou étire les poignées en haut et en bas pour ajuster les horaires — sans ouvrir le formulaire.",
+    },
+    {
+      icon: "#",
+      title: "Gestion des tags",
+      desc: "Dans le Journal (panneau latéral), tu peux renommer un tag sur tout l'historique ou le fusionner avec un autre. Pratique pour corriger une saisie incohérente.",
+    },
+    {
+      icon: "📅",
+      title: hasCalendar ? "Sync calendrier à jour" : "Connecter Google Calendar",
+      desc: hasCalendar
+        ? "Clique 'Sync calendrier' dans l'Agenda pour actualiser les événements de la semaine. Les réunions apparaissent comme suggestions — clique pour les convertir en vraie session."
+        : "Colle l'URL iCal de ton Google Calendar dans ton profil. Tes réunions apparaîtront comme suggestions dans l'Agenda, sans saisie manuelle.",
+    },
+    {
+      icon: "🎯",
+      title: "Lier à un objectif OKR",
+      desc: "Dans le formulaire de saisie, déplie la section 'Objectifs'. Tu peux rattacher chaque session à un Pôle, un OKR et un KR — les analyses montrent alors où va vraiment le temps.",
+    },
+    {
+      icon: "⚡",
+      title: "Cliquer sur l'agenda pour pré-remplir",
+      desc: "Clique sur une heure vide dans l'Agenda pour ouvrir le formulaire avec les horaires pré-remplis. Plus rapide qu'une saisie manuelle depuis zéro.",
+    },
+    {
+      icon: "🧠",
+      title: "Mémoire des projets",
+      desc: "L'app retient tes projets récents et leurs catégories / tags associés. Le panneau latéral propose les plus fréquents pour une saisie en un clic.",
+    },
+  ];
+
+  const grid = document.createElement("div");
+  grid.className = "guide-tips-grid";
+
+  for (const tip of tips) {
+    const card = document.createElement("div");
+    card.className = "guide-tip-card";
+    const icon = document.createElement("span");
+    icon.className = "guide-tip-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = tip.icon;
+    const h = document.createElement("h3");
+    h.textContent = tip.title;
+    const p = document.createElement("p");
+    p.textContent = tip.desc;
+    card.append(icon, h, p);
+    grid.append(card);
+  }
+
+  root.append(head, grid);
+  return root;
 }
 
 function renderUsersAdmin() {

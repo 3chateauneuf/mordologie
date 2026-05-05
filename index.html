@@ -163,6 +163,16 @@
             <span class="nav-tooltip" aria-hidden="true">Journal</span>
             <span class="visually-hidden">Journal</span>
           </button>
+          <button type="button" data-view-target="guide" aria-label="Guide">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36z" />
+              </svg>
+            </span>
+            <span class="nav-tooltip" aria-hidden="true">Guide</span>
+            <span class="visually-hidden">Guide</span>
+          </button>
         </nav>
       </header>
 
@@ -876,6 +886,12 @@
             <h2>Utilisateurs</h2>
           </div>
           <div id="users-admin-shell" class="users-admin-shell"></div>
+        </section>
+      </section>
+
+      <section class="app-view" id="guide" data-view-panel="guide">
+        <section class="panel guide-panel">
+          <div id="guide-shell"></div>
         </section>
       </section>
     </main>

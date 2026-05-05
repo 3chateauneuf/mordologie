@@ -3738,3 +3738,239 @@ select.select-input {
 .capture-form-panel .form-grid {
   gap: 10px 12px;
 }
+
+/* --- Guide view --- */
+
+.guide-panel {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 24px 64px;
+}
+
+/* Guest: hero + features */
+
+.guide-hero {
+  margin-bottom: 32px;
+}
+
+.guide-hero h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+
+.guide-hero-sub {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 600px;
+}
+
+.guide-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 40px;
+}
+
+.guide-cta-icon {
+  font-size: 1.25rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.guide-cta p {
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 500;
+  margin: 0;
+}
+
+.guide-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.guide-feature-card {
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-feature-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.guide-feature-card h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.guide-feature-card p {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* New user: onboarding steps */
+
+.guide-onboarding-head,
+.guide-tips-head {
+  margin-bottom: 28px;
+}
+
+.guide-onboarding-head h2,
+.guide-tips-head h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.guide-onboarding-sub,
+.guide-tips-sub {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.guide-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+}
+
+.guide-step--done {
+  background: var(--panel-soft);
+  border-color: rgba(13, 148, 136, 0.2);
+}
+
+.guide-step-check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.guide-step--done .guide-step-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.guide-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guide-step-body strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.guide-step--done .guide-step-body strong {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: rgba(13, 148, 136, 0.4);
+}
+
+.guide-step-body p {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+.guide-step-btn {
+  margin-top: 10px;
+  align-self: flex-start;
+}
+
+/* Existing user: tips grid */
+
+.guide-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.guide-tip-card {
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guide-tip-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.guide-tip-card h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.guide-tip-card p {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .guide-features {
+    grid-template-columns: 1fr;
+  }
+  .guide-tips-grid {
+    grid-template-columns: 1fr;
+  }
+}
