@@ -6964,9 +6964,14 @@ function findExactDuplicate(session, excludeId = null) {
   const poleKey = normalizeText(session.objectivePole ?? "");
   const okrKey = normalizeText(session.objectiveOkr ?? "");
   const krKey = normalizeText(session.objectiveKr ?? "");
+  // When editing (excludeId set), also exclude by dbTimeEntryId — after a Supabase sync,
+  // loadServerBackedState may create a new local copy with a different id but the same
+  // dbTimeEntryId, which would otherwise be wrongly flagged as a duplicate.
+  const excludeDbId = excludeId ? (session.dbTimeEntryId ?? null) : null;
 
   return getSessionsWithPendingStopped().find((existing) => {
     if (!existing || existing.id === excludeId) return false;
+    if (excludeDbId && existing.dbTimeEntryId === excludeDbId) return false;
     if (session.dbTimeEntryId && existing.dbTimeEntryId && session.dbTimeEntryId === existing.dbTimeEntryId) return true;
     if (session.dbActiveSessionId && existing.dbActiveSessionId && !existing.isServerActive
         && session.dbActiveSessionId === existing.dbActiveSessionId) return true;
