@@ -1586,48 +1586,92 @@ select.select-input {
   background: rgba(39, 56, 68, 0.08);
 }
 
-.personal-stats-head {
+/* ── Personal stats card ───────────────────────────────── */
+
+.personal-stats-card {
+  padding: 14px 16px 16px;
+}
+
+.personal-card-controls {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
-.personal-stats-head-text {
-  flex: 1;
-  min-width: 0;
+/* Mode switch: iOS-style segmented control */
+.personal-mode-switch {
+  display: flex;
+  background: rgba(39, 56, 68, 0.07);
+  border-radius: var(--radius-input);
+  padding: 3px;
+  gap: 2px;
 }
 
-.personal-period-switch {
-  flex-shrink: 0;
+.personal-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 13px;
+  font-size: 0.79rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: calc(var(--radius-input) - 1px);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  line-height: 1.3;
+  min-height: 0;
+}
+
+.personal-mode-btn.active {
+  background: var(--panel-strong);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(39, 56, 68, 0.13), 0 0 0 1px rgba(39, 56, 68, 0.07);
+}
+
+/* Period block: switch + nav stacked, right-aligned */
+.personal-period-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.personal-period-switch .period-btn {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
 }
 
 .personal-period-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin: 10px 0 6px;
+  gap: 2px;
 }
 
 .personal-period-label {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--muted);
   font-weight: 500;
   white-space: nowrap;
+  padding: 0 4px;
 }
 
 .personal-period-arrow {
-  padding: 3px 7px;
+  padding: 3px 6px;
   line-height: 1;
+  min-height: 0;
+  color: var(--muted);
 }
 
 .personal-custom-range {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 10px 0 8px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 
@@ -1641,17 +1685,26 @@ select.select-input {
 
 .personal-week-bar {
   margin-bottom: 14px;
-  margin-top: 10px;
 }
+
+/* ── Category rows ──────────────────────────────────────── */
 
 .personal-category-rows {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .personal-cat-row {
   display: grid;
-  gap: 5px;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-input);
+  background: rgba(39, 56, 68, 0.025);
+  transition: background 120ms ease;
+}
+
+.personal-cat-row:hover {
+  background: rgba(39, 56, 68, 0.055);
 }
 
 .personal-cat-head {
@@ -1661,32 +1714,34 @@ select.select-input {
 }
 
 .personal-cat-swatch {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .personal-cat-name {
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 600;
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 
 .personal-cat-meta {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--muted);
   white-space: nowrap;
   font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .personal-cat-track {
-  height: 6px;
-  background: rgba(39, 56, 68, 0.07);
+  height: 5px;
+  background: rgba(39, 56, 68, 0.09);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1694,6 +1749,7 @@ select.select-input {
 .personal-cat-fill {
   height: 100%;
   border-radius: 999px;
+  opacity: 0.85;
 }
 
 .personal-distribution-shell {
