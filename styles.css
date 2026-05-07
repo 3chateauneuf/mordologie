@@ -1732,6 +1732,13 @@ select.select-input {
   align-items: start;
 }
 
+.agenda-board-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 220px);
+  border-radius: var(--radius-panel);
+}
+
 .agenda-board-wide {
   overflow-x: auto;
   padding-bottom: 0;
