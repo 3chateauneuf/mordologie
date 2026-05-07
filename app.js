@@ -301,6 +301,7 @@ const journalFilterCategoryInput = document.querySelector("#journal-filter-categ
 const journalFilterTagsInput = document.querySelector("#journal-filter-tags");
 const journalFilterSubjectInput = document.querySelector("#journal-filter-subject");
 const journalFilterResetButton = document.querySelector("#journal-filter-reset");
+const journalSideSwitch = document.querySelector("#journal-side-switch");
 const projectMemoryList = document.querySelector("#project-memory-list");
 const sessionItemTemplate = document.querySelector("#session-item-template");
 const resourceTotal = document.querySelector("#resource-total");
@@ -945,6 +946,7 @@ let currentCategories = [];
 let currentTags = [];
 let timerIntervalId = null;
 let reportPeriod = "week";
+let journalSideMode = "tags";
 let personalPeriod = "week";
 let personalAnchorDate = new Date();
 let statsMode = "categories";
@@ -1710,6 +1712,13 @@ exportCsvButton?.addEventListener("click", () => {
   input?.addEventListener("change", () => {
     renderSessionList();
   });
+});
+
+journalSideSwitch?.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-journal-side]");
+  if (!btn) return;
+  journalSideMode = btn.dataset.journalSide;
+  renderTagManager();
 });
 
 journalFilterResetButton?.addEventListener("click", () => {
@@ -7582,6 +7591,17 @@ function renderTagManager() {
   const cleanupBtn = document.getElementById("tag-cleanup-btn");
   if (!el) return;
 
+  if (journalSideSwitch) {
+    for (const btn of journalSideSwitch.querySelectorAll("[data-journal-side]")) {
+      btn.classList.toggle("active", btn.dataset.journalSide === journalSideMode);
+    }
+  }
+
+  if (journalSideMode === "categories") {
+    renderCategoryManager(el, cleanupBtn);
+    return;
+  }
+
   const tagCounts = new Map();
   for (const session of getSessionsWithPendingStopped()) {
     for (const tag of session.tags ?? []) {
@@ -7804,6 +7824,135 @@ async function cleanupHistoricalTags(btn) {
     await window.supabase
       .from("time_entries")
       .update({ tags_text: tags.join(", "), updated_at: new Date().toISOString() })
+      .eq("time_entry_id", session.dbTimeEntryId);
+  }
+
+  await loadServerBackedState({ silent: false });
+}
+
+function renderCategoryManager(el, cleanupBtn) {
+  el.innerHTML = "";
+  if (cleanupBtn) cleanupBtn.hidden = true;
+
+  const categoryCounts = new Map();
+  for (const session of getSessionsWithPendingStopped()) {
+    for (const cat of session.categories ?? []) {
+      if (cat) categoryCounts.set(cat, (categoryCounts.get(cat) || 0) + 1);
+    }
+  }
+
+  const sorted = Array.from(categoryCounts.entries()).sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"),
+  );
+
+  if (!sorted.length) {
+    el.append(createEmptyState("Aucune catégorie enregistrée."));
+    return;
+  }
+
+  const allCategories = sorted.map(([cat]) => cat);
+  for (const [cat, count] of sorted) {
+    el.append(buildCategoryItem(cat, count, allCategories));
+  }
+}
+
+function buildCategoryItem(cat, count, allCategories) {
+  const item = document.createElement("div");
+  item.className = "tag-manager-item";
+  item.dataset.category = cat;
+  showCategoryDefault(item, cat, count, allCategories);
+  return item;
+}
+
+function showCategoryDefault(item, cat, count, allCategories) {
+  item.classList.remove("is-editing");
+  while (item.firstChild) item.removeChild(item.firstChild);
+
+  const color = getCategoryColor(cat);
+  const swatch = document.createElement("span");
+  swatch.className = "tag-hash cat-swatch";
+  swatch.style.cssText = `width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0;`;
+
+  const label = document.createElement("span");
+  label.className = "tag-manager-label";
+  label.textContent = cat;
+
+  const countEl = document.createElement("span");
+  countEl.className = "tag-manager-count";
+  countEl.textContent = count;
+
+  const actions = document.createElement("span");
+  actions.className = "tag-manager-actions";
+
+  const renameBtn = document.createElement("button");
+  renameBtn.type = "button";
+  renameBtn.className = "btn-tag-action";
+  renameBtn.textContent = "Renommer";
+  renameBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showCategoryRenameForm(item, cat, count, allCategories);
+  });
+
+  actions.append(renameBtn);
+  item.append(swatch, label, countEl, actions);
+}
+
+function showCategoryRenameForm(item, cat, count, allCategories) {
+  item.classList.add("is-editing");
+  while (item.firstChild) item.removeChild(item.firstChild);
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "tag-edit-input";
+  input.value = cat;
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "btn-tag-confirm";
+  confirmBtn.textContent = "Valider";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "btn-tag-cancel";
+  cancelBtn.textContent = "✕";
+  cancelBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showCategoryDefault(item, cat, count, allCategories);
+  });
+
+  const doConfirm = async () => {
+    const newCat = input.value.trim();
+    if (!newCat || newCat === cat) {
+      showCategoryDefault(item, cat, count, allCategories);
+      return;
+    }
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "…";
+    await applyCategoryRename(cat, newCat);
+  };
+
+  confirmBtn.addEventListener("click", (e) => { e.stopPropagation(); doConfirm(); });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); doConfirm(); }
+    if (e.key === "Escape") { e.stopPropagation(); showCategoryDefault(item, cat, count, allCategories); }
+  });
+
+  item.append(input, confirmBtn, cancelBtn);
+  requestAnimationFrame(() => { input.focus(); input.select(); });
+}
+
+async function applyCategoryRename(oldCat, newCat) {
+  if (!window.supabase) return;
+
+  const affected = getSessionsWithPendingStopped().filter(
+    (s) => (s.categories ?? []).includes(oldCat) && s.dbTimeEntryId,
+  );
+
+  for (const session of affected) {
+    await window.supabase
+      .from("time_entries")
+      .update({ activity_category_label: newCat, updated_at: new Date().toISOString() })
       .eq("time_entry_id", session.dbTimeEntryId);
   }
 
@@ -11829,10 +11978,7 @@ function renderCategoryTokens() {
   renderTokenList(categoriesList, currentCategories, (index) => {
     currentCategories = currentCategories.filter((_, i) => i !== index);
     renderCategoryTokens();
-  }, {
-    kind: "category",
-    onEdit: (index, newVal) => { currentCategories[index] = newVal; renderCategoryTokens(); },
-  });
+  }, { kind: "category" });
   updateFieldManageButtons();
 }
 
@@ -11840,8 +11986,6 @@ function renderTagTokens() {
   renderTokenList(tagsList, currentTags, (index) => {
     currentTags = currentTags.filter((_, i) => i !== index);
     renderTagTokens();
-  }, {
-    onEdit: (index, newVal) => { currentTags[index] = newVal; renderTagTokens(); },
   });
   updateFieldManageButtons();
 }
@@ -11850,8 +11994,6 @@ function renderManualTagTokens() {
   renderTokenList(manualTagsList, manualCurrentTags, (index) => {
     manualCurrentTags = manualCurrentTags.filter((_, i) => i !== index);
     renderManualTagTokens();
-  }, {
-    onEdit: (index, newVal) => { manualCurrentTags[index] = newVal; renderManualTagTokens(); },
   });
 }
 
@@ -11859,18 +12001,13 @@ function renderPlannedCategoryTokens() {
   renderTokenList(plannedCategoriesList, plannedCurrentCategories, (index) => {
     plannedCurrentCategories = plannedCurrentCategories.filter((_, i) => i !== index);
     renderPlannedCategoryTokens();
-  }, {
-    kind: "category",
-    onEdit: (index, newVal) => { plannedCurrentCategories[index] = newVal; renderPlannedCategoryTokens(); },
-  });
+  }, { kind: "category" });
 }
 
 function renderPlannedTagTokens() {
   renderTokenList(plannedTagsList, plannedCurrentTags, (index) => {
     plannedCurrentTags = plannedCurrentTags.filter((_, i) => i !== index);
     renderPlannedTagTokens();
-  }, {
-    onEdit: (index, newVal) => { plannedCurrentTags[index] = newVal; renderPlannedTagTokens(); },
   });
 }
 

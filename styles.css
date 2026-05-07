@@ -3486,6 +3486,10 @@ select.select-input {
   margin: 14px 0 6px;
 }
 
+.journal-side-switch {
+  flex: 1;
+}
+
 .tag-manager-list {
   display: flex;
   flex-direction: column;
