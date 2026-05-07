@@ -3739,6 +3739,20 @@ select.select-input {
   gap: 10px 12px;
 }
 
+/* --- Button icons --- */
+
+.btn-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.btn-icon--fill {
+  fill: currentColor;
+  stroke: none;
+}
+
 /* --- Token inline edit --- */
 
 .token-chip {

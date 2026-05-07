@@ -229,6 +229,10 @@ const repriseArchiveZone = document.querySelector("#reprise-archive-zone");
 const repriseDoneZone = document.querySelector("#reprise-done-zone");
 const toggleButton = document.querySelector("#toggle-button");
 const pauseButton = document.querySelector("#pause-button");
+
+const TIMER_ICON_PLAY  = `<svg viewBox="0 0 24 24" aria-hidden="true" class="btn-icon btn-icon--fill"><path d="M6 4.5l13 7.5-13 7.5V4.5z"/></svg>`;
+const TIMER_ICON_STOP  = `<svg viewBox="0 0 24 24" aria-hidden="true" class="btn-icon btn-icon--fill"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>`;
+const TIMER_ICON_PAUSE = `<svg viewBox="0 0 24 24" aria-hidden="true" class="btn-icon btn-icon--fill"><rect x="5.5" y="4" width="4.5" height="16" rx="1.5"/><rect x="14" y="4" width="4.5" height="16" rx="1.5"/></svg>`;
 const openManualButton = document.querySelector("#open-manual-button");
 const activeStartDisplay = document.querySelector("#active-start-display");
 const timerDisplay = document.querySelector("#timer-display");
@@ -7396,7 +7400,7 @@ function renderActiveSession() {
         ? "Clôture en cours."
         : "Session arrêtée localement."
       : "Prêt à lancer une nouvelle session.";
-    toggleButton.textContent = "Démarrer";
+    toggleButton.innerHTML = `${TIMER_ICON_PLAY}<span>Démarrer</span>`;
     toggleButton.classList.remove("running");
     pauseButton.hidden = true;
     pauseButton.classList.remove("paused");
@@ -7425,10 +7429,12 @@ function renderActiveSession() {
   timerPanel?.classList.toggle("timer-panel--paused", isPaused);
   const activeSubject = typeof activeSession.project === "string" ? activeSession.project.trim() : "";
   activeTaskLabel.textContent = activeSubject || (isPaused ? "Session en pause." : "Session en cours.");
-  toggleButton.textContent = "Arrêter";
+  toggleButton.innerHTML = `${TIMER_ICON_STOP}<span>Arrêter</span>`;
   toggleButton.classList.toggle("running", !isPaused);
   pauseButton.hidden = false;
-  pauseButton.textContent = isPaused ? "Reprendre" : "Mettre en pause";
+  pauseButton.innerHTML = isPaused
+    ? `${TIMER_ICON_PLAY}<span>Reprendre</span>`
+    : `${TIMER_ICON_PAUSE}<span>Pause</span>`;
   pauseButton.classList.toggle("paused", isPaused);
   activeStartDisplay.textContent = `Démarré à ${formatTimeLabel(new Date(activeSession.start))}`;
   activeStartDisplay.disabled = false;
