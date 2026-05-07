@@ -11759,7 +11759,11 @@ function setupTokenInput(input, config) {
   if (tokenField && !tokenField.dataset.tokenFieldInteractive) {
     tokenField.dataset.tokenFieldInteractive = "true";
     tokenField.addEventListener("click", (event) => {
-      if (event.target === input || event.target.closest("button") || event.target.closest(".token-chip")) {
+      if (event.target.closest(".token-chip")) {
+        event.stopPropagation();
+        return;
+      }
+      if (event.target === input || event.target.closest("button")) {
         return;
       }
       focusTokenFieldInput(input);
