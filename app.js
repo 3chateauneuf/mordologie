@@ -11633,6 +11633,13 @@ function getPersonalPeriodRange() {
   return getPeriodRange(personalAnchorDate, personalPeriod);
 }
 
+function getIsoWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+}
+
 function renderPersonalPeriodControls() {
   if (!personalPeriodSwitch) return;
   for (const btn of personalPeriodSwitch.querySelectorAll("[data-personal-period]")) {
@@ -11643,7 +11650,11 @@ function renderPersonalPeriodControls() {
   if (personalCustomRange) personalCustomRange.hidden = !isCustom;
   if (!isCustom && personalPeriodLabel) {
     const range = getPersonalPeriodRange();
-    personalPeriodLabel.textContent = formatPeriodLabel(range.start, range.end, personalPeriod);
+    let label = formatPeriodLabel(range.start, range.end, personalPeriod);
+    if (personalPeriod === "week") {
+      label += ` · S${getIsoWeekNumber(range.start)}`;
+    }
+    personalPeriodLabel.textContent = label;
   }
 }
 
