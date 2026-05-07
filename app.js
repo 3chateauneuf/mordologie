@@ -8785,47 +8785,53 @@ function renderAgenda() {
         continue;
       }
 
-      const laidOutPlannedRows = layoutAgendaPlannedEvents(dayPlannedRows, startHour, endHour, hourHeight);
-      for (const row of laidOutPlannedRows) {
-        const plannedEvent = row.session;
+      // Combine real sessions + planned events into one layout pass so
+      // overlapping items share columns instead of stacking on top of each other.
+      const allDayItems = [
+        ...dayRows.map((s) => ({ _type: "session", _data: s })),
+        ...dayPlannedRows.map((p) => ({ _type: "planned", _data: p })),
+      ].sort((a, b) => {
+        const aStart = a._type === "session" ? new Date(a._data.start) : new Date(a._data.start_at);
+        const bStart = b._type === "session" ? new Date(b._data.start) : new Date(b._data.start_at);
+        return aStart - bStart;
+      });
+
+      const laidOutAll = layoutAgendaTimedRows(
+        allDayItems,
+        startHour,
+        endHour,
+        hourHeight,
+        (item) => (item._type === "session" ? item._data.start : item._data.start_at),
+        (item) => (item._type === "session" ? item._data.end   : item._data.end_at),
+      );
+
+      for (const row of laidOutAll) {
+        const item = row.session;
         const visualSize = getAgendaEventVisualSize(row.heightPx);
         const event = document.createElement("button");
         event.type = "button";
-        event.className = "agenda-event agenda-event--planned";
-        if (visualSize !== "full") {
-          event.classList.add(`agenda-event--${visualSize}`);
-        }
-        event.dataset.plannedId = plannedEvent.id;
         event.style.top = `${row.topPx}px`;
         event.style.height = `${row.heightPx}px`;
         event.style.left = `${row.leftOffset}%`;
         event.style.width = `${row.widthPercent}%`;
-        event.title = buildPlannedEventTooltip(plannedEvent);
-        applyPlannedAgendaEventColor(event, plannedEvent);
-        renderPlannedAgendaEventContents(event, plannedEvent, visualSize);
-        dayTrack.append(event);
-      }
 
-      const laidOutRows = layoutAgendaSessions(dayRows, startHour, endHour, hourHeight);
-
-      for (const row of laidOutRows) {
-        const session = row.session;
-        const visualSize = getAgendaEventVisualSize(row.heightPx);
-
-        const event = document.createElement("button");
-        event.type = "button";
-        event.className = "agenda-event";
-        if (visualSize !== "full") {
-          event.classList.add(`agenda-event--${visualSize}`);
+        if (item._type === "planned") {
+          const plannedEvent = item._data;
+          event.className = "agenda-event agenda-event--planned";
+          if (visualSize !== "full") event.classList.add(`agenda-event--${visualSize}`);
+          event.dataset.plannedId = plannedEvent.id;
+          event.title = buildPlannedEventTooltip(plannedEvent);
+          applyPlannedAgendaEventColor(event, plannedEvent);
+          renderPlannedAgendaEventContents(event, plannedEvent, visualSize);
+        } else {
+          const session = item._data;
+          event.className = "agenda-event";
+          if (visualSize !== "full") event.classList.add(`agenda-event--${visualSize}`);
+          event.dataset.sessionId = session.id;
+          event.title = buildAgendaTooltip(session);
+          applyAgendaEventColor(event, session);
+          renderAgendaEventContents(event, session, visualSize);
         }
-        event.dataset.sessionId = session.id;
-        event.style.top = `${row.topPx}px`;
-        event.style.height = `${row.heightPx}px`;
-        event.style.left = `${row.leftOffset}%`;
-        event.style.width = `${row.widthPercent}%`;
-        event.title = buildAgendaTooltip(session);
-        applyAgendaEventColor(event, session);
-        renderAgendaEventContents(event, session, visualSize);
 
         dayTrack.append(event);
       }
