@@ -201,11 +201,9 @@ const manageClientButton = document.querySelector("#manage-client-button");
 const categoriesInput = document.querySelector("#categories-input");
 const categoriesList = document.querySelector("#categories-list");
 const categorySuggestions = document.querySelector("#category-suggestions");
-const manageCategoryButton = document.querySelector("#manage-category-button");
 const tagsInput = document.querySelector("#tags-input");
 const tagsList = document.querySelector("#tags-list");
 const tagSuggestions = document.querySelector("#tag-suggestions");
-const manageTagsButton = document.querySelector("#manage-tags-button");
 const notionInput = document.querySelector("#notion-input");
 const manageLinkButton = document.querySelector("#manage-link-button");
 const objectiveDisclosure = document.querySelector("#objective-disclosure");
@@ -1848,6 +1846,7 @@ plannedDialog?.addEventListener("close", () => {
 
 manualDialog?.addEventListener("close", () => {
   setManualDialogStatus("");
+  manualEditingSessionId = null;
 });
 
 retryPendingStopButton?.addEventListener("click", () => {
@@ -11823,13 +11822,16 @@ function startTokenInlineEdit(chip, label, currentValue, index, options) {
   input.type = "text";
   input.className = "token-chip-edit-input";
   input.value = currentValue;
-  // Match chip width to content
   input.style.width = `${Math.max(currentValue.length, 3)}ch`;
   label.replaceWith(input);
 
   requestAnimationFrame(() => { input.select(); input.focus(); });
 
+  let done = false;
+
   const commit = () => {
+    if (done) return;
+    done = true;
     const raw = input.value.trim();
     const newValue = options.kind === "category" ? raw : normalizeTag(raw);
     chip.classList.remove("token-chip--editing");
@@ -11841,6 +11843,8 @@ function startTokenInlineEdit(chip, label, currentValue, index, options) {
   };
 
   const cancel = () => {
+    if (done) return;
+    done = true;
     chip.classList.remove("token-chip--editing");
     input.replaceWith(label);
   };
@@ -11848,7 +11852,6 @@ function startTokenInlineEdit(chip, label, currentValue, index, options) {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); commit(); }
     if (e.key === "Escape") { e.preventDefault(); cancel(); }
-    // Grow input as user types
     input.style.width = `${Math.max(input.value.length + 1, 3)}ch`;
   });
   input.addEventListener("blur", commit, { once: true });
