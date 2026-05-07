@@ -3810,6 +3810,87 @@ select.select-input {
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 3px;
+  margin-right: -3px;
+  transition: color 100ms, background 100ms;
+}
+
+.session-time-range:hover {
+  color: var(--accent-strong, #069494);
+  background: rgba(6, 148, 148, 0.07);
+}
+
+.session-time-range.is-editing {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: default;
+  background: transparent;
+}
+
+.session-time-range.time-updated-flash {
+  color: var(--accent-strong, #069494);
+  background: rgba(6, 148, 148, 0.08);
+  cursor: default;
+}
+
+.time-quick-input {
+  width: 62px;
+  padding: 1px 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  border: 1px solid var(--border, #d0d8dd);
+  border-radius: 4px;
+  background: var(--surface, #fff);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.time-quick-input:focus {
+  outline: none;
+  border-color: var(--accent-strong, #069494);
+}
+
+.time-quick-sep {
+  font-size: 0.72rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.time-quick-confirm,
+.time-quick-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 80ms, color 80ms;
+}
+
+.time-quick-confirm {
+  color: var(--accent-strong, #069494);
+}
+
+.time-quick-confirm:hover {
+  background: rgba(6, 148, 148, 0.12);
+}
+
+.time-quick-cancel {
+  color: var(--muted);
+}
+
+.time-quick-cancel:hover {
+  background: rgba(39, 56, 68, 0.07);
+  color: var(--text);
 }
 
 .session-duration {

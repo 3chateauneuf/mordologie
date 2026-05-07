@@ -1755,6 +1755,15 @@ sessionList.addEventListener("click", (event) => {
     return;
   }
 
+  const timeRangeTrigger = event.target.closest(".session-time-range");
+  if (timeRangeTrigger && !timeRangeTrigger.classList.contains("is-editing")) {
+    event.stopPropagation();
+    const sid = timeRangeTrigger.closest(".session-item")?.dataset.sessionId;
+    const sess = findSessionById(sid);
+    if (sess) openTimeRangeInlineEditor(timeRangeTrigger, sess);
+    return;
+  }
+
   const sessionItem = event.target.closest(".session-item");
   if (!sessionItem) {
     return;
@@ -8239,6 +8248,126 @@ function renderSessionList() {
     group.append(body);
     sessionList.append(group);
   }
+}
+
+function openTimeRangeInlineEditor(el, session) {
+  el.classList.add("is-editing");
+
+  const startDate = new Date(session.start);
+  const endDate = session.end ? new Date(session.end) : null;
+
+  const toTimeValue = (d) =>
+    `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+
+  const startInput = document.createElement("input");
+  startInput.type = "time";
+  startInput.className = "time-quick-input";
+  startInput.value = toTimeValue(startDate);
+
+  const sep = document.createElement("span");
+  sep.className = "time-quick-sep";
+  sep.textContent = "–";
+
+  const endInput = document.createElement("input");
+  endInput.type = "time";
+  endInput.className = "time-quick-input";
+  if (endDate) endInput.value = toTimeValue(endDate);
+  endInput.disabled = !endDate;
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "time-quick-confirm";
+  confirmBtn.setAttribute("aria-label", "Confirmer");
+  confirmBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M1.5 5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "time-quick-cancel";
+  cancelBtn.setAttribute("aria-label", "Annuler");
+  cancelBtn.innerHTML = `<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+
+  el.textContent = "";
+  el.append(startInput, sep, endInput, confirmBtn, cancelBtn);
+  startInput.focus();
+
+  const restore = () => {
+    el.classList.remove("is-editing");
+    el.textContent = `${formatTimeLabel(startDate)}${endDate ? ` – ${formatTimeLabel(endDate)}` : ""}`;
+  };
+
+  const doConfirm = async () => {
+    if (!startInput.value) { restore(); return; }
+    const [sh, sm] = startInput.value.split(":").map(Number);
+    const newStart = new Date(startDate);
+    newStart.setHours(sh, sm, 0, 0);
+
+    let newEnd = endDate;
+    if (endDate && endInput.value) {
+      const [eh, em] = endInput.value.split(":").map(Number);
+      newEnd = new Date(endDate);
+      newEnd.setHours(eh, em, 0, 0);
+      if (newEnd <= newStart) newEnd = new Date(newEnd.getTime() + 86400000);
+    }
+
+    el.classList.remove("is-editing");
+    await quickPatchSessionTimes(el, session, newStart, newEnd);
+  };
+
+  confirmBtn.addEventListener("click", (e) => { e.stopPropagation(); doConfirm(); });
+  cancelBtn.addEventListener("click", (e) => { e.stopPropagation(); restore(); });
+  [startInput, endInput].forEach((inp) => {
+    inp.addEventListener("click", (e) => e.stopPropagation());
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); doConfirm(); }
+      if (e.key === "Escape") { e.stopPropagation(); restore(); }
+    });
+  });
+}
+
+async function quickPatchSessionTimes(el, session, newStart, newEnd) {
+  const durationMs = newEnd
+    ? Math.max(newEnd.getTime() - newStart.getTime(), 0)
+    : (Number(session.durationMs) || 0);
+
+  const idx = sessions.findIndex((s) => s.id === session.id);
+  if (idx >= 0) {
+    sessions[idx] = {
+      ...sessions[idx],
+      start: newStart.toISOString(),
+      end: newEnd ? newEnd.toISOString() : sessions[idx].end,
+      durationMs,
+    };
+  }
+  persistSessions();
+
+  el.textContent = "✓ Mis à jour";
+  el.classList.add("time-updated-flash");
+
+  if (session.dbTimeEntryId && window.supabase) {
+    try {
+      await window.supabase
+        .from("time_entries")
+        .update({
+          started_at: newStart.toISOString(),
+          ended_at: newEnd ? newEnd.toISOString() : session.end,
+          entry_date: newStart.toISOString().slice(0, 10),
+          duration_minutes: Math.max(1, Math.round(durationMs / 60000)),
+          duration_hours: Number((durationMs / 3600000).toFixed(2)),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("time_entry_id", session.dbTimeEntryId);
+    } catch {}
+  }
+
+  setTimeout(() => {
+    el.classList.remove("time-updated-flash");
+    el.textContent = `${formatTimeLabel(newStart)}${newEnd ? ` – ${formatTimeLabel(newEnd)}` : ""}`;
+    const timingEl = el.closest(".session-timing");
+    if (timingEl && durationMs > 0) {
+      const durEl = timingEl.querySelector(".session-duration");
+      if (durEl) durEl.textContent = formatDuration(durationMs);
+    }
+  }, 1800);
 }
 
 function renderCadreViews() {
