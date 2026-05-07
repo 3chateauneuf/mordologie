@@ -2993,7 +2993,7 @@ function scheduleAutocompleteHide() {
 
 function getInitialView() {
   const hash = window.location.hash.replace("#", "");
-  return ["cadre", "manager", "resources", "users", "journal", "guide"].includes(hash) ? hash : "cadre";
+  return ["cadre", "manager", "resources", "users", "journal", "guide"].includes(hash) ? hash : "guide";
 }
 
 function initializeObjectiveSelections() {
@@ -5490,6 +5490,11 @@ async function applyLocalRescueAccess(rawName, { silent = false } = {}) {
     remoteLoaded ? "success" : "warning",
     { persistMs: remoteLoaded ? 2600 : undefined },
   );
+  // After login, leave the guide and go directly to the main view
+  if (currentView === "guide") {
+    currentView = "cadre";
+    window.history.replaceState(null, "", "#cadre");
+  }
   render();
   return true;
 }
@@ -5575,13 +5580,16 @@ function getKnownUsers() {
 }
 
 function getAllowedViewsForRole(role = getAccessRole()) {
+  if (role === "open") {
+    return ["guide"];
+  }
   if (role === "cadre") {
     return ["cadre", "journal", "guide"];
   }
   if (role === "admin") {
     return ["cadre", "manager", "resources", "users", "journal", "guide"];
   }
-  if (role === "manager" || role === "admin") {
+  if (role === "manager") {
     return ["cadre", "manager", "resources", "journal", "guide"];
   }
   return ["cadre", "journal", "guide"];
