@@ -3739,6 +3739,127 @@ select.select-input {
   gap: 10px 12px;
 }
 
+/* --- Save toasts --- */
+
+.toast-stack {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.save-toast {
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 13px 16px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13), 0 1px 4px rgba(0, 0, 0, 0.07);
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  width: 264px;
+  cursor: pointer;
+  pointer-events: all;
+  overflow: hidden;
+  position: relative;
+  transform: translateY(12px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.22s ease;
+  margin-bottom: 8px;
+}
+
+.save-toast--in {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.save-toast--out {
+  transform: translateY(6px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.18s ease;
+}
+
+.save-toast-check {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.save-toast-check circle {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 54;
+  stroke-dashoffset: 54;
+  animation: toast-circle 0.38s 0.08s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.save-toast-check path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 11;
+  stroke-dashoffset: 11;
+  animation: toast-check 0.25s 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes toast-circle {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes toast-check {
+  to { stroke-dashoffset: 0; }
+}
+
+.save-toast-body {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 13px;
+}
+
+.save-toast-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.save-toast-project {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+
+.save-toast-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2.5px;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  border-radius: 0 0 14px 14px;
+  animation: toast-progress 3000ms linear forwards;
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
 /* --- Guide view --- */
 
 .guide-panel {

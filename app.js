@@ -2901,6 +2901,7 @@ function handleAgendaDragEnd(event) {
       upsertSession({ ...sessionToSave, syncStatus: "pending_update" });
       persistSessions();
       void logSessionChange(state.originalSession, sessionToSave, `agenda-${state.mode}`);
+      showSaveToast(sessionToSave, { label: "Horaires mis à jour" });
       void (async () => {
         const ok = await syncSessionToSupabase(sessionToSave, "manual", { refreshAfterSuccess: false });
         if (ok) {
@@ -4048,6 +4049,7 @@ async function syncPendingStoppedSession({ fromRetry = false } = {}) {
     persistSessions();
     clearPendingStoppedSessionState();
     setAuthStatusMessage("Session arrêtée et synchronisée.", "success", { persistMs: 2600 });
+    showSaveToast(sessionToSync);
     render();
     return true;
   }
@@ -6804,6 +6806,7 @@ function saveManualEntry() {
           render();
         }
       })();
+      showSaveToast(sessionToSave, { label: editingSession ? "Modifié" : "Enregistré" });
       manualEditingSessionId = null;
       manualDialog.close();
       saveManualButton.textContent = "Enregistrer";
@@ -9711,6 +9714,63 @@ function renderResourcesViews() {
   } else {
     resourceKrList.innerHTML = "";
   }
+}
+
+function showSaveToast(session, options = {}) {
+  const stack = document.querySelector("#toast-stack");
+  if (!stack) return;
+
+  const DURATION = options.duration ?? 3000;
+  const label = options.label ?? "Enregistré";
+  const project = session?.project || session?.title || "";
+
+  const toast = document.createElement("div");
+  toast.className = "save-toast";
+  toast.setAttribute("role", "status");
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 20 20");
+  svg.setAttribute("class", "save-toast-check");
+  svg.setAttribute("aria-hidden", "true");
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", "10");
+  circle.setAttribute("cy", "10");
+  circle.setAttribute("r", "8.5");
+  const check = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  check.setAttribute("d", "M6.5 10.5l2.5 2.5 4.5-5");
+  svg.append(circle, check);
+
+  const body = document.createElement("div");
+  body.className = "save-toast-body";
+  const labelEl = document.createElement("p");
+  labelEl.className = "save-toast-label";
+  labelEl.textContent = label;
+  body.append(labelEl);
+  if (project) {
+    const projectEl = document.createElement("p");
+    projectEl.className = "save-toast-project";
+    projectEl.textContent = project;
+    body.append(projectEl);
+  }
+
+  const bar = document.createElement("div");
+  bar.className = "save-toast-bar";
+  bar.style.animationDuration = `${DURATION}ms`;
+
+  toast.append(svg, body, bar);
+  stack.append(toast);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add("save-toast--in"));
+  });
+
+  const dismiss = () => {
+    toast.classList.add("save-toast--out");
+    toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+  };
+
+  const timer = setTimeout(dismiss, DURATION);
+  toast.addEventListener("click", () => { clearTimeout(timer); dismiss(); });
 }
 
 function renderGuideView() {
