@@ -1721,6 +1721,10 @@ journalSideSwitch?.addEventListener("click", (event) => {
   renderTagManager();
 });
 
+document.getElementById("journal-sync-btn")?.addEventListener("click", () => {
+  void syncAllLocalSessions();
+});
+
 journalFilterResetButton?.addEventListener("click", () => {
   if (journalFilterFromInput) journalFilterFromInput.value = "";
   if (journalFilterToInput) journalFilterToInput.value = "";
@@ -7293,6 +7297,7 @@ function render() {
   renderProjectMemoryList();
   renderTagManager();
   renderSessionList();
+  renderSyncButton();
   renderCadreViews();
   renderManagerControls();
   renderManagerViews();
@@ -8368,6 +8373,54 @@ async function quickPatchSessionTimes(el, session, newStart, newEnd) {
       if (durEl) durEl.textContent = formatDuration(durationMs);
     }
   }, 1800);
+}
+
+function getUnsyncedLocalSessions() {
+  return sessions.filter(
+    (s) => !s.isServerBacked && s.end && Number(s.durationMs) > 0 && !isDemoSession(s),
+  );
+}
+
+function renderSyncButton() {
+  const btn = document.getElementById("journal-sync-btn");
+  const label = document.getElementById("journal-sync-label");
+  if (!btn) return;
+  const unsynced = getUnsyncedLocalSessions();
+  const count = unsynced.length;
+  btn.hidden = count === 0;
+  if (label) {
+    label.textContent = count === 1
+      ? "Synchroniser 1 entrée"
+      : `Synchroniser ${count} entrées`;
+  }
+}
+
+async function syncAllLocalSessions() {
+  const btn = document.getElementById("journal-sync-btn");
+  const label = document.getElementById("journal-sync-label");
+  if (btn) btn.disabled = true;
+
+  const unsynced = getUnsyncedLocalSessions();
+  if (!unsynced.length) {
+    if (btn) btn.hidden = true;
+    return;
+  }
+
+  let done = 0;
+  for (const session of unsynced) {
+    if (label) label.textContent = `${done}/${unsynced.length}…`;
+    try {
+      await syncSessionToSupabase(session, "manual", { refreshAfterSuccess: false });
+      done++;
+    } catch {}
+  }
+
+  if (label) label.textContent = `✓ ${done} entrée${done !== 1 ? "s" : ""} synchronisée${done !== 1 ? "s" : ""}`;
+  setTimeout(async () => {
+    await loadServerBackedState({ silent: false });
+    renderSyncButton();
+    if (btn) btn.disabled = false;
+  }, 1200);
 }
 
 function renderCadreViews() {

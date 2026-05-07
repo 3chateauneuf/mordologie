@@ -3480,6 +3480,39 @@ select.select-input {
   margin-bottom: 2px;
 }
 
+.journal-panel-main .panel-head {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.btn-sync-local {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, opacity 120ms;
+  white-space: nowrap;
+}
+
+.btn-sync-local:hover {
+  background: rgba(13, 148, 136, 0.16);
+  border-color: rgba(15, 118, 110, 0.35);
+}
+
+.btn-sync-local:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 .tag-manager-divider {
   height: 1px;
   background: rgba(39, 56, 68, 0.07);
