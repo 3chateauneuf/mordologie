@@ -8393,12 +8393,68 @@ function renderSyncButton() {
   if (label && !btn.disabled) label.textContent = "Synchroniser vers DB";
 }
 
+async function deduplicateTimeEntries() {
+  if (!window.supabase) return 0;
+
+  const { data: all, error } = await window.supabase
+    .from("time_entries")
+    .select("time_entry_id, source_session_id, user_name, started_at, duration_minutes, project_name, activity_category_label, created_at")
+    .order("created_at", { ascending: true });
+
+  if (error || !all?.length) return 0;
+
+  // Group by user_name + started_at (truncated to seconds for tolerance)
+  const groups = new Map();
+  for (const row of all) {
+    const startKey = (row.started_at ?? "").slice(0, 19); // YYYY-MM-DDTHH:MM:SS
+    const key = `${normalizeText(row.user_name ?? "")}::${startKey}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
+  }
+
+  const toDelete = [];
+  for (const [, group] of groups) {
+    if (group.length <= 1) continue;
+    // Keep the one with a "real" source_session_id (not equal to time_entry_id, and not null)
+    group.sort((a, b) => {
+      const aReal = a.source_session_id && a.source_session_id !== a.time_entry_id ? 1 : 0;
+      const bReal = b.source_session_id && b.source_session_id !== b.time_entry_id ? 1 : 0;
+      if (aReal !== bReal) return bReal - aReal; // real first
+      // then prefer more complete (has project or category)
+      const aScore = (a.project_name ? 1 : 0) + (a.activity_category_label ? 1 : 0);
+      const bScore = (b.project_name ? 1 : 0) + (b.activity_category_label ? 1 : 0);
+      return bScore - aScore;
+    });
+    // First entry is the keeper, rest are duplicates
+    for (const dup of group.slice(1)) toDelete.push(dup.time_entry_id);
+  }
+
+  if (!toDelete.length) return 0;
+
+  // Delete in batches of 50
+  for (let i = 0; i < toDelete.length; i += 50) {
+    await window.supabase
+      .from("time_entries")
+      .delete()
+      .in("time_entry_id", toDelete.slice(i, i + 50));
+  }
+  return toDelete.length;
+}
+
 async function syncAllLocalSessions() {
   const btn = document.getElementById("journal-sync-btn");
   const label = document.getElementById("journal-sync-label");
   if (!window.supabase || !btn) return;
 
   btn.disabled = true;
+  if (label) label.textContent = "Vérification des doublons…";
+
+  const removed = await deduplicateTimeEntries();
+  if (removed > 0 && label) {
+    label.textContent = `${removed} doublon${removed > 1 ? "s" : ""} supprimé${removed > 1 ? "s" : ""}…`;
+    await new Promise((r) => setTimeout(r, 800));
+  }
+
   if (label) label.textContent = "Vérification…";
 
   // 1. Fetch all entries already in DB (source_session_id + time_entry_id)
