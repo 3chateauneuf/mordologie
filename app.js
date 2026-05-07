@@ -11671,7 +11671,7 @@ function setupTokenInput(input, config) {
   if (tokenField && !tokenField.dataset.tokenFieldInteractive) {
     tokenField.dataset.tokenFieldInteractive = "true";
     tokenField.addEventListener("click", (event) => {
-      if (event.target === input || event.target.closest("button")) {
+      if (event.target === input || event.target.closest("button") || event.target.closest(".token-chip")) {
         return;
       }
       focusTokenFieldInput(input);
