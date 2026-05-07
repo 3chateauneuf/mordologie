@@ -8375,52 +8375,121 @@ async function quickPatchSessionTimes(el, session, newStart, newEnd) {
   }, 1800);
 }
 
-function getUnsyncedLocalSessions() {
-  return sessions.filter(
-    (s) => !s.isServerBacked && s.end && Number(s.durationMs) > 0 && !isDemoSession(s),
-  );
-}
-
 function renderSyncButton() {
   const btn = document.getElementById("journal-sync-btn");
   const label = document.getElementById("journal-sync-label");
   if (!btn) return;
-  const unsynced = getUnsyncedLocalSessions();
-  const count = unsynced.length;
-  btn.hidden = count === 0;
-  if (label) {
-    label.textContent = count === 1
-      ? "Synchroniser 1 entrée"
-      : `Synchroniser ${count} entrées`;
-  }
+  btn.hidden = !window.supabase;
+  if (label && !btn.disabled) label.textContent = "Synchroniser vers DB";
 }
 
 async function syncAllLocalSessions() {
   const btn = document.getElementById("journal-sync-btn");
   const label = document.getElementById("journal-sync-label");
-  if (btn) btn.disabled = true;
+  if (!window.supabase || !btn) return;
 
-  const unsynced = getUnsyncedLocalSessions();
-  if (!unsynced.length) {
-    if (btn) btn.hidden = true;
+  btn.disabled = true;
+  if (label) label.textContent = "Vérification…";
+
+  // 1. Fetch all entries already in DB (source_session_id + time_entry_id)
+  const { data: existing, error: fetchErr } = await window.supabase
+    .from("time_entries")
+    .select("source_session_id, time_entry_id");
+
+  if (fetchErr) {
+    if (label) label.textContent = "Erreur de connexion";
+    btn.disabled = false;
     return;
   }
 
-  let done = 0;
-  for (const session of unsynced) {
-    if (label) label.textContent = `${done}/${unsynced.length}…`;
-    try {
-      await syncSessionToSupabase(session, "manual", { refreshAfterSuccess: false });
-      done++;
-    } catch {}
+  const existingSourceIds = new Set((existing ?? []).map((r) => normalizeText(r.source_session_id ?? "")));
+  const existingTeIds     = new Set((existing ?? []).map((r) => normalizeText(r.time_entry_id ?? "")));
+
+  // 2. Sessions that are TRULY missing from DB
+  const missing = sessions.filter((s) => {
+    if (!s.end || !(Number(s.durationMs) > 0) || isDemoSession(s)) return false;
+    if (existingSourceIds.has(normalizeText(s.id))) return false;
+    if (s.dbTimeEntryId && existingTeIds.has(normalizeText(s.dbTimeEntryId))) return false;
+    return true;
+  });
+
+  if (!missing.length) {
+    if (label) label.textContent = "✓ Tout est synchronisé";
+    setTimeout(() => {
+      if (label) label.textContent = "Synchroniser vers DB";
+      btn.disabled = false;
+    }, 2500);
+    return;
   }
 
-  if (label) label.textContent = `✓ ${done} entrée${done !== 1 ? "s" : ""} synchronisée${done !== 1 ? "s" : ""}`;
+  // 3. Get base ID number for new entries
+  if (label) label.textContent = `Préparation de ${missing.length} entrée${missing.length > 1 ? "s" : ""}…`;
+  const { data: lastTeRow } = await window.supabase
+    .from("time_entries")
+    .select("time_entry_id")
+    .order("time_entry_id", { ascending: false })
+    .limit(1);
+
+  const lastNum = lastTeRow?.[0]?.time_entry_id
+    ? parseInt(String(lastTeRow[0].time_entry_id).replace("TE-", ""), 10)
+    : 0;
+
+  const userName = accessProfile.appUser?.user_name ?? "";
+  const userId   = accessProfile.appUser?.user_id ?? null;
+
+  // 4. Build payloads (no resolveSessionReferences — direct mapping)
+  const payloads = missing.map((s, i) => {
+    const start = new Date(s.start);
+    const durationMs = Math.max(Number(s.durationMs) || 0, 0);
+    return {
+      time_entry_id:            `TE-${String(lastNum + 1 + i).padStart(6, "0")}`,
+      source_session_id:        s.id,
+      entry_date:               start.toISOString().slice(0, 10),
+      started_at:               s.start,
+      ended_at:                 s.end,
+      user_name:                s.collaborator || userName,
+      user_id:                  s.dbUserId || userId,
+      team_name:                s.dbTeamName || "",
+      project_name:             s.project || "",
+      project_id:               s.dbProjectId || null,
+      client_name:              s.dbClientName || "",
+      activity_category_label:  s.categories?.[0] || null,
+      activity_category_id:     s.dbActivityCategoryId || null,
+      kpi_category_label:       s.dbKpiCategoryLabel || null,
+      task_label:               s.task || "",
+      tags_text:                dedupePreservingOrder((s.tags ?? []).map(normalizeTag)).join(", "),
+      duration_minutes:         Math.max(1, Math.round(durationMs / 60000)),
+      duration_hours:           Number((durationMs / 3600000).toFixed(2)),
+      notes:                    s.notes || "",
+      notion_ref:               s.notionRef || "",
+      objective_pole:           s.objectivePole || "",
+      objective_okr:            s.objectiveOkr || "",
+      objective_kr:             s.objectiveKr || "",
+      source:                   "manual",
+      status:                   "saved",
+    };
+  });
+
+  // 5. Insert in batches of 50
+  let done = 0;
+  for (let i = 0; i < payloads.length; i += 50) {
+    if (label) label.textContent = `${done}/${missing.length}…`;
+    const batch = payloads.slice(i, i + 50);
+    const { error } = await window.supabase.from("time_entries").insert(batch);
+    if (!error) done += batch.length;
+  }
+
+  if (label) {
+    label.textContent = done === missing.length
+      ? `✓ ${done} entrée${done !== 1 ? "s" : ""} ajoutée${done !== 1 ? "s" : ""}`
+      : `${done}/${missing.length} synchronisées (${missing.length - done} erreurs)`;
+  }
+
   setTimeout(async () => {
     await loadServerBackedState({ silent: false });
-    renderSyncButton();
-    if (btn) btn.disabled = false;
-  }, 1200);
+    if (label) label.textContent = "Synchroniser vers DB";
+    btn.disabled = false;
+  }, 2000);
 }
 
 function renderCadreViews() {
