@@ -7893,7 +7893,16 @@ function showCategoryDefault(item, cat, count, allCategories) {
     showCategoryRenameForm(item, cat, count, allCategories);
   });
 
-  actions.append(renameBtn);
+  const mergeBtn = document.createElement("button");
+  mergeBtn.type = "button";
+  mergeBtn.className = "btn-tag-action is-merge";
+  mergeBtn.textContent = "Fusionner";
+  mergeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showCategoryMergeForm(item, cat, count, allCategories);
+  });
+
+  actions.append(renameBtn, mergeBtn);
   item.append(swatch, label, countEl, actions);
 }
 
@@ -7940,6 +7949,65 @@ function showCategoryRenameForm(item, cat, count, allCategories) {
 
   item.append(input, confirmBtn, cancelBtn);
   requestAnimationFrame(() => { input.focus(); input.select(); });
+}
+
+function showCategoryMergeForm(item, cat, count, allCategories) {
+  item.classList.add("is-editing");
+  while (item.firstChild) item.removeChild(item.firstChild);
+
+  const sourceLabel = document.createElement("span");
+  sourceLabel.className = "tag-merge-source";
+  sourceLabel.textContent = cat + " →";
+
+  const datalistId = "cat-merge-dl";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.list = datalistId;
+  input.className = "tag-edit-input";
+  input.placeholder = "catégorie cible";
+
+  const datalist = document.createElement("datalist");
+  datalist.id = datalistId;
+  for (const c of allCategories.filter((c) => c !== cat)) {
+    const opt = document.createElement("option");
+    opt.value = c;
+    datalist.append(opt);
+  }
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "btn-tag-confirm";
+  confirmBtn.textContent = "Fusionner";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "btn-tag-cancel";
+  cancelBtn.textContent = "✕";
+  cancelBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showCategoryDefault(item, cat, count, allCategories);
+  });
+
+  const doConfirm = async () => {
+    const targetCat = input.value.trim();
+    if (!targetCat || targetCat === cat) {
+      showCategoryDefault(item, cat, count, allCategories);
+      return;
+    }
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "…";
+    await applyCategoryRename(cat, targetCat);
+  };
+
+  confirmBtn.addEventListener("click", (e) => { e.stopPropagation(); doConfirm(); });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); doConfirm(); }
+    if (e.key === "Escape") { e.stopPropagation(); showCategoryDefault(item, cat, count, allCategories); }
+  });
+
+  item.append(sourceLabel, input, datalist, confirmBtn, cancelBtn);
+  requestAnimationFrame(() => input.focus());
 }
 
 async function applyCategoryRename(oldCat, newCat) {
