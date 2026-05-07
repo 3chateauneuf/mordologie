@@ -9874,23 +9874,23 @@ function buildGuideForNewUser(sessionCount, hasCalendar) {
     {
       done: true,
       label: "Profil sélectionné",
-      detail: "Tu es connecté. Tes sessions sont enregistrées à ton nom et visibles par le manager.",
+      detail: "Tu es connecté. Tes sessions sont enregistrées à ton nom et synchronisées avec le serveur.",
     },
     {
       done: sessionCount > 0,
       label: "Lancer ton premier chrono",
-      detail: "Remplis le Sujet et la Catégorie, puis clique Démarrer. Arrête quand tu finis. C'est tout.",
+      detail: "Remplis Sujet + Catégorie, clique ▶ Démarrer. Arrête quand tu finis. Un toast confirme l'enregistrement en bas à droite.",
       action: { label: "Aller saisir", view: "cadre" },
     },
     {
       done: hasCalendar,
       label: "Connecter Google Calendar",
-      detail: "Dans ton profil (en haut à droite), colle l'URL iCal secrète de ton agenda Google. Tes réunions apparaîtront dans la vue Agenda comme suggestions à valider.",
+      detail: "Dans ton profil (avatar en haut), colle l'URL iCal privée de ton Google Calendar (Paramètres → Agendas → Adresse secrète au format iCal). Puis clique « Sync calendrier » dans la vue Agenda.",
     },
     {
       done: sessionCount >= 3,
       label: "Explorer les analyses",
-      detail: "La vue Gandalf (barres verticales) montre la répartition du temps par catégorie, par projet et par collaborateur.",
+      detail: "La vue Gandalf montre la répartition du temps. Passe le curseur sur une barre de catégorie pour voir les tags détaillés de cette catégorie.",
       action: { label: "Voir les analyses", view: "manager" },
     },
   ];
@@ -9955,35 +9955,45 @@ function buildGuideForExistingUser(hasCalendar) {
   const tips = [
     {
       icon: "↕",
-      title: "Drag & drop dans l'agenda",
-      desc: "Glisse un bloc de session pour déplacer, ou étire les poignées en haut et en bas pour ajuster les horaires — sans ouvrir le formulaire.",
+      title: "Agenda : déplacer & redimensionner",
+      desc: "Glisse un bloc pour le déplacer sur la semaine. Étire la poignée en haut ou en bas pour ajuster le début ou la fin — tout sans ouvrir de formulaire.",
+    },
+    {
+      icon: "✏️",
+      title: "Édition inline des chips",
+      desc: "Double-clic sur un tag ou une catégorie dans le formulaire pour l'éditer directement sur place. Entrée pour valider, Échap pour annuler.",
+    },
+    {
+      icon: "📊",
+      title: "Survol des graphiques",
+      desc: "Dans la vue Gandalf, passe le curseur sur une barre de catégorie : un tooltip liste les tags utilisés dans cette catégorie et leur répartition.",
     },
     {
       icon: "#",
-      title: "Gestion des tags",
-      desc: "Dans le Journal (panneau latéral), tu peux renommer un tag sur tout l'historique ou le fusionner avec un autre. Pratique pour corriger une saisie incohérente.",
+      title: "Tags : renommer & fusionner",
+      desc: "Dans le panneau latéral du Journal, tu peux renommer un tag sur tout l'historique ou le fusionner dans un autre — utile pour corriger une saisie passée.",
     },
     {
       icon: "📅",
-      title: hasCalendar ? "Sync calendrier à jour" : "Connecter Google Calendar",
+      title: hasCalendar ? "Sync Google Calendar active" : "Connecter Google Calendar",
       desc: hasCalendar
-        ? "Clique 'Sync calendrier' dans l'Agenda pour actualiser les événements de la semaine. Les réunions apparaissent comme suggestions — clique pour les convertir en vraie session."
-        : "Colle l'URL iCal de ton Google Calendar dans ton profil. Tes réunions apparaîtront comme suggestions dans l'Agenda, sans saisie manuelle.",
+        ? "Clique « Sync calendrier » dans l'Agenda pour importer les événements de la semaine. Clique un événement fantôme pour le convertir en vraie session qualifiée."
+        : "Colle l'URL iCal privée de ton Google Calendar dans ton profil. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
     },
     {
       icon: "🎯",
       title: "Lier à un objectif OKR",
-      desc: "Dans le formulaire de saisie, déplie la section 'Objectifs'. Tu peux rattacher chaque session à un Pôle, un OKR et un KR — les analyses montrent alors où va vraiment le temps.",
+      desc: "Déplie la section « Objectifs » dans le formulaire pour rattacher chaque session à un Pôle, un OKR et un KR. Les analyses reflètent alors où va réellement le temps.",
     },
     {
       icon: "⚡",
-      title: "Cliquer sur l'agenda pour pré-remplir",
-      desc: "Clique sur une heure vide dans l'Agenda pour ouvrir le formulaire avec les horaires pré-remplis. Plus rapide qu'une saisie manuelle depuis zéro.",
+      title: "Clic sur l'agenda pour pré-remplir",
+      desc: "Clique sur n'importe quelle heure vide dans l'Agenda pour ouvrir la saisie avec début et fin déjà positionnés.",
     },
     {
       icon: "🧠",
       title: "Mémoire des projets",
-      desc: "L'app retient tes projets récents et leurs catégories / tags associés. Le panneau latéral propose les plus fréquents pour une saisie en un clic.",
+      desc: "L'app retient tes projets récents avec leurs catégories et tags. Le panneau latéral les propose pour une saisie en un clic — sans retaper à chaque fois.",
     },
   ];
 
