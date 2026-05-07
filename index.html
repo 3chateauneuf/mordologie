@@ -420,27 +420,20 @@
               <span>Vue du lundi au dimanche.</span>
             </article>
             <article class="summary-card">
-              <p>Équipe active</p>
-              <strong id="team-count">0</strong>
-              <span id="active-count-copy">Aucune session en cours.</span>
+              <p>Catégorie principale</p>
+              <strong id="top-category-name">—</strong>
+              <span id="top-category-time">0 h 00</span>
             </article>
           </div>
 
           <section class="cadre-stack">
             <article class="inner-card">
               <div class="section-minihead">
-                <h3 id="personal-stats-title">Catégories en cours</h3>
-                <p id="personal-stats-copy">Lecture compacte du temps réel, par objectifs ou catégories.</p>
+                <h3 id="personal-stats-title">Catégories cette semaine</h3>
+                <p id="personal-stats-copy">Répartition de ton temps par catégorie.</p>
               </div>
-              <div class="personal-distribution-shell">
-                <div id="personal-distribution-donut" class="personal-distribution-donut" aria-hidden="true">
-                  <div class="personal-distribution-donut-inner">
-                    <strong id="personal-distribution-total">0%</strong>
-                    <span id="personal-distribution-subcopy">répartition</span>
-                  </div>
-                </div>
-                <div id="personal-distribution-legend" class="personal-distribution-legend"></div>
-              </div>
+              <div id="personal-distribution-bar" class="distribution-bar personal-week-bar"></div>
+              <div id="personal-category-rows" class="personal-category-rows"></div>
             </article>
           </section>
         </section>

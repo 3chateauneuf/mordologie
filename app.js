@@ -245,15 +245,13 @@ const activeTaskLabel = document.querySelector("#active-task-label");
 const todayTotal = document.querySelector("#today-total");
 const weekTotal = document.querySelector("#week-total");
 const todayPanelCopy = document.querySelector("#today-panel-copy");
-const teamCount = document.querySelector("#team-count");
-const activeCountCopy = document.querySelector("#active-count-copy");
+const topCategoryName = document.querySelector("#top-category-name");
+const topCategoryTime = document.querySelector("#top-category-time");
 const personalStatsSwitch = document.querySelector("#personal-stats-switch");
 const personalStatsTitle = document.querySelector("#personal-stats-title");
 const personalStatsCopy = document.querySelector("#personal-stats-copy");
-const personalDistributionDonut = document.querySelector("#personal-distribution-donut");
-const personalDistributionTotal = document.querySelector("#personal-distribution-total");
-const personalDistributionSubcopy = document.querySelector("#personal-distribution-subcopy");
-const personalDistributionLegend = document.querySelector("#personal-distribution-legend");
+const personalDistributionBar = document.querySelector("#personal-distribution-bar");
+const personalCategoryRows = document.querySelector("#personal-category-rows");
 const agendaBoard = document.querySelector("#agenda-board");
 const agendaPrevWeekButton = document.querySelector("#agenda-prev-week");
 const agendaCurrentWeekButton = document.querySelector("#agenda-current-week");
@@ -8003,8 +8001,8 @@ function renderPersonalStats() {
     todayTotal.textContent = "0 h 00";
     weekTotal.textContent = "0 h 00";
     todayPanelCopy.textContent = "Choisissez votre nom pour charger votre temps réel.";
-    teamCount.textContent = "0";
-    activeCountCopy.textContent = "Aucune session en cours.";
+    if (topCategoryName) topCategoryName.textContent = "—";
+    if (topCategoryTime) topCategoryTime.textContent = "0 h 00";
     return;
   }
 
@@ -8044,24 +8042,21 @@ function renderPersonalStats() {
     ? `Temps réel saisi aujourd'hui pour ${collaborator}.`
     : `Lecture réelle ancrée au ${formatDate(referenceDayStart)} pour ${collaborator}.`;
 
-  const collaborators = new Set(getScopedSessions(getAllSessionsWithActive()).map((session) => session.collaborator).filter(Boolean));
-  teamCount.textContent = String(collaborators.size);
-  activeCountCopy.textContent = activeSession
-    ? `Session en cours pour ${activeSession.collaborator}.`
-    : "Aucune session en cours.";
 }
 
 function renderPersonalDistribution() {
   const collaborator = getCurrentCollaborator();
   const usesObjectives = statsMode === "objectives";
 
-  personalStatsTitle.textContent = usesObjectives ? "Objectifs en cours" : "Catégories en cours";
+  personalStatsTitle.textContent = usesObjectives ? "Objectifs cette semaine" : "Catégories cette semaine";
   personalStatsCopy.textContent = usesObjectives
-    ? "Lecture compacte des objectifs réels de la semaine."
-    : "Lecture compacte des catégories réelles sur la semaine.";
+    ? "Répartition de ton temps par objectif cette semaine."
+    : "Répartition de ton temps par catégorie cette semaine.";
 
   if (!collaborator) {
-    renderPersonalDistributionDonut([], 0, usesObjectives, "Choisissez votre nom pour voir votre semaine.");
+    if (topCategoryName) topCategoryName.textContent = "—";
+    if (topCategoryTime) topCategoryTime.textContent = "0 h 00";
+    renderPersonalWeekDistribution([], 0, usesObjectives, "Choisissez votre nom pour voir votre semaine.");
     return;
   }
 
@@ -8072,7 +8067,11 @@ function renderPersonalDistribution() {
   const displayRows = usesObjectives ? objectiveRows : fallbackRows;
   const totalMs = displayRows.reduce((sum, row) => sum + row.durationMs, 0);
 
-  renderPersonalDistributionDonut(
+  const topRow = displayRows[0];
+  if (topCategoryName) topCategoryName.textContent = topRow?.label ?? "—";
+  if (topCategoryTime) topCategoryTime.textContent = topRow ? formatDuration(topRow.durationMs) : "0 h 00";
+
+  renderPersonalWeekDistribution(
     displayRows,
     totalMs,
     usesObjectives,
@@ -10970,82 +10969,70 @@ function colorForPastelDistributionLabel(label) {
   return colorForLabel(`pastel-${label}`);
 }
 
-function renderPersonalDistributionDonut(rows, totalMs, usesObjectives, emptyMessage) {
-  if (!personalDistributionDonut || !personalDistributionLegend || !personalDistributionTotal || !personalDistributionSubcopy) {
-    return;
-  }
+function renderPersonalWeekDistribution(rows, totalMs, usesObjectives, emptyMessage) {
+  if (!personalDistributionBar || !personalCategoryRows) return;
 
-  personalDistributionLegend.innerHTML = "";
+  personalDistributionBar.innerHTML = "";
+  personalCategoryRows.innerHTML = "";
 
   if (!rows.length || !totalMs) {
-    personalDistributionDonut.style.background = "conic-gradient(rgba(255, 192, 203, 0.22) 0deg 360deg)";
-    personalDistributionTotal.textContent = "0%";
-    personalDistributionSubcopy.textContent = "répartition";
-    personalDistributionLegend.append(createEmptyState(emptyMessage));
+    personalDistributionBar.style.display = "none";
+    personalCategoryRows.append(createEmptyState(emptyMessage));
     return;
   }
 
-  const visibleRows = rows.slice(0, 5);
-  const remainderMs = rows.slice(5).reduce((sum, row) => sum + row.durationMs, 0);
-  const chartRows = remainderMs
-    ? [...visibleRows, { label: "Autres", durationMs: remainderMs, count: rows.slice(5).reduce((sum, row) => sum + row.count, 0) }]
-    : visibleRows;
+  personalDistributionBar.style.display = "";
 
-  let currentAngle = 0;
-  const segments = chartRows.map((row) => {
-    const degrees = totalMs ? (row.durationMs / totalMs) * 360 : 0;
-    const start = currentAngle;
-    const end = currentAngle + degrees;
-    currentAngle = end;
-    return {
-      ...row,
-      start,
-      end,
-      share: totalMs ? row.durationMs / totalMs : 0,
-      color: getDistributionColor(row.label, usesObjectives),
-    };
-  });
+  // Stacked proportional bar (overview)
+  for (const row of rows) {
+    const color = getDistributionColor(row.label, usesObjectives);
+    const segment = document.createElement("div");
+    segment.className = "distribution-segment";
+    segment.style.width = `${Math.max((row.durationMs / totalMs) * 100, 2)}%`;
+    segment.style.background = color;
+    const tooltip = usesObjectives ? "" : formatCategoryTagTooltip(row);
+    attachHoverTooltip(segment, tooltip || `${row.label} · ${formatShare(row.durationMs, totalMs)}`);
+    personalDistributionBar.append(segment);
+  }
 
-  personalDistributionDonut.style.background = `conic-gradient(${segments
-    .map((segment) => `${segment.color} ${segment.start}deg ${segment.end}deg`)
-    .join(", ")})`;
+  // Per-category rows with individual bars
+  for (const row of rows) {
+    const color = getDistributionColor(row.label, usesObjectives);
+    const share = totalMs ? row.durationMs / totalMs : 0;
+    const tooltip = usesObjectives ? "" : formatCategoryTagTooltip(row);
 
-  const leadSegment = segments[0];
-  personalDistributionTotal.textContent = `${Math.round((leadSegment.share || 0) * 100)}%`;
-  personalDistributionSubcopy.textContent = leadSegment.label;
-
-  for (const segment of segments) {
-    const categoryTooltip = usesObjectives ? "" : formatCategoryTagTooltip(segment);
     const item = document.createElement("div");
-    item.className = "personal-legend-item";
-    attachHoverTooltip(
-      item,
-      categoryTooltip || `${segment.label} · ${formatDuration(segment.durationMs)} · ${Math.round((segment.share || 0) * 100)}%`,
-    );
+    item.className = "personal-cat-row";
+    if (tooltip) attachHoverTooltip(item, tooltip);
+
+    const head = document.createElement("div");
+    head.className = "personal-cat-head";
 
     const swatch = document.createElement("span");
-    swatch.className = "personal-legend-swatch";
-    swatch.style.background = segment.color;
+    swatch.className = "personal-cat-swatch";
+    swatch.style.background = color;
 
-    const copy = document.createElement("div");
-    copy.className = "personal-legend-copy";
+    const name = document.createElement("span");
+    name.className = "personal-cat-name";
+    name.textContent = row.label;
 
-    const top = document.createElement("div");
-    top.className = "personal-legend-top";
+    const meta = document.createElement("span");
+    meta.className = "personal-cat-meta";
+    meta.textContent = `${formatDuration(row.durationMs)} · ${Math.round(share * 100)}%`;
 
-    const label = document.createElement("strong");
-    label.textContent = segment.label;
+    head.append(swatch, name, meta);
 
-    const share = document.createElement("span");
-    share.textContent = `${Math.round((segment.share || 0) * 100)}%`;
+    const track = document.createElement("div");
+    track.className = "personal-cat-track";
 
-    const meta = document.createElement("p");
-    meta.textContent = `${formatDuration(segment.durationMs)}${segment.count ? ` · ${segment.count} entrée${segment.count > 1 ? "s" : ""}` : ""}`;
+    const fill = document.createElement("div");
+    fill.className = "personal-cat-fill";
+    fill.style.width = `${Math.max(share * 100, 2)}%`;
+    fill.style.background = color;
 
-    top.append(label, share);
-    copy.append(top, meta);
-    item.append(swatch, copy);
-    personalDistributionLegend.append(item);
+    track.append(fill);
+    item.append(head, track);
+    personalCategoryRows.append(item);
   }
 }
 
