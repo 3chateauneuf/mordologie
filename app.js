@@ -9966,7 +9966,7 @@ function buildGuideForExistingUser(hasCalendar) {
     {
       icon: "📊",
       title: "Survol des graphiques",
-      desc: "Dans la vue Gandalf, passe le curseur sur une barre de catégorie : un tooltip liste les tags utilisés dans cette catégorie et leur répartition.",
+      desc: "Dans Hobbit et Gandalf, passe le curseur sur une catégorie (barre ou légende du donut) : un tooltip liste tous les tags utilisés dans cette catégorie.",
     },
     {
       icon: "#",
