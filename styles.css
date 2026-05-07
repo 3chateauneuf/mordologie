@@ -3811,52 +3811,61 @@ select.select-input {
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  border-radius: 3px;
-  padding: 1px 3px;
-  margin-right: -3px;
-  transition: color 100ms, background 100ms;
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin-right: -4px;
+  transition: color 120ms, background 120ms;
 }
 
 .session-time-range:hover {
-  color: var(--accent-strong, #069494);
-  background: rgba(6, 148, 148, 0.07);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
 }
 
 .session-time-range.is-editing {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 3px;
   cursor: default;
   background: transparent;
+  width: 100%;
+  justify-content: flex-end;
 }
 
 .session-time-range.time-updated-flash {
-  color: var(--accent-strong, #069494);
-  background: rgba(6, 148, 148, 0.08);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
   cursor: default;
+  font-size: 0.72rem;
 }
 
 .time-quick-input {
-  width: 62px;
-  padding: 1px 3px;
+  width: 80px;
+  height: 24px;
+  padding: 2px 5px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   font-family: inherit;
-  border: 1px solid var(--border, #d0d8dd);
-  border-radius: 4px;
-  background: var(--surface, #fff);
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-input);
+  background: var(--panel-strong);
   color: var(--text);
-  line-height: 1.4;
+  line-height: 1;
+  transition: border-color 120ms, box-shadow 120ms;
 }
 
 .time-quick-input:focus {
   outline: none;
-  border-color: var(--accent-strong, #069494);
+  border-color: rgba(15, 118, 110, 0.46);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.11);
 }
 
 .time-quick-sep {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--muted);
+  font-weight: 700;
   flex-shrink: 0;
 }
 
@@ -3865,11 +3874,11 @@ select.select-input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
@@ -3877,11 +3886,11 @@ select.select-input {
 }
 
 .time-quick-confirm {
-  color: var(--accent-strong, #069494);
+  color: var(--accent-strong);
 }
 
 .time-quick-confirm:hover {
-  background: rgba(6, 148, 148, 0.12);
+  background: var(--accent-soft);
 }
 
 .time-quick-cancel {
@@ -3889,7 +3898,7 @@ select.select-input {
 }
 
 .time-quick-cancel:hover {
-  background: rgba(39, 56, 68, 0.07);
+  background: var(--ink-soft-strong);
   color: var(--text);
 }
 
