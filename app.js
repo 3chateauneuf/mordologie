@@ -1943,8 +1943,6 @@ adjustConflictButton.addEventListener("click", () => {
 [
   [manageProjectButton, "project"],
   [manageClientButton, "client"],
-  [manageCategoryButton, "category"],
-  [manageTagsButton, "tags"],
   [manageLinkButton, "link"],
   [managePoleButton, "pole"],
   [manageOkrButton, "okr"],
@@ -4807,8 +4805,6 @@ function showAuthRequiredMessage() {
 function updateFieldManageButtons() {
   syncFieldManageButton(manageProjectButton, Boolean(projectInput.value.trim()));
   syncFieldManageButton(manageClientButton, Boolean(taskInput.value.trim()));
-  syncFieldManageButton(manageCategoryButton, currentCategories.length > 0);
-  syncFieldManageButton(manageTagsButton, currentTags.length > 0);
   syncFieldManageButton(manageLinkButton, Boolean(notionInput.value.trim()));
   syncFieldManageButton(managePoleButton, Boolean(objectivePoleInput.value.trim()));
   syncFieldManageButton(manageOkrButton, Boolean(objectiveOkrInput.value.trim()));
@@ -11729,38 +11725,50 @@ function commitTokenInput(input, config) {
 
 function renderCategoryTokens() {
   renderTokenList(categoriesList, currentCategories, (index) => {
-    currentCategories = currentCategories.filter((_, itemIndex) => itemIndex !== index);
+    currentCategories = currentCategories.filter((_, i) => i !== index);
     renderCategoryTokens();
-  }, { kind: "category" });
+  }, {
+    kind: "category",
+    onEdit: (index, newVal) => { currentCategories[index] = newVal; renderCategoryTokens(); },
+  });
   updateFieldManageButtons();
 }
 
 function renderTagTokens() {
   renderTokenList(tagsList, currentTags, (index) => {
-    currentTags = currentTags.filter((_, itemIndex) => itemIndex !== index);
+    currentTags = currentTags.filter((_, i) => i !== index);
     renderTagTokens();
+  }, {
+    onEdit: (index, newVal) => { currentTags[index] = newVal; renderTagTokens(); },
   });
   updateFieldManageButtons();
 }
 
 function renderManualTagTokens() {
   renderTokenList(manualTagsList, manualCurrentTags, (index) => {
-    manualCurrentTags = manualCurrentTags.filter((_, itemIndex) => itemIndex !== index);
+    manualCurrentTags = manualCurrentTags.filter((_, i) => i !== index);
     renderManualTagTokens();
+  }, {
+    onEdit: (index, newVal) => { manualCurrentTags[index] = newVal; renderManualTagTokens(); },
   });
 }
 
 function renderPlannedCategoryTokens() {
   renderTokenList(plannedCategoriesList, plannedCurrentCategories, (index) => {
-    plannedCurrentCategories = plannedCurrentCategories.filter((_, itemIndex) => itemIndex !== index);
+    plannedCurrentCategories = plannedCurrentCategories.filter((_, i) => i !== index);
     renderPlannedCategoryTokens();
-  }, { kind: "category" });
+  }, {
+    kind: "category",
+    onEdit: (index, newVal) => { plannedCurrentCategories[index] = newVal; renderPlannedCategoryTokens(); },
+  });
 }
 
 function renderPlannedTagTokens() {
   renderTokenList(plannedTagsList, plannedCurrentTags, (index) => {
-    plannedCurrentTags = plannedCurrentTags.filter((_, itemIndex) => itemIndex !== index);
+    plannedCurrentTags = plannedCurrentTags.filter((_, i) => i !== index);
     renderPlannedTagTokens();
+  }, {
+    onEdit: (index, newVal) => { plannedCurrentTags[index] = newVal; renderPlannedTagTokens(); },
   });
 }
 
@@ -11786,12 +11794,61 @@ function renderTokenList(container, values, onRemove, options = {}) {
     remove.className = "token-chip-remove";
     remove.setAttribute("aria-label", `Retirer ${value}`);
     remove.textContent = "×";
-    remove.addEventListener("click", () => onRemove(index));
+    remove.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onRemove(index);
+    });
 
-    chip.append(label);
-    chip.append(remove);
+    chip.append(label, remove);
     container.append(chip);
+
+    if (options.onEdit) {
+      chip.title = "Double-clic pour modifier";
+      chip.addEventListener("dblclick", (e) => {
+        if (e.target === remove || chip.classList.contains("token-chip--editing")) return;
+        e.preventDefault();
+        startTokenInlineEdit(chip, label, value, index, options);
+      });
+    }
   }
+}
+
+function startTokenInlineEdit(chip, label, currentValue, index, options) {
+  chip.classList.add("token-chip--editing");
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "token-chip-edit-input";
+  input.value = currentValue;
+  // Match chip width to content
+  input.style.width = `${Math.max(currentValue.length, 3)}ch`;
+  label.replaceWith(input);
+
+  requestAnimationFrame(() => { input.select(); input.focus(); });
+
+  const commit = () => {
+    const raw = input.value.trim();
+    const newValue = options.kind === "category" ? raw : normalizeTag(raw);
+    chip.classList.remove("token-chip--editing");
+    if (newValue && newValue !== currentValue) {
+      options.onEdit(index, newValue);
+    } else {
+      input.replaceWith(label);
+    }
+  };
+
+  const cancel = () => {
+    chip.classList.remove("token-chip--editing");
+    input.replaceWith(label);
+  };
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); commit(); }
+    if (e.key === "Escape") { e.preventDefault(); cancel(); }
+    // Grow input as user types
+    input.style.width = `${Math.max(input.value.length + 1, 3)}ch`;
+  });
+  input.addEventListener("blur", commit, { once: true });
 }
 
 function renderPills(container, values, options = {}) {

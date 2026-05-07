@@ -3739,6 +3739,35 @@ select.select-input {
   gap: 10px 12px;
 }
 
+/* --- Token inline edit --- */
+
+.token-chip {
+  cursor: default;
+}
+
+.token-chip[title] {
+  cursor: text;
+}
+
+.token-chip--editing {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.token-chip-edit-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  min-width: 3ch;
+  line-height: 1.1;
+}
+
 /* --- Save toasts --- */
 
 .toast-stack {
