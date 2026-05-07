@@ -428,9 +428,29 @@
 
           <section class="cadre-stack">
             <article class="inner-card">
-              <div class="section-minihead">
-                <h3 id="personal-stats-title">Catégories cette semaine</h3>
-                <p id="personal-stats-copy">Répartition de ton temps par catégorie.</p>
+              <div class="section-minihead personal-stats-head">
+                <div class="personal-stats-head-text">
+                  <h3 id="personal-stats-title">Catégories cette semaine</h3>
+                  <p id="personal-stats-copy">Répartition de ton temps par catégorie.</p>
+                </div>
+                <div id="personal-period-switch" class="view-switch personal-period-switch">
+                  <button type="button" class="period-btn active" data-personal-period="week">Sem.</button>
+                  <button type="button" class="period-btn" data-personal-period="month">Mois</button>
+                  <button type="button" class="period-btn" data-personal-period="custom">Période</button>
+                </div>
+              </div>
+              <div id="personal-period-nav" class="personal-period-nav">
+                <button id="personal-period-prev" type="button" class="icon-btn personal-period-arrow" aria-label="Période précédente">
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12"><path d="M7.5 2L4 6l3.5 4"/></svg>
+                </button>
+                <span id="personal-period-label" class="personal-period-label"></span>
+                <button id="personal-period-next" type="button" class="icon-btn personal-period-arrow" aria-label="Période suivante">
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="12" height="12"><path d="M4.5 2L8 6l-3.5 4"/></svg>
+                </button>
+              </div>
+              <div id="personal-custom-range" class="personal-custom-range" hidden>
+                <label class="personal-custom-label">Du <input id="personal-custom-from" type="date" class="date-input"></label>
+                <label class="personal-custom-label">au <input id="personal-custom-to" type="date" class="date-input"></label>
               </div>
               <div id="personal-distribution-bar" class="distribution-bar personal-week-bar"></div>
               <div id="personal-category-rows" class="personal-category-rows"></div>

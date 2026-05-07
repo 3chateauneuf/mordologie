@@ -250,6 +250,14 @@ const personalStatsTitle = document.querySelector("#personal-stats-title");
 const personalStatsCopy = document.querySelector("#personal-stats-copy");
 const personalDistributionBar = document.querySelector("#personal-distribution-bar");
 const personalCategoryRows = document.querySelector("#personal-category-rows");
+const personalPeriodSwitch = document.querySelector("#personal-period-switch");
+const personalPeriodLabel = document.querySelector("#personal-period-label");
+const personalPeriodPrev = document.querySelector("#personal-period-prev");
+const personalPeriodNext = document.querySelector("#personal-period-next");
+const personalPeriodNav = document.querySelector("#personal-period-nav");
+const personalCustomRange = document.querySelector("#personal-custom-range");
+const personalCustomFromInput = document.querySelector("#personal-custom-from");
+const personalCustomToInput = document.querySelector("#personal-custom-to");
 const agendaBoard = document.querySelector("#agenda-board");
 const agendaPrevWeekButton = document.querySelector("#agenda-prev-week");
 const agendaCurrentWeekButton = document.querySelector("#agenda-current-week");
@@ -937,6 +945,8 @@ let currentCategories = [];
 let currentTags = [];
 let timerIntervalId = null;
 let reportPeriod = "week";
+let personalPeriod = "week";
+let personalAnchorDate = new Date();
 let statsMode = "categories";
 let evolutionFilterLabel = null;
 let manualTimingSyncLocked = false;
@@ -1633,6 +1643,38 @@ personalStatsSwitch.addEventListener("click", (event) => {
   statsMode = button.dataset.statsMode;
   render();
 });
+
+personalPeriodSwitch?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-personal-period]");
+  if (!button) return;
+  personalPeriod = button.dataset.personalPeriod;
+  if (personalPeriod !== "custom") personalAnchorDate = new Date();
+  renderPersonalPeriodControls();
+  renderPersonalDistribution();
+});
+
+personalPeriodPrev?.addEventListener("click", () => {
+  if (personalPeriod === "week") {
+    personalAnchorDate = new Date(personalAnchorDate.getTime() - 7 * 86400000);
+  } else if (personalPeriod === "month") {
+    personalAnchorDate = new Date(personalAnchorDate.getFullYear(), personalAnchorDate.getMonth() - 1, 1);
+  }
+  renderPersonalPeriodControls();
+  renderPersonalDistribution();
+});
+
+personalPeriodNext?.addEventListener("click", () => {
+  if (personalPeriod === "week") {
+    personalAnchorDate = new Date(personalAnchorDate.getTime() + 7 * 86400000);
+  } else if (personalPeriod === "month") {
+    personalAnchorDate = new Date(personalAnchorDate.getFullYear(), personalAnchorDate.getMonth() + 1, 1);
+  }
+  renderPersonalPeriodControls();
+  renderPersonalDistribution();
+});
+
+personalCustomFromInput?.addEventListener("change", () => renderPersonalDistribution());
+personalCustomToInput?.addEventListener("change", () => renderPersonalDistribution());
 
 analysisStatsSwitch.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-stats-mode]");
@@ -4727,7 +4769,10 @@ function resetComposerForm({ collaborator = "", hint = "Commencez à taper : un 
 }
 
 function setDefaultReportAnchor() {
-  reportAnchorInput.value = formatDateInput(new Date());
+  const today = formatDateInput(new Date());
+  reportAnchorInput.value = today;
+  if (personalCustomFromInput && !personalCustomFromInput.value) personalCustomFromInput.value = today;
+  if (personalCustomToInput && !personalCustomToInput.value) personalCustomToInput.value = today;
 }
 
 function readFormValues() {
@@ -7982,6 +8027,7 @@ function renderSessionList() {
 function renderCadreViews() {
   renderDayThemes();
   renderPersonalStats();
+  renderPersonalPeriodControls();
   renderPersonalDistribution();
   renderAgenda();
 }
@@ -8055,19 +8101,23 @@ function renderPersonalDistribution() {
   const collaborator = getCurrentCollaborator();
   const usesObjectives = statsMode === "objectives";
 
-  personalStatsTitle.textContent = usesObjectives ? "Objectifs cette semaine" : "Catégories cette semaine";
+  const periodSuffix = personalPeriod === "week" ? "cette semaine"
+    : personalPeriod === "month" ? "ce mois"
+    : "sur cette période";
+
+  personalStatsTitle.textContent = usesObjectives ? `Objectifs ${periodSuffix}` : `Catégories ${periodSuffix}`;
   personalStatsCopy.textContent = usesObjectives
-    ? "Répartition de ton temps par objectif cette semaine."
-    : "Répartition de ton temps par catégorie cette semaine.";
+    ? `Répartition de ton temps par objectif ${periodSuffix}.`
+    : `Répartition de ton temps par catégorie ${periodSuffix}.`;
 
   if (!collaborator) {
     if (topCategoryName) topCategoryName.textContent = "—";
     if (topCategoryTime) topCategoryTime.textContent = "0 h 00";
-    renderPersonalWeekDistribution([], 0, usesObjectives, "Choisissez votre nom pour voir votre semaine.");
+    renderPersonalWeekDistribution([], 0, usesObjectives, "Choisissez votre nom pour voir vos données.");
     return;
   }
 
-  const range = getPeriodRange(getReportAnchorDate(), "week");
+  const range = getPersonalPeriodRange();
   const rows = getSessionsForCollaborator(collaborator).filter((session) => isSessionInRange(session, range));
   const objectiveRows = buildObjectiveOkrRows(rows);
   const fallbackRows = buildReportRows(rows, "categories");
@@ -8083,8 +8133,8 @@ function renderPersonalDistribution() {
     totalMs,
     usesObjectives,
     usesObjectives
-      ? "Aucun objectif 2026 renseigné cette semaine pour ce cargonaute."
-      : "Aucune catégorie enregistrée cette semaine pour ce cargonaute.",
+      ? `Aucun objectif 2026 renseigné ${periodSuffix} pour ce cargonaute.`
+      : `Aucune catégorie enregistrée ${periodSuffix} pour ce cargonaute.`,
   );
 }
 
@@ -11568,6 +11618,33 @@ function shiftAgendaWeek(delta) {
   renderCadreViews();
   renderManagerViews();
   renderResourcesViews();
+}
+
+function getPersonalPeriodRange() {
+  if (personalPeriod === "custom") {
+    const fromStr = personalCustomFromInput?.value;
+    const toStr = personalCustomToInput?.value;
+    const from = fromStr ? new Date(`${fromStr}T00:00:00`) : new Date();
+    const toDay = toStr ? new Date(`${toStr}T00:00:00`) : from;
+    const end = new Date(toDay);
+    end.setDate(end.getDate() + 1);
+    return { start: from, end };
+  }
+  return getPeriodRange(personalAnchorDate, personalPeriod);
+}
+
+function renderPersonalPeriodControls() {
+  if (!personalPeriodSwitch) return;
+  for (const btn of personalPeriodSwitch.querySelectorAll("[data-personal-period]")) {
+    btn.classList.toggle("active", btn.dataset.personalPeriod === personalPeriod);
+  }
+  const isCustom = personalPeriod === "custom";
+  if (personalPeriodNav) personalPeriodNav.hidden = isCustom;
+  if (personalCustomRange) personalCustomRange.hidden = !isCustom;
+  if (!isCustom && personalPeriodLabel) {
+    const range = getPersonalPeriodRange();
+    personalPeriodLabel.textContent = formatPeriodLabel(range.start, range.end, personalPeriod);
+  }
 }
 
 function getPeriodRange(anchor, period) {
