@@ -4663,6 +4663,10 @@ async function loadServerBackedState({ silent = false } = {}) {
     if (!silent) {
       render();
     }
+
+    // Auto-refresh iCal if current week has no snapshot or last import is stale (>4h)
+    void autoSyncCalendarIfStale();
+
     return true;
   })();
 
@@ -9702,6 +9706,28 @@ async function saveCalendarIcsUrl(collaborator, url) {
   calendarIcsUrlsByCollaborator[key] = url;
   storeCalendarIcsUrls(calendarIcsUrlsByCollaborator);
   await syncSharedUiPreference(CALENDAR_ICS_PREFERENCE_KEY, collaborator, url);
+}
+
+async function autoSyncCalendarIfStale() {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator) return;
+  const icsUrl = getCalendarIcsUrl(collaborator);
+  if (!icsUrl) return;
+
+  const currentWeekStart = formatDateInput(getStartOfWeek(new Date()));
+  const existing = plannedCalendarSnapshots.find(
+    (s) => normalizeText(s.collaborator) === normalizeText(collaborator) &&
+           String(s.week_start ?? "") === currentWeekStart &&
+           s.source_calendar_id === icsUrl,
+  );
+
+  const STALE_MS = 4 * 60 * 60 * 1000; // 4 hours
+  const importedAt = existing ? new Date(existing.imported_at ?? 0).getTime() : 0;
+  const isStale = !existing || (Date.now() - importedAt > STALE_MS);
+
+  if (isStale) {
+    await syncGoogleCalendar(collaborator);
+  }
 }
 
 async function syncGoogleCalendar(collaborator) {
