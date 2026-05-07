@@ -1610,6 +1610,12 @@ document.addEventListener("dragend", () => {
   }
 });
 
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    void autoSyncCalendarIfStale();
+  }
+});
+
 projectMemoryList.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-memory-key]");
   if (!button) {
@@ -9721,7 +9727,7 @@ async function autoSyncCalendarIfStale() {
            s.source_calendar_id === icsUrl,
   );
 
-  const STALE_MS = 4 * 60 * 60 * 1000; // 4 hours
+  const STALE_MS = 30 * 60 * 1000; // 30 minutes
   const importedAt = existing ? new Date(existing.imported_at ?? 0).getTime() : 0;
   const isStale = !existing || (Date.now() - importedAt > STALE_MS);
 
