@@ -917,6 +917,15 @@ select.select-input {
 
 .token-chip-remove {
   cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.token-chip:hover .token-chip-remove,
+.token-chip:focus-within .token-chip-remove {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .token-chip,
