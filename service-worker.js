@@ -1,11 +1,16 @@
-const CACHE_NAME = "mordologie-v3";
+const CACHE_NAME = "mordologie-v4";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",
-  "./icon.webp",
+  "./favicon.ico",
+  "./favicon-32x32.png",
+  "./favicon-16x16.png",
+  "./apple-touch-icon.png",
+  "./android-chrome-192x192.png",
+  "./android-chrome-512x512.png",
 ];
 
 function isSameOrigin(requestUrl) {
@@ -20,7 +25,10 @@ function isCoreAssetRequest(request) {
   if (request.mode === "navigate") {
     return true;
   }
-  return ["/", "/index.html", "/styles.css", "/app.js", "/manifest.webmanifest", "/icon.webp"].includes(url.pathname);
+  return ["/", "/index.html", "/styles.css", "/app.js", "/manifest.webmanifest",
+    "/favicon.ico", "/favicon-32x32.png", "/favicon-16x16.png",
+    "/apple-touch-icon.png", "/android-chrome-192x192.png", "/android-chrome-512x512.png",
+  ].includes(url.pathname);
 }
 
 self.addEventListener("install", (event) => {
