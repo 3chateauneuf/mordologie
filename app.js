@@ -9559,20 +9559,22 @@ function getPlannedEventsForCollaborator(collaborator, range) {
   ];
   const slots = slotSets[weekOffset % slotSets.length];
 
-  return slots.map((slot, index) => {
-    const source = sources[(index + weekOffset) % sources.length];
-    return buildPlannedMockEvent(
-      {
-        ...slot,
-        title: source.title,
-        description: source.description,
-        suggested_category: source.suggested_category,
-        suggested_tags: source.suggested_tags,
-        status: source.suggested_category ? (index % 3 === 2 ? "validated" : "suggested") : "pending",
-      },
-      index,
-    );
-  });
+  return slots
+    .map((slot, index) => {
+      const source = sources[(index + weekOffset) % sources.length];
+      return buildPlannedMockEvent(
+        {
+          ...slot,
+          title: source.title,
+          description: source.description,
+          suggested_category: source.suggested_category,
+          suggested_tags: source.suggested_tags,
+          status: source.suggested_category ? (index % 3 === 2 ? "validated" : "suggested") : "pending",
+        },
+        index,
+      );
+    })
+    .filter((row) => row.status !== "ignored");
 }
 
 function openPlannedDialog(plannedEvent) {
@@ -10010,7 +10012,7 @@ function getImportedPlannedEventsForCollaborator(collaborator, range) {
         .filter((event) => isValidPlannedSnapshotEvent(event))
         .map((event, index) => buildPlannedImportedEvent(snapshot, event, index)),
     )
-    .filter((row) => row.status !== "integrated")
+    .filter((row) => row.status !== "integrated" && row.status !== "ignored")
     .filter((row) => {
       const start = new Date(row.start_at);
       const end = new Date(row.end_at);
