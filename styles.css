@@ -97,6 +97,22 @@ button {
   z-index: 10;
 }
 
+.topbar-brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.topbar-logo {
+  height: 22px;
+  width: auto;
+  display: block;
+  opacity: 0.88;
+}
+
 .eyebrow,
 .panel-copy,
 .summary-card p,
@@ -4445,5 +4461,11 @@ select.select-input {
   }
   .guide-tips-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar-brand {
+    display: none;
   }
 }
