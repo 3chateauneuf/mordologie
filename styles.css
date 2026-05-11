@@ -310,6 +310,15 @@ button {
   align-items: center;
 }
 
+.auth-calendar-row--multi {
+  align-items: flex-start;
+}
+
+.auth-calendar-input--multi {
+  resize: vertical;
+  font-family: inherit;
+}
+
 .auth-calendar-input {
   flex: 1;
   min-width: 0;

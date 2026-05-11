@@ -362,13 +362,13 @@ function parseIcs(text) {
         event.tzid,
       );
       for (const occ of occurrences) {
-        const dur = new Date(occ.end_at).getTime() - new Date(occ.start_at).getTime();
-        if (dur > 0 && !occ.all_day) events.push(occ);
+        const dur = occ.all_day ? 86400000 : new Date(occ.end_at).getTime() - new Date(occ.start_at).getTime();
+        if (dur > 0) events.push(occ);
       }
     } else {
       // Non-recurring event
-      const dur = new Date(event.end_at).getTime() - new Date(event.start_at).getTime();
-      if (dur > 0 && !event.all_day) events.push(event);
+      const dur = event.all_day ? 86400000 : new Date(event.end_at).getTime() - new Date(event.start_at).getTime();
+      if (dur > 0) events.push(event);
     }
   }
 

@@ -94,9 +94,9 @@
             <span id="auth-user-email" class="muted-copy auth-dropdown-email"></span>
             <span id="auth-role-pill" class="pill auth-role-pill">Cargonaute</span>
             <div class="auth-calendar-section">
-              <label class="auth-section-label" for="auth-calendar-ics-input">Google Calendar (URL iCal)</label>
-              <div class="auth-calendar-row">
-                <input id="auth-calendar-ics-input" type="url" class="auth-calendar-input" placeholder="https://calendar.google.com/calendar/ical/…" />
+              <label class="auth-section-label" for="auth-calendar-ics-input">Google Calendar (URLs iCal — une par ligne)</label>
+              <div class="auth-calendar-row auth-calendar-row--multi">
+                <textarea id="auth-calendar-ics-input" class="auth-calendar-input auth-calendar-input--multi" rows="3" placeholder="https://calendar.google.com/calendar/ical/…&#10;https://calendar.google.com/calendar/ical/…"></textarea>
                 <button id="auth-calendar-ics-save" type="button" class="btn btn-secondary">Sauvegarder</button>
               </div>
             </div>

@@ -1105,7 +1105,7 @@ authUserAvatar?.addEventListener("click", () => {
   authUserDropdown.hidden = !opening;
   authUserAvatar.setAttribute("aria-expanded", String(opening));
   if (opening && authCalendarIcsInput) {
-    authCalendarIcsInput.value = getCalendarIcsUrl(getCurrentCollaborator() || "");
+    authCalendarIcsInput.value = getCalendarIcsUrls(getCurrentCollaborator() || "").join("\n");
   }
 });
 
@@ -9763,137 +9763,154 @@ function storeCalendarIcsUrls(urls) {
   }
 }
 
-function getCalendarIcsUrl(collaborator) {
-  return calendarIcsUrlsByCollaborator[normalizeText(collaborator || "")] ?? "";
+function getCalendarIcsUrls(collaborator) {
+  const raw = calendarIcsUrlsByCollaborator[normalizeText(collaborator || "")] ?? "";
+  const lines = (Array.isArray(raw) ? raw.join("\n") : String(raw)).split(/\s+/);
+  return lines.map((u) => u.trim()).filter((u) => u.startsWith("https://"));
 }
 
-async function saveCalendarIcsUrl(collaborator, url) {
+function getCalendarIcsUrl(collaborator) {
+  return getCalendarIcsUrls(collaborator)[0] ?? "";
+}
+
+async function saveCalendarIcsUrl(collaborator, rawText) {
   const key = normalizeText(collaborator || "");
   if (!key) return;
-  calendarIcsUrlsByCollaborator[key] = url;
+  const urls = String(rawText || "").split(/\s+/).map((u) => u.trim()).filter((u) => u.startsWith("https://"));
+  const stored = urls.join("\n");
+  calendarIcsUrlsByCollaborator[key] = stored;
   storeCalendarIcsUrls(calendarIcsUrlsByCollaborator);
-  await syncSharedUiPreference(CALENDAR_ICS_PREFERENCE_KEY, collaborator, url);
+  await syncSharedUiPreference(CALENDAR_ICS_PREFERENCE_KEY, collaborator, stored);
 }
 
 async function autoSyncCalendarIfStale() {
   const collaborator = getCurrentCollaborator();
   if (!collaborator) return;
-  const icsUrl = getCalendarIcsUrl(collaborator);
-  if (!icsUrl) return;
+  const icsUrls = getCalendarIcsUrls(collaborator);
+  if (!icsUrls.length) return;
 
   const currentWeekStart = formatDateInput(getStartOfWeek(new Date()));
-  const existing = plannedCalendarSnapshots.find(
-    (s) => normalizeText(s.collaborator) === normalizeText(collaborator) &&
-           String(s.week_start ?? "") === currentWeekStart &&
-           s.source_calendar_id === icsUrl,
-  );
+  const STALE_MS = 30 * 60 * 1000;
 
-  const STALE_MS = 30 * 60 * 1000; // 30 minutes
-  const importedAt = existing ? new Date(existing.imported_at ?? 0).getTime() : 0;
-  const isStale = !existing || (Date.now() - importedAt > STALE_MS);
+  const anyStale = icsUrls.some((icsUrl) => {
+    const existing = plannedCalendarSnapshots.find(
+      (s) => normalizeText(s.collaborator) === normalizeText(collaborator) &&
+             String(s.week_start ?? "") === currentWeekStart &&
+             s.source_calendar_id === icsUrl,
+    );
+    const importedAt = existing ? new Date(existing.imported_at ?? 0).getTime() : 0;
+    return !existing || (Date.now() - importedAt > STALE_MS);
+  });
 
-  if (isStale) {
+  if (anyStale) {
     await syncGoogleCalendar(collaborator);
   }
 }
 
 async function syncGoogleCalendar(collaborator) {
-  const icsUrl = getCalendarIcsUrl(collaborator);
-  if (!icsUrl) {
+  const icsUrls = getCalendarIcsUrls(collaborator);
+  if (!icsUrls.length) {
     setAuthStatusMessage("Aucune URL iCal configurée. Collez-la dans votre profil.", "warning", { persistMs: 3500 });
     return;
   }
 
   setAuthStatusMessage("Synchronisation du calendrier…", "neutral");
 
+  let totalEvents = 0;
+  const allWeeks = new Set();
+  let storedRows = [];
   try {
-    const proxyUrl = `/api/calendar-proxy?url=${encodeURIComponent(icsUrl)}`;
-    const response = await fetch(proxyUrl);
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || `HTTP ${response.status}`);
-    }
-    const { events } = await response.json();
-    if (!Array.isArray(events) || events.length === 0) {
-      setAuthStatusMessage("Aucun événement trouvé dans ce calendrier.", "warning", { persistMs: 3200 });
-      return;
-    }
+    const raw = JSON.parse(window.localStorage.getItem(PLANNED_CALENDAR_SNAPSHOTS_KEY) ?? "[]");
+    storedRows = sanitizePlannedCalendarSnapshots(Array.isArray(raw) ? raw : []);
+  } catch {
+    storedRows = [];
+  }
 
-    // Group events by week
-    const snapshotsByWeek = new Map();
-    for (const event of events) {
-      const startDate = new Date(event.start_at);
-      if (Number.isNaN(startDate.getTime())) continue;
-      const weekStart = formatDateInput(getStartOfWeek(startDate));
-      if (!snapshotsByWeek.has(weekStart)) {
-        snapshotsByWeek.set(weekStart, []);
-      }
-      const durationMs = new Date(event.end_at).getTime() - startDate.getTime();
-      if (durationMs <= 0) continue;
-      const inferred = inferPlannedSuggestionFromTitle(event.title || "");
-      snapshotsByWeek.get(weekStart).push({
-        id: `gcal-${normalizeComparableText(collaborator)}-${normalizeComparableText(event.uid || event.title || weekStart)}`,
-        source: "google_calendar",
-        source_event_id: event.uid || "",
-        source_calendar_id: icsUrl,
-        collaborator,
-        title: event.title || "Sans titre",
-        description: event.description || "",
-        start_at: event.start_at,
-        end_at: event.end_at,
-        durationMs,
-        day_key: formatDateInput(startDate),
-        all_day: event.all_day || false,
-        suggested_category: inferred.suggested_category ?? "",
-        suggested_tags: inferred.suggested_tags ?? [],
-        validated_category: "",
-        validated_tags: [],
-        matching_confidence: inferred.matching_confidence ?? 0.3,
-        status: inferred.suggested_category ? "suggested" : "pending",
-        updated_at: null,
-      });
-    }
+  // Remove existing snapshots for this collaborator across all configured URLs
+  storedRows = storedRows.filter(
+    (s) => !(normalizeText(s.collaborator) === normalizeText(collaborator) &&
+             icsUrls.includes(s.source_calendar_id)),
+  );
 
-    const newSnapshots = [];
-    for (const [weekStart, weekEvents] of snapshotsByWeek.entries()) {
-      if (weekEvents.length === 0) continue;
-      newSnapshots.push({
-        collaborator,
-        source: "google_calendar",
-        source_calendar_id: icsUrl,
-        week_start: weekStart,
-        imported_at: new Date().toISOString(),
-        events: weekEvents,
-      });
-    }
+  const newSnapshots = [];
 
-    // Read raw stored rows (without seeded), replace existing for this collaborator+icsUrl
-    let storedRows = [];
+  for (const icsUrl of icsUrls) {
     try {
-      const raw = JSON.parse(window.localStorage.getItem(PLANNED_CALENDAR_SNAPSHOTS_KEY) ?? "[]");
-      storedRows = sanitizePlannedCalendarSnapshots(Array.isArray(raw) ? raw : []);
-    } catch {
-      storedRows = [];
-    }
-    const filtered = storedRows.filter(
-      (s) => !(normalizeText(s.collaborator) === normalizeText(collaborator) && s.source_calendar_id === icsUrl),
-    );
-    const updated = [...filtered, ...newSnapshots];
-    storePlannedCalendarSnapshots(updated);
-    plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+      const proxyUrl = `/api/calendar-proxy?url=${encodeURIComponent(icsUrl)}`;
+      const response = await fetch(proxyUrl);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        console.warn("Calendar sync failed for URL:", icsUrl, data.error || `HTTP ${response.status}`);
+        continue;
+      }
+      const { events } = await response.json();
+      if (!Array.isArray(events) || events.length === 0) continue;
 
-    const eventCount = events.length;
-    const weekCount = snapshotsByWeek.size;
+      const snapshotsByWeek = new Map();
+      for (const event of events) {
+        const startDate = new Date(event.start_at);
+        if (Number.isNaN(startDate.getTime())) continue;
+        const durationMs = event.all_day
+          ? 86400000
+          : new Date(event.end_at).getTime() - startDate.getTime();
+        if (durationMs <= 0) continue;
+        const weekStart = formatDateInput(getStartOfWeek(startDate));
+        if (!snapshotsByWeek.has(weekStart)) snapshotsByWeek.set(weekStart, []);
+        const inferred = inferPlannedSuggestionFromTitle(event.title || "");
+        snapshotsByWeek.get(weekStart).push({
+          id: `gcal-${normalizeComparableText(collaborator)}-${normalizeComparableText(event.uid || event.title || weekStart)}`,
+          source: "google_calendar",
+          source_event_id: event.uid || "",
+          source_calendar_id: icsUrl,
+          collaborator,
+          title: event.title || "Sans titre",
+          description: event.description || "",
+          start_at: event.start_at,
+          end_at: event.end_at,
+          durationMs,
+          day_key: formatDateInput(startDate),
+          all_day: event.all_day || false,
+          suggested_category: inferred.suggested_category ?? "",
+          suggested_tags: inferred.suggested_tags ?? [],
+          validated_category: "",
+          validated_tags: [],
+          matching_confidence: inferred.matching_confidence ?? 0.3,
+          status: inferred.suggested_category ? "suggested" : "pending",
+          updated_at: null,
+        });
+      }
+
+      for (const [weekStart, weekEvents] of snapshotsByWeek.entries()) {
+        if (!weekEvents.length) continue;
+        allWeeks.add(weekStart);
+        newSnapshots.push({
+          collaborator,
+          source: "google_calendar",
+          source_calendar_id: icsUrl,
+          week_start: weekStart,
+          imported_at: new Date().toISOString(),
+          events: weekEvents,
+        });
+        totalEvents += weekEvents.length;
+      }
+    } catch (err) {
+      console.warn("Calendar sync error for URL:", icsUrl, err);
+    }
+  }
+
+  storePlannedCalendarSnapshots([...storedRows, ...newSnapshots]);
+  plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+
+  if (totalEvents === 0) {
+    setAuthStatusMessage("Aucun événement trouvé dans les calendriers configurés.", "warning", { persistMs: 3200 });
+  } else {
     setAuthStatusMessage(
-      `${eventCount} événement${eventCount !== 1 ? "s" : ""} importé${eventCount !== 1 ? "s" : ""} (${weekCount} semaine${weekCount !== 1 ? "s" : ""}).`,
+      `${totalEvents} événement${totalEvents !== 1 ? "s" : ""} importé${totalEvents !== 1 ? "s" : ""} (${allWeeks.size} semaine${allWeeks.size !== 1 ? "s" : ""}).`,
       "success",
       { persistMs: 3500 },
     );
-    render();
-  } catch (err) {
-    console.error("Google Calendar sync failed:", err);
-    setAuthStatusMessage("Erreur lors de la synchronisation du calendrier.", "error", { persistMs: 4000 });
   }
+  render();
 }
 
 function sanitizePlannedCalendarSnapshots(rows) {
