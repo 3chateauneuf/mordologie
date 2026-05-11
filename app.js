@@ -9818,6 +9818,8 @@ async function syncGoogleCalendar(collaborator) {
 
   let totalEvents = 0;
   const allWeeks = new Set();
+
+  // Load base row set — never mutate until we have successful results per URL
   let storedRows = [];
   try {
     const raw = JSON.parse(window.localStorage.getItem(PLANNED_CALENDAR_SNAPSHOTS_KEY) ?? "[]");
@@ -9825,14 +9827,6 @@ async function syncGoogleCalendar(collaborator) {
   } catch {
     storedRows = [];
   }
-
-  // Remove existing snapshots for this collaborator across all configured URLs
-  storedRows = storedRows.filter(
-    (s) => !(normalizeText(s.collaborator) === normalizeText(collaborator) &&
-             icsUrls.includes(s.source_calendar_id)),
-  );
-
-  const newSnapshots = [];
 
   for (const icsUrl of icsUrls) {
     try {
@@ -9880,6 +9874,7 @@ async function syncGoogleCalendar(collaborator) {
         });
       }
 
+      const newSnapshots = [];
       for (const [weekStart, weekEvents] of snapshotsByWeek.entries()) {
         if (!weekEvents.length) continue;
         allWeeks.add(weekStart);
@@ -9893,12 +9888,19 @@ async function syncGoogleCalendar(collaborator) {
         });
         totalEvents += weekEvents.length;
       }
+
+      // Only replace existing snapshots for this URL once we have successful results
+      storedRows = storedRows.filter(
+        (s) => !(normalizeText(s.collaborator) === normalizeText(collaborator) &&
+                 s.source_calendar_id === icsUrl),
+      );
+      storedRows = [...storedRows, ...newSnapshots];
     } catch (err) {
       console.warn("Calendar sync error for URL:", icsUrl, err);
     }
   }
 
-  storePlannedCalendarSnapshots([...storedRows, ...newSnapshots]);
+  storePlannedCalendarSnapshots(storedRows);
   plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
 
   if (totalEvents === 0) {
