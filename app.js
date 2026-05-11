@@ -195,9 +195,7 @@ const collaboratorSuggestions = document.querySelector("#collaborator-suggestion
 const projectInput = document.querySelector("#project-input");
 const projectSuggestions = document.querySelector("#project-suggestions");
 const projectMemoryHint = document.querySelector("#project-memory-hint");
-const manageProjectButton = document.querySelector("#manage-project-button");
 const taskInput = document.querySelector("#task-input");
-const manageClientButton = document.querySelector("#manage-client-button");
 const categoriesInput = document.querySelector("#categories-input");
 const categoriesList = document.querySelector("#categories-list");
 const categorySuggestions = document.querySelector("#category-suggestions");
@@ -2012,8 +2010,6 @@ adjustConflictButton.addEventListener("click", () => {
 });
 
 [
-  [manageProjectButton, "project"],
-  [manageClientButton, "client"],
   [manageLinkButton, "link"],
   [managePoleButton, "pole"],
   [manageOkrButton, "okr"],
@@ -4761,14 +4757,13 @@ function syncActiveSessionDraftFromForm({ audit = false, source = "active-sessio
 }
 
 function hydrateFormFromActiveSession() {
-  const source = activeSession ?? sessions[0] ?? null;
-  collaboratorInput.value = activeSession?.collaborator ?? source?.collaborator ?? "";
+  collaboratorInput.value = activeSession?.collaborator ?? "";
   projectInput.value = activeSession?.project ?? "";
   taskInput.value = activeSession?.task ?? "";
   notionInput.value = activeSession?.notionRef ?? "";
-  objectivePoleInput.value = activeSession?.objectivePole ?? source?.objectivePole ?? "";
-  objectiveOkrInput.value = activeSession?.objectiveOkr ?? source?.objectiveOkr ?? "";
-  objectiveKrInput.value = activeSession?.objectiveKr ?? source?.objectiveKr ?? "";
+  objectivePoleInput.value = activeSession?.objectivePole ?? "";
+  objectiveOkrInput.value = activeSession?.objectiveOkr ?? "";
+  objectiveKrInput.value = activeSession?.objectiveKr ?? "";
   notesInput.value = activeSession?.notes ?? "";
   currentCategories = [...(activeSession?.categories ?? [])];
   currentTags = [...(activeSession?.tags ?? [])];
@@ -4881,8 +4876,6 @@ function showAuthRequiredMessage() {
 }
 
 function updateFieldManageButtons() {
-  syncFieldManageButton(manageProjectButton, Boolean(projectInput.value.trim()));
-  syncFieldManageButton(manageClientButton, Boolean(taskInput.value.trim()));
   syncFieldManageButton(manageLinkButton, Boolean(notionInput.value.trim()));
   syncFieldManageButton(managePoleButton, Boolean(objectivePoleInput.value.trim()));
   syncFieldManageButton(manageOkrButton, Boolean(objectiveOkrInput.value.trim()));
@@ -6673,9 +6666,8 @@ async function logSessionChange(previousSession, nextSession, source = "manual")
 
 
 function resetFormAfterStop() {
-  const lastCollaborator = collaboratorInput.value.trim();
   resetComposerForm({
-    collaborator: lastCollaborator,
+    collaborator: getCurrentCollaborator(),
     hint: "Commencez à taper : un sujet déjà connu recharge automatiquement ses informations utiles.",
   });
 }
