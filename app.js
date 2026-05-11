@@ -5415,6 +5415,11 @@ async function initializeAuth() {
     await applyLocalRescueAccess(rescueName, { silent: true });
     return;
   }
+  if (window.supabase) {
+    await ensureReferenceCatalogLoaded();
+    await loadServerBackedState({ silent: true });
+    startRemoteSyncLoop();
+  }
   render();
 }
 
