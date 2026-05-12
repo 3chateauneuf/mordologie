@@ -6697,20 +6697,25 @@ function openManualDialog(session = null, preset = null) {
   const end = preset?.end ? new Date(preset.end) : new Date();
   const start = preset?.start ? new Date(preset.start) : new Date(end.getTime() - 30 * 60 * 1000);
 
+  // Only inherit main-form state when opening with no session and no preset at all (keyboard
+  // shortcut / "Ajouter" button). When called from a day-track click (preset contains slot but
+  // no content fields), keep the form blank so we don't leak the last session's data.
+  const inheritForm = session == null && preset == null;
+
   manualEditingSessionId = session?.id ?? null;
   setManualDialogStatus("");
   manualCollaboratorInput.value =
     session?.collaborator ?? preset?.collaborator ?? collaboratorInput.value.trim();
-  manualProjectInput.value = session?.project ?? preset?.project ?? projectInput.value.trim();
-  manualTaskInput.value = session?.task ?? preset?.task ?? taskInput.value.trim();
-  manualCategoriesInput.value = (session?.categories ?? preset?.categories ?? currentCategories).join(", ");
-  manualCurrentTags = dedupePreservingOrder(session?.tags ?? preset?.tags ?? currentTags);
+  manualProjectInput.value = session?.project ?? preset?.project ?? (inheritForm ? projectInput.value.trim() : "");
+  manualTaskInput.value = session?.task ?? preset?.task ?? (inheritForm ? taskInput.value.trim() : "");
+  manualCategoriesInput.value = (session?.categories ?? preset?.categories ?? (inheritForm ? currentCategories : [])).join(", ");
+  manualCurrentTags = dedupePreservingOrder(session?.tags ?? preset?.tags ?? (inheritForm ? currentTags : []));
   manualTagsInput.value = "";
-  manualNotionInput.value = session?.notionRef ?? preset?.notionRef ?? notionInput.value.trim();
-  manualObjectivePoleInput.value = session?.objectivePole ?? preset?.objectivePole ?? objectivePoleInput.value.trim();
-  manualObjectiveOkrInput.value = session?.objectiveOkr ?? preset?.objectiveOkr ?? objectiveOkrInput.value.trim();
-  manualObjectiveKrInput.value = session?.objectiveKr ?? preset?.objectiveKr ?? objectiveKrInput.value.trim();
-  manualNotesInput.value = session?.notes ?? preset?.notes ?? notesInput.value.trim();
+  manualNotionInput.value = session?.notionRef ?? preset?.notionRef ?? (inheritForm ? notionInput.value.trim() : "");
+  manualObjectivePoleInput.value = session?.objectivePole ?? preset?.objectivePole ?? (inheritForm ? objectivePoleInput.value.trim() : "");
+  manualObjectiveOkrInput.value = session?.objectiveOkr ?? preset?.objectiveOkr ?? (inheritForm ? objectiveOkrInput.value.trim() : "");
+  manualObjectiveKrInput.value = session?.objectiveKr ?? preset?.objectiveKr ?? (inheritForm ? objectiveKrInput.value.trim() : "");
+  manualNotesInput.value = session?.notes ?? preset?.notes ?? (inheritForm ? notesInput.value.trim() : "");
   const startDateValue = session ? new Date(session.start) : start;
   const endDateValue = session ? new Date(session.end) : end;
   setDateTimeFieldValue(manualStartDateInput, manualStartTimeInput, startDateValue);
@@ -9584,6 +9589,7 @@ function openPlannedDialog(plannedEvent) {
   plannedSubjectInput.value = plannedEvent.title || "";
   plannedTaskInput.value = plannedEvent.task || "";
   plannedCurrentCategories = getPlannedEventDisplayCategory(plannedEvent) ? [getPlannedEventDisplayCategory(plannedEvent)] : [];
+  plannedCategoryInput.value = "";
   plannedCurrentTags = getPlannedEventEditableTags(plannedEvent);
   renderPlannedCategoryTokens();
   plannedNotionInput.value = plannedEvent.notionRef || extractFirstUrl(plannedEvent.description || "") || "";
@@ -9940,7 +9946,8 @@ function isValidPlannedSnapshotEvent(event) {
     return false;
   }
   const durationMs = end.getTime() - start.getTime();
-  if (durationMs > 12 * 60 * 60 * 1000) {
+  // Allow all-day events (86400000 ms) but reject multi-day spans (> 48h)
+  if (durationMs > 48 * 60 * 60 * 1000) {
     return false;
   }
   if (isLikelyBrokenPlannedSnapshotTitle(event.title ?? "")) {
@@ -10009,6 +10016,12 @@ function buildPlannedImportedEvent(snapshot, event, index) {
     validated_category: validatedCategory,
     validated_tags: dedupePreservingOrder(validatedTags),
     matching_confidence: inferred.matching_confidence,
+    task: override.task ?? "",
+    notionRef: override.notionRef ?? "",
+    objectivePole: override.objectivePole ?? "",
+    objectiveOkr: override.objectiveOkr ?? "",
+    objectiveKr: override.objectiveKr ?? "",
+    notes: override.description ?? event.description ?? "",
     status,
     updated_at: override.updated_at ?? snapshot.imported_at ?? null,
   };
