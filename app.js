@@ -4378,11 +4378,12 @@ function mapActiveSessionRowToSession(row) {
   });
 }
 
-function hydrateRemoteState(historyRows, activeRows) {
+function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = true } = {}) {
   logStateLoss("hydrateRemoteState:before", {
     writer: "hydrateRemoteState",
     historyRowsCount: historyRows.length,
     activeRowsCount: activeRows.length,
+    historyAuthoritative,
   });
   const previousHydratedActiveSessionId = activeSession?.id ?? null;
   const remoteSessions = historyRows.map(mapTimeEntryRowToSession);
@@ -4423,7 +4424,10 @@ function hydrateRemoteState(historyRows, activeRows) {
     }
 
     const protectRecentLocalSession = ["pending_create", "pending_remote_stop", "synced", "pending_update"].includes(session.syncStatus || "");
-    if (session.isServerBacked && !protectRecentLocalSession) {
+    // Only defer to server-state when the history query actually succeeded.
+    // If historyAuthoritative=false (query failed), preserve all local sessions
+    // so a failed fetch doesn't wipe previously-synced entries from localStorage.
+    if (historyAuthoritative && session.isServerBacked && !protectRecentLocalSession) {
       continue;
     }
 
@@ -4646,7 +4650,7 @@ async function loadServerBackedState({ silent = false } = {}) {
       repriseRowsCount: repriseActionRows?.length ?? 0,
       preferenceRowsCount: preferenceRows?.length ?? 0,
     });
-    hydrateRemoteState(historyRows ?? [], activeRows ?? []);
+    hydrateRemoteState(historyRows ?? [], activeRows ?? [], { historyAuthoritative: historyOk });
     hydrateRepriseActions(repriseActionRows ?? repriseActions);
     hydrateSharedUiPreferences(preferenceRows ?? []);
     logStateLoss("loadServerBackedState:after-hydrate", {
