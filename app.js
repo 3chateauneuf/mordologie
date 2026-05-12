@@ -4673,6 +4673,11 @@ async function loadServerBackedState({ silent = false } = {}) {
     // Auto-refresh iCal if current week has no snapshot or last import is stale (>4h)
     void autoSyncCalendarIfStale();
 
+    // Push any locally-held sessions that never made it to Supabase
+    if (historyOk) {
+      void autoFlushPendingSessions();
+    }
+
     return true;
   })();
 
@@ -5434,11 +5439,13 @@ function setAuthStatusMessage(message = "", tone = "neutral", options = {}) {
     authStatusShell.hidden = !message;
   }
   authStatus.dataset.tone = message ? tone : "";
+  authStatus.dataset.pendingSync = "";
   if (message && options.persistMs) {
     const expectedMessage = message;
     authStatusClearTimeoutId = window.setTimeout(() => {
       if (authStatus.textContent === expectedMessage) {
         setAuthStatusMessage("");
+        renderPendingSyncIndicator();
       }
     }, options.persistMs);
   }
@@ -7314,6 +7321,7 @@ function render() {
   renderTagManager();
   renderSessionList();
   renderSyncButton();
+  renderPendingSyncIndicator();
   renderCadreViews();
   renderManagerControls();
   renderManagerViews();
@@ -8391,12 +8399,48 @@ async function quickPatchSessionTimes(el, session, newStart, newEnd) {
   }, 1800);
 }
 
+function countUnsyncedSessions() {
+  const pendingStopId = pendingStoppedSessionState?.session?.id ?? "";
+  return sessions.filter((s) =>
+    s.end &&
+    !isDemoSession(s) &&
+    Number(s.durationMs) > 0 &&
+    !s.isServerBacked &&
+    s.id !== pendingStopId,
+  ).length;
+}
+
+function renderPendingSyncIndicator() {
+  if (!authStatus) return;
+  const count = countUnsyncedSessions();
+  const isOurMessage = authStatus.dataset.pendingSync === "true";
+  const statusIsEmpty = authStatus.hidden || !authStatus.textContent.trim();
+  if (count > 0 && (isOurMessage || statusIsEmpty)) {
+    const label = `${count} session${count > 1 ? "s" : ""} non synchronisée${count > 1 ? "s" : ""}.`;
+    authStatus.textContent = label;
+    authStatus.hidden = false;
+    if (authStatusShell) authStatusShell.hidden = false;
+    authStatus.dataset.tone = "warning";
+    authStatus.dataset.pendingSync = "true";
+  } else if (count === 0 && isOurMessage) {
+    authStatus.hidden = true;
+    authStatus.textContent = "";
+    if (authStatusShell) authStatusShell.hidden = true;
+    authStatus.dataset.tone = "";
+    authStatus.dataset.pendingSync = "";
+  }
+}
+
 function renderSyncButton() {
   const btn = document.getElementById("journal-sync-btn");
   const label = document.getElementById("journal-sync-label");
   if (!btn) return;
-  btn.hidden = !window.supabase;
-  if (label && !btn.disabled) label.textContent = "Synchroniser vers DB";
+  const unsyncedCount = countUnsyncedSessions();
+  btn.hidden = !window.supabase && unsyncedCount === 0;
+  if (!label || btn.disabled) return;
+  label.textContent = unsyncedCount > 0
+    ? `Synchroniser (${unsyncedCount} en attente)`
+    : "Synchroniser vers DB";
 }
 
 async function deduplicateTimeEntries() {
@@ -8445,6 +8489,125 @@ async function deduplicateTimeEntries() {
       .in("time_entry_id", toDelete.slice(i, i + 50));
   }
   return toDelete.length;
+}
+
+let autoFlushInProgress = false;
+
+async function autoFlushPendingSessions() {
+  if (autoFlushInProgress || !window.supabase || !remoteStateAvailable) return;
+  if (!accessProfile.appUser?.user_id) return;
+
+  const pendingStopId = pendingStoppedSessionState?.session?.id ?? "";
+  const candidates = sessions.filter((s) =>
+    s.end && !isDemoSession(s) && Number(s.durationMs) > 0 && !s.isServerBacked && s.id !== pendingStopId,
+  );
+  if (!candidates.length) return;
+
+  autoFlushInProgress = true;
+  try {
+    const { data: existing, error: fetchErr } = await window.supabase
+      .from("time_entries")
+      .select("source_session_id, time_entry_id");
+    if (fetchErr) return;
+
+    const existingSourceIds = new Set((existing ?? []).map((r) => normalizeText(r.source_session_id ?? "")));
+    const existingTeIds     = new Set((existing ?? []).map((r) => normalizeText(r.time_entry_id ?? "")));
+
+    const missing = candidates.filter((s) => {
+      if (existingSourceIds.has(normalizeText(s.id))) return false;
+      if (s.dbTimeEntryId && existingTeIds.has(normalizeText(s.dbTimeEntryId))) return false;
+      return true;
+    });
+
+    // Sessions already in Supabase but not yet marked locally → mark synced now
+    for (const s of candidates) {
+      if (!missing.includes(s)) {
+        const teId = s.dbTimeEntryId && existingTeIds.has(normalizeText(s.dbTimeEntryId))
+          ? s.dbTimeEntryId
+          : null;
+        upsertSession({ ...s, syncStatus: "synced", isServerBacked: true, dbTimeEntryId: teId ?? s.dbTimeEntryId });
+      }
+    }
+    if (candidates.length !== missing.length) {
+      persistSessions();
+      renderPendingSyncIndicator();
+    }
+
+    if (!missing.length) return;
+
+    const { data: lastTeRow } = await window.supabase
+      .from("time_entries")
+      .select("time_entry_id")
+      .order("time_entry_id", { ascending: false })
+      .limit(1);
+    const lastNum = lastTeRow?.[0]?.time_entry_id
+      ? parseInt(String(lastTeRow[0].time_entry_id).replace("TE-", ""), 10)
+      : 0;
+
+    const userName = accessProfile.appUser.user_name;
+    const userId   = accessProfile.appUser.user_id;
+
+    const payloads = missing.map((s, i) => {
+      const start = new Date(s.start);
+      const durationMs = Math.max(Number(s.durationMs) || 0, 0);
+      return {
+        time_entry_id:           `TE-${String(lastNum + 1 + i).padStart(6, "0")}`,
+        source_session_id:       s.id,
+        entry_date:              start.toISOString().slice(0, 10),
+        started_at:              s.start,
+        ended_at:                s.end,
+        user_name:               s.collaborator || userName,
+        user_id:                 s.dbUserId || userId,
+        team_name:               s.dbTeamName || "",
+        project_name:            s.project || "",
+        project_id:              s.dbProjectId || null,
+        client_name:             s.dbClientName || "",
+        activity_category_label: s.categories?.[0] || null,
+        activity_category_id:    s.dbActivityCategoryId || null,
+        kpi_category_label:      s.dbKpiCategoryLabel || null,
+        task_label:              s.task || "",
+        tags_text:               dedupePreservingOrder((s.tags ?? []).map(normalizeTag)).join(", "),
+        duration_minutes:        Math.max(1, Math.round(durationMs / 60000)),
+        duration_hours:          Number((durationMs / 3600000).toFixed(2)),
+        notes:                   s.notes || "",
+        notion_ref:              s.notionRef || "",
+        objective_pole:          s.objectivePole || "",
+        objective_okr:           s.objectiveOkr || "",
+        objective_kr:            s.objectiveKr || "",
+        source:                  normalizeTimeEntrySource(s.source || "manual"),
+        status:                  "saved",
+      };
+    });
+
+    let done = 0;
+    for (let i = 0; i < payloads.length; i += 50) {
+      const batch = payloads.slice(i, i + 50);
+      const { error } = await window.supabase.from("time_entries").insert(batch);
+      if (!error) {
+        done += batch.length;
+        for (const payload of batch) {
+          const s = sessions.find((sess) => normalizeText(sess.id) === normalizeText(payload.source_session_id));
+          if (s) {
+            upsertSession({ ...s, syncStatus: "synced", isServerBacked: true, dbTimeEntryId: payload.time_entry_id });
+          }
+        }
+        persistSessions();
+        renderPendingSyncIndicator();
+      }
+    }
+
+    if (done > 0) {
+      setAuthStatusMessage(
+        `${done} session${done > 1 ? "s" : ""} synchronisée${done > 1 ? "s" : ""} automatiquement.`,
+        "success",
+        { persistMs: 3000 },
+      );
+      await loadServerBackedState({ silent: true });
+      render();
+    }
+  } finally {
+    autoFlushInProgress = false;
+  }
 }
 
 async function syncAllLocalSessions() {
