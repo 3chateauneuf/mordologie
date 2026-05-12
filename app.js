@@ -4507,10 +4507,13 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     !isGhostActiveSessionCandidate(previousActiveSession, Array.from(mergedSessions.values())) &&
     // Stop if this session was explicitly closed on another device (ID appears in completed time_entries)
     !closedRemoteSessionIds.has(normalizeText(previousActiveSession.id ?? "")) &&
-    // Stop if the user has newer completed sessions on the server (timer was abandoned at another workstation)
+    // Stop if the user has newer completed sessions on the server (timer was abandoned at another workstation).
+    // Guard: the remote row must itself have been created after the local timer started, to avoid
+    // retroactive manual entries (logged today but for an earlier slot) from killing a running timer.
     !(historyAuthoritative && historyRows.some((row) =>
       normalizeText(row.user_name ?? "") === normalizeText(previousActiveSession.collaborator ?? "") &&
-      new Date(row.started_at ?? 0).getTime() > new Date(previousActiveSession.start).getTime() + 60000
+      new Date(row.started_at ?? 0).getTime() > new Date(previousActiveSession.start).getTime() + 60000 &&
+      new Date(row.created_at ?? 0).getTime() > new Date(previousActiveSession.start).getTime()
     ))
   ) {
     activeSession = normalizeSession(previousActiveSession);
@@ -4592,7 +4595,9 @@ async function loadServerBackedState({ silent = false } = {}) {
   remoteStateLoadingPromise = (async () => {
     const preferenceOwnerName = getSharedPreferenceOwnerName();
     const [historyResult, activeResult, repriseActionsResult, preferencesResult] = await Promise.allSettled([
-      window.supabase.from("time_entries").select("*").order("created_at", { ascending: false }),
+      window.supabase.from("time_entries").select("*")
+        .gte("entry_date", new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10))
+        .order("created_at", { ascending: false }),
       window.supabase.from("active_sessions").select("*").order("updated_at", { ascending: false }),
       window.supabase.from("reprise_actions").select("*").order("updated_at", { ascending: false }),
       preferenceOwnerName
@@ -8512,13 +8517,29 @@ async function autoFlushPendingSessions() {
 
   autoFlushInProgress = true;
   try {
-    const { data: existing, error: fetchErr } = await window.supabase
-      .from("time_entries")
-      .select("source_session_id, time_entry_id");
-    if (fetchErr) return;
+    // Only check the specific IDs we care about to avoid the 1000-row Supabase default cap.
+    const candidateSourceIds = candidates.map((s) => s.id).filter(Boolean);
+    const candidateTeIds = candidates.map((s) => s.dbTimeEntryId).filter(Boolean);
 
-    const existingSourceIds = new Set((existing ?? []).map((r) => normalizeText(r.source_session_id ?? "")));
-    const existingTeIds     = new Set((existing ?? []).map((r) => normalizeText(r.time_entry_id ?? "")));
+    const [sourceResult, teResult] = await Promise.all([
+      window.supabase
+        .from("time_entries")
+        .select("source_session_id, time_entry_id")
+        .in("source_session_id", candidateSourceIds),
+      candidateTeIds.length
+        ? window.supabase
+            .from("time_entries")
+            .select("time_entry_id")
+            .in("time_entry_id", candidateTeIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (sourceResult.error) return;
+
+    const existingSourceIds = new Set((sourceResult.data ?? []).map((r) => normalizeText(r.source_session_id ?? "")));
+    const existingTeIds     = new Set([
+      ...(sourceResult.data ?? []).map((r) => normalizeText(r.time_entry_id ?? "")),
+      ...(teResult.data ?? []).map((r) => normalizeText(r.time_entry_id ?? "")),
+    ]);
 
     const missing = candidates.filter((s) => {
       if (existingSourceIds.has(normalizeText(s.id))) return false;
