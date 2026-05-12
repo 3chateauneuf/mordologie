@@ -4504,7 +4504,14 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     previousActiveSession &&
     !previousActiveSession.isServerBacked &&
     normalizeText(previousActiveSession.collaborator) === normalizeText(currentUserName) &&
-    !isGhostActiveSessionCandidate(previousActiveSession, Array.from(mergedSessions.values()))
+    !isGhostActiveSessionCandidate(previousActiveSession, Array.from(mergedSessions.values())) &&
+    // Stop if this session was explicitly closed on another device (ID appears in completed time_entries)
+    !closedRemoteSessionIds.has(normalizeText(previousActiveSession.id ?? "")) &&
+    // Stop if the user has newer completed sessions on the server (timer was abandoned at another workstation)
+    !(historyAuthoritative && historyRows.some((row) =>
+      normalizeText(row.user_name ?? "") === normalizeText(previousActiveSession.collaborator ?? "") &&
+      new Date(row.started_at ?? 0).getTime() > new Date(previousActiveSession.start).getTime() + 60000
+    ))
   ) {
     activeSession = normalizeSession(previousActiveSession);
   } else {
