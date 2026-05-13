@@ -1084,6 +1084,13 @@ setupTokenInput(plannedTagsInput, {
   },
 });
 
+// Prevent the browser from scrolling to the #cadre (or any view) hash anchor on load.
+// The hash is used only to persist the active tab across reloads — not as a scroll target.
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+window.scrollTo(0, 0);
+
 initializeAutocomplete();
 applyBookFavicon();
 initializeObjectiveSelections();
