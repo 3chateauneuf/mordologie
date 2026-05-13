@@ -6932,6 +6932,20 @@ function saveManualEntry() {
           render();
         }
       })();
+      // If saving a past entry (not editing) that would fall outside the default 200-session
+      // display window, auto-set the date filter so the user can immediately see it.
+      if (!editingSession) {
+        const entryDate = formatDateInput(new Date(sessionToSave.start));
+        const todayDate = formatDateInput(new Date());
+        if (entryDate !== todayDate && journalFilterFromInput && journalFilterToInput) {
+          const allSorted = getFilteredJournalSessions(getScopedSessions(getSessionsWithPendingStopped()));
+          const pos = allSorted.findIndex((s) => s.id === sessionToSave.id);
+          if (pos >= 200) {
+            journalFilterFromInput.value = entryDate;
+            journalFilterToInput.value = entryDate;
+          }
+        }
+      }
       showSaveToast(sessionToSave, { label: editingSession ? "Modifié" : "Enregistré" });
       manualEditingSessionId = null;
       manualDialog.close();
@@ -8195,15 +8209,15 @@ function getFilteredJournalSessions(rows) {
 function renderSessionList() {
   sessionList.innerHTML = "";
   const visibleSessions = getFilteredJournalSessions(getScopedSessions(getSessionsWithPendingStopped()));
+  const filtersActive = Boolean(
+    journalFilterFromInput?.value ||
+      journalFilterToInput?.value ||
+      journalFilterCategoryInput?.value ||
+      journalFilterTagsInput?.value ||
+      journalFilterSubjectInput?.value,
+  );
 
   if (!visibleSessions.length) {
-    const filtersActive = Boolean(
-      journalFilterFromInput?.value ||
-        journalFilterToInput?.value ||
-        journalFilterCategoryInput?.value ||
-        journalFilterTagsInput?.value ||
-        journalFilterSubjectInput?.value,
-    );
     sessionList.append(
       createEmptyState(
         filtersActive
@@ -8214,8 +8228,12 @@ function renderSessionList() {
     return;
   }
 
+  // When a date/keyword filter is active the user is explicitly looking for specific entries —
+  // show all matches. Otherwise cap at 200 to keep rendering fast.
+  const displayedSessions = filtersActive ? visibleSessions : visibleSessions.slice(0, 200);
+
   const groups = new Map();
-  for (const session of visibleSessions.slice(0, 42)) {
+  for (const session of displayedSessions) {
     const dayKey = new Date(session.start).toISOString().slice(0, 10);
     const current = groups.get(dayKey) ?? [];
     current.push(session);
