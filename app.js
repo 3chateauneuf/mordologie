@@ -4498,7 +4498,26 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     ? remoteActiveSessions.find((session) => normalizeText(session.collaborator) === normalizeText(currentUserName)) ?? null
     : null;
 
-  if (remoteActiveSession && !isGhostActiveSessionCandidate(remoteActiveSession, Array.from(mergedSessions.values()))) {
+  // A remote active session row can survive in active_sessions even after the user stopped the
+  // timer on another device (e.g. the delete call hit a network timeout). Detect this by checking
+  // whether there are newer completed time_entries for the same user created after the timer started.
+  // If so, the row is orphaned — don't reinstate it, and clean it up in the background.
+  const remoteActiveIsStale = Boolean(
+    remoteActiveSession &&
+    historyAuthoritative &&
+    historyRows.some((row) =>
+      normalizeText(row.user_name ?? "") === normalizeText(remoteActiveSession.collaborator ?? "") &&
+      new Date(row.started_at ?? 0).getTime() > new Date(remoteActiveSession.start ?? 0).getTime() + 60000 &&
+      new Date(row.created_at ?? 0).getTime() > new Date(remoteActiveSession.start ?? 0).getTime()
+    )
+  );
+
+  if (remoteActiveIsStale) {
+    // Clean up the orphaned active_sessions row so it doesn't keep re-appearing.
+    void removeStoppedSessionGhostsFromSupabase(remoteActiveSession, { refreshAfterSuccess: false });
+  }
+
+  if (remoteActiveSession && !remoteActiveIsStale && !isGhostActiveSessionCandidate(remoteActiveSession, Array.from(mergedSessions.values()))) {
     activeSession = remoteActiveSession;
   } else if (
     previousActiveSession &&
