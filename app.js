@@ -204,17 +204,6 @@ const tagsList = document.querySelector("#tags-list");
 const tagSuggestions = document.querySelector("#tag-suggestions");
 const notionInput = document.querySelector("#notion-input");
 const manageLinkButton = document.querySelector("#manage-link-button");
-const objectiveDisclosure = document.querySelector("#objective-disclosure");
-const objectiveSummaryText = document.querySelector("#objective-summary-text");
-const objectivePoleInput = document.querySelector("#objective-pole-input");
-const objectiveOkrInput = document.querySelector("#objective-okr-input");
-const objectiveKrInput = document.querySelector("#objective-kr-input");
-const managePoleButton = document.querySelector("#manage-pole-button");
-const manageOkrButton = document.querySelector("#manage-okr-button");
-const manageKrButton = document.querySelector("#manage-kr-button");
-const objectivePoleSelected = document.querySelector("#objective-pole-selected");
-const objectiveOkrSelected = document.querySelector("#objective-okr-selected");
-const objectiveKrSelected = document.querySelector("#objective-kr-selected");
 const notesInput = document.querySelector("#notes-input");
 const dayThemesList = document.querySelector("#day-themes-list");
 const dayThemeInput = document.querySelector("#day-theme-input");
@@ -276,9 +265,6 @@ const reportTopProjectTime = document.querySelector("#report-top-project-time");
 const reportTopCategoryLabel = document.querySelector("#report-top-category-label");
 const reportTopCategory = document.querySelector("#report-top-category");
 const reportTopCategoryTime = document.querySelector("#report-top-category-time");
-const reportTopKrCard = document.querySelector("#report-top-kr-card");
-const reportTopKr = document.querySelector("#report-top-kr");
-const reportTopKrTime = document.querySelector("#report-top-kr-time");
 const managerDistributionTitle = document.querySelector("#manager-distribution-title");
 const managerDistributionCopy = document.querySelector("#manager-distribution-copy");
 const managerDistributionBar = document.querySelector("#manager-distribution-bar");
@@ -288,10 +274,6 @@ const teamReportList = document.querySelector("#team-report-list");
 const reportProjectList = document.querySelector("#report-project-list");
 const reportCategoryHead = document.querySelector("#report-category-head");
 const reportCategoryList = document.querySelector("#report-category-list");
-const reportKrShell = document.querySelector("#report-kr-shell");
-const reportKrList = document.querySelector("#report-kr-list");
-const managerObjectivesPanel = document.querySelector("#manager-objectives-panel");
-const managerObjectivesGrid = document.querySelector("#manager-objectives-grid");
 const usersAdminShell = document.querySelector("#users-admin-shell");
 const sessionList = document.querySelector("#session-list");
 const journalFilterFromInput = document.querySelector("#journal-filter-from");
@@ -310,9 +292,6 @@ const resourceTopProjectTime = document.querySelector("#resource-top-project-tim
 const resourceTopCategoryLabel = document.querySelector("#resource-top-category-label");
 const resourceTopCategory = document.querySelector("#resource-top-category");
 const resourceTopCategoryTime = document.querySelector("#resource-top-category-time");
-const resourceTopKrCard = document.querySelector("#resource-top-kr-card");
-const resourceTopKr = document.querySelector("#resource-top-kr");
-const resourceTopKrTime = document.querySelector("#resource-top-kr-time");
 const resourceDistributionTitle = document.querySelector("#resource-distribution-title");
 const resourceDistributionCopy = document.querySelector("#resource-distribution-copy");
 const resourceDistributionBar = document.querySelector("#resource-distribution-bar");
@@ -322,10 +301,6 @@ const resourceTeamList = document.querySelector("#resource-team-list");
 const resourceProjectList = document.querySelector("#resource-project-list");
 const resourceCategoryHead = document.querySelector("#resource-category-head");
 const resourceCategoryList = document.querySelector("#resource-category-list");
-const resourceKrShell = document.querySelector("#resource-kr-shell");
-const resourceKrList = document.querySelector("#resource-kr-list");
-const resourceObjectivesPanel = document.querySelector("#resource-objectives-panel");
-const resourceObjectivesGrid = document.querySelector("#resource-objectives-grid");
 const reportTotalDelta = document.querySelector("#report-total-delta");
 const reportTopProjectDelta = document.querySelector("#report-top-project-delta");
 const reportTopCategoryDelta = document.querySelector("#report-top-category-delta");
@@ -348,14 +323,6 @@ const plannedTagsList = document.querySelector("#planned-tags-list");
 const plannedTagsInput = document.querySelector("#planned-tags-input");
 const plannedNotionInput = document.querySelector("#planned-notion-input");
 const plannedNotesInput = document.querySelector("#planned-notes-input");
-const plannedObjectiveDisclosure = document.querySelector("#planned-objective-disclosure");
-const plannedObjectiveSummaryText = document.querySelector("#planned-objective-summary-text");
-const plannedObjectivePoleInput = document.querySelector("#planned-objective-pole-input");
-const plannedObjectiveOkrInput = document.querySelector("#planned-objective-okr-input");
-const plannedObjectiveKrInput = document.querySelector("#planned-objective-kr-input");
-const plannedObjectivePoleSelected = document.querySelector("#planned-objective-pole-selected");
-const plannedObjectiveOkrSelected = document.querySelector("#planned-objective-okr-selected");
-const plannedObjectiveKrSelected = document.querySelector("#planned-objective-kr-selected");
 const plannedDialogStatus = document.querySelector("#planned-dialog-status");
 const plannedIgnoreButton = document.querySelector("#planned-ignore-button");
 const plannedCancelButton = document.querySelector("#planned-cancel-button");
@@ -368,14 +335,6 @@ const manualCategoriesInput = document.querySelector("#manual-categories-input")
 const manualTagsList = document.querySelector("#manual-tags-list");
 const manualTagsInput = document.querySelector("#manual-tags-input");
 const manualNotionInput = document.querySelector("#manual-notion-input");
-const manualObjectiveDisclosure = document.querySelector("#manual-objective-disclosure");
-const manualObjectiveSummaryText = document.querySelector("#manual-objective-summary-text");
-const manualObjectivePoleInput = document.querySelector("#manual-objective-pole-input");
-const manualObjectiveOkrInput = document.querySelector("#manual-objective-okr-input");
-const manualObjectiveKrInput = document.querySelector("#manual-objective-kr-input");
-const manualObjectivePoleSelected = document.querySelector("#manual-objective-pole-selected");
-const manualObjectiveOkrSelected = document.querySelector("#manual-objective-okr-selected");
-const manualObjectiveKrSelected = document.querySelector("#manual-objective-kr-selected");
 const manualStartDateInput = document.querySelector("#manual-start-date-input");
 const manualStartTimeInput = document.querySelector("#manual-start-time-input");
 const manualEndDateInput = document.querySelector("#manual-end-date-input");
@@ -413,173 +372,6 @@ const fieldManageEditButton = document.querySelector("#field-manage-edit");
 const fieldManageDeleteButton = document.querySelector("#field-manage-delete");
 const fieldManageConfirmButton = document.querySelector("#field-manage-confirm");
 
-const OBJECTIVE_2026_CATALOG = [
-  {
-    pole: "Cyclologistique",
-    okrCode: "O1",
-    okrLabel:
-      "On a developpe le CA et ameliore le taux horaire, en maitrisant le ratio matin/apres-midi",
-    krs: [
-      "RC 1.1 : On a augmente le CA global du pole cyclologistique de 10% en 2026",
-      "RC 1.2 : Le taux horaire global livraison a augmente de 4,82%",
-      "RC 1.3 : Le taux horaire de l'apres-midi a augmente de 10%",
-      "RC 1.4 : Le ratio de CA matin/apres-midi est passe de 2,95 a 2,5",
-    ],
-  },
-  {
-    pole: "Cyclologistique",
-    okrCode: "O2",
-    okrLabel:
-      "On a developpe et diversifie le portefeuille commercial des activites livraison et stockage",
-    krs: [
-      "RC 2.1 : On a embarque 7 nouveaux clients avec un CA mensuel moyen superieur a 1 000EUR",
-      "RC 2.2 : On est passe de 5,6% a 8% de CA sur des clients 100% collecte",
-      "RC 2.3 : On a signe 2 contrats supplementaires en co-traitance",
-      "RC 2.4 : Le CA du top client ne represente pas plus de 50% du CA entrepot",
-      "RC 2.5 : On a augmente de 45% le nombre de clients actifs en stockage et livraison",
-      "RC 2.6 : On est passe de 300 a 350 demandes entrantes issues du site web",
-      "RC 2.7 : On sait suivre precisement le CA des operations speciales",
-    ],
-  },
-  {
-    pole: "Cyclologistique",
-    okrCode: "O3",
-    okrLabel: "On a renforce l'excellence operationnelle",
-    krs: [
-      "RC 3.1 : On est passe de 12% a 15% des livraisons en horaires de bureau",
-      "RC 3.2 : On a atteint 95% de respect des cut-off",
-      "RC 3.3 : Le taux de livraisons en retard de plus de 30 minutes est passe de 1,24% a 1,00%",
-      "RC 3.4 : Le taux de livraisons Rive droite hors 12 et 16 reste superieur a 70%",
-      "RC 3.5 : On a optimise le chargement au depart et le dechargement au retour de tournee",
-    ],
-  },
-  {
-    pole: "Cyclologistique",
-    okrCode: "O4",
-    okrLabel: "On a developpe de nouvelles prestations a forte valeur ajoutee",
-    krs: [
-      "RC 4.1 : On est capables d'expedier de la marchandise via des transporteurs partenaires",
-      "RC 4.2 : On a defini la strategie et le calendrier d'un 20m3 electrique avec hayon",
-      "RC 4.3 : On sait repondre aux demandes spot avec un tarif structure",
-      "RC 4.4 : On a lance et commercialise l'offre livraison lourde en zone proche",
-    ],
-  },
-  {
-    pole: "Cyclologistique",
-    okrCode: "O5",
-    okrLabel: "On a progresse en conformite et ameliore l'offre de services",
-    krs: [
-      "RC 5.1 : On a obtenu le label Entrepositaire agree sous douane",
-      "RC 5.2 : On a deploye et commercialise une option de suivi de temperature",
-      "RC 5.3 : On garantit 0 colis introuvable et 0 colis rackoone a tort",
-      "RC 5.4 : On a deploye un WMS qui couvre au moins 80% du volume transitant par l'entrepot",
-    ],
-  },
-  {
-    pole: "Cyclologistique",
-    okrCode: "O6",
-    okrLabel: "On a ameliore les conditions de travail, l'ergonomie, la securite et les outils",
-    krs: [
-      "RC 6.1 : Aucun colis ne depasse 15 kg",
-      "RC 6.2 : Plus de 80% des livraisons entrantes arrivent sur palettes",
-      "RC 6.3 : On a mis en service un gerbeur et un transpalette electriques",
-      "RC 6.4 : Le ratio batteries sur velos est superieur a 2 pour les bullit et les bosch",
-      "RC 6.5 : On a un calendrier de revisions preventives par types de velo",
-    ],
-  },
-  {
-    pole: "Cercle de management",
-    okrCode: "O1",
-    okrLabel:
-      "On anticipe mieux les besoins humains, le planning absorbe l'activite sans generer de tensions",
-    krs: [
-      "RC 1.1 : Les shifts de depannage restent inferieurs a 5% des shifts course par semaine",
-      "RC 1.2 : Moins de 5% des shifts depassent de plus de 45 minutes le planning",
-      "RC 1.3 : Aucune semaine consecutive ne depasse durablement les seuils de depannage",
-      "RC 1.4 : Le deficit horaire reste inferieur a 0,8% sur l'annee",
-      "RC 1.5 : Le planning est publie le mercredi au plus tard",
-      "RC 1.6 : On a un cadre pour les indisponibilites des salarie.es",
-      "RC 1.7 : On utilise un dashboard pour mieux anticiper le volume de livraison",
-    ],
-  },
-  {
-    pole: "Cercle de management",
-    okrCode: "O2",
-    okrLabel: "Nous avons ancre une formation initiale et continue dans nos pratiques",
-    krs: [
-      "RC 2.1 : Toutes les personnes recrutees en 2026 ont suivi au moins 3 jours de formation",
-      "RC 2.2 : Chaque recrue a beneficie de 3 entretiens de feedback durant ses 2 premiers mois",
-      "RC 2.3 : 100% des salarie.es ont suivi une demi-journee de sensibilisation au commercial",
-      "RC 2.4 : 5 salarie.es ont suivi une formation externe",
-    ],
-  },
-  {
-    pole: "Cercle de management",
-    okrCode: "O3",
-    okrLabel:
-      "Nous investissons dans le matériel et l’équipement nécessaires à des conditions de travail optimales",
-    krs: [
-      "RC 3.1 : 100% des salarié·es en période d’essai reçoivent un kit de base complet",
-      "RC 3.2 : 100% du materiel a duree de vie definie est renouvele dans les delais",
-      "RC 3.3 : 100% des cadenas sont recuperes lors des departs",
-      "RC 3.4 : 100% des salarie.es eligibles recoivent la participation telephone",
-    ],
-  },
-  {
-    pole: "Cyke",
-    okrCode: "O1",
-    okrLabel: "Nous realisons 5000EUR de revenu mensuel recurrent en Europe",
-    krs: [
-      "R1 : Allemagne : 3 clients pour 1500EUR par mois",
-      "R2 : Suisse : 2 clients pour 2000EUR par mois",
-      "R3 : Italie : 2 nouveaux clients pour 300EUR par mois",
-      "R4 : Espagne : 2 nouveaux clients pour 300EUR par mois",
-      "R5 : Urbike a teste sur le terrain et defini son plan de migration",
-      "R6 : Les clients etrangers ont 2 propositions d'entretiens utilisateurs dans l'annee",
-    ],
-  },
-  {
-    pole: "Cyke",
-    okrCode: "O2",
-    okrLabel: "Cyke couvre mieux les differents cas d'usage de la cyclologistique",
-    krs: [
-      "R1 : Entretien utilisateurs pour les ambassadeurs",
-      "R2 : 10 visites sur site chez des cyclologisticiens",
-      "R3 : On sait comment chaque client utilise Cyke et on en tire des pistes d'amelioration",
-      "R4 : On a signe au moins un nouveau client petit colis en sous-traitance",
-    ],
-  },
-  {
-    pole: "Cyke",
-    okrCode: "O3",
-    okrLabel: "Cyke gagne en fiabilite",
-    krs: [
-      "R1 : Le nombre de pages qui chargent en plus de 3 secondes passe de 17 a 4",
-      "R2 : La mediane mensuelle d'erreur Sentry Ruby par jour est inferieure a 5",
-      "R3 : La mediane mensuelle d'erreur Sentry JS et mobile par jour est inferieure a 50",
-    ],
-  },
-  {
-    pole: "Cyke",
-    okrCode: "O4",
-    okrLabel:
-      "On utilise les projets annexes pour financer Cyke tout en ameliorant le socle de fonctionnalites",
-    krs: [
-      "R1 : L'équipe ne ressent pas de surcharge ni de ralentissement liés aux projets annexes",
-      "R2 : Chaque amelioration d'un projet annexe correspond a la roadmap ou la vision Cyke",
-      "R3 : 100% des fonctionnalites liees a un projet annexe sont utilisees par d'autres utilisateurs",
-    ],
-  },
-];
-
-const OBJECTIVE_2026_PILLARS = [
-  "Cyclologistique",
-  "Cercle de management",
-  "Cyke",
-  "Bigbikes Consulting",
-  "Vente de materiel",
-];
-
 const LOCAL_DEMO_SESSIONS = [
   {
     id: "LOC-001",
@@ -589,16 +381,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Préparation de commandes"],
     tags: ["hub", "matin"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O3 · On a renforce l'excellence operationnelle",
-    objectiveKr: "On a atteint 95% de respect des cut-off",
     notes: "Pic de commandes alimentaire.",
     start: "2026-04-07T06:40:00+02:00",
     end: "2026-04-07T08:20:00+02:00",
     durationMs: 6000000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Operations",
   },
   {
     id: "LOC-002",
@@ -608,16 +396,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["SAV client"],
     tags: ["sav", "clients"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O3 · On a renforce l'excellence operationnelle",
-    objectiveKr: "Le taux de livraisons en retard de plus de 30 minutes est passe de 1,24% a 1,00%",
     notes: "Beaucoup de retours sur des créneaux non tenus.",
     start: "2026-04-07T14:10:00+02:00",
     end: "2026-04-07T15:20:00+02:00",
     durationMs: 4200000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Support",
   },
   {
     id: "LOC-003",
@@ -627,16 +411,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["État des stocks"],
     tags: ["stock", "hub"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O5 · On a progresse en conformite et ameliore l'offre de services",
-    objectiveKr: "On a deploye un WMS qui couvre au moins 80% du volume transitant par l'entrepot",
     notes: "Trois references a verifier apres retour client.",
     start: "2026-04-07T15:40:00+02:00",
     end: "2026-04-07T17:10:00+02:00",
     durationMs: 5400000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Operations",
   },
   {
     id: "LOC-004",
@@ -646,16 +426,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Développement outil interne"],
     tags: ["produit", "ux"],
     notionRef: "",
-    objectivePole: "Cyke",
-    objectiveOkr: "O3 · Cyke gagne en fiabilite",
-    objectiveKr: "Le nombre de pages qui chargent en plus de 3 secondes passe de 17 a 4",
     notes: "Simplification du parcours principal.",
     start: "2026-04-07T10:00:00+02:00",
     end: "2026-04-07T12:00:00+02:00",
     durationMs: 7200000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Product",
   },
   {
     id: "LOC-005",
@@ -665,16 +441,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Finance & administration"],
     tags: ["marge", "sav"],
     notionRef: "",
-    objectivePole: "",
-    objectiveOkr: "",
-    objectiveKr: "",
     notes: "Travail sur les couts caches du SAV.",
     start: "2026-04-08T09:00:00+02:00",
     end: "2026-04-08T10:30:00+02:00",
     durationMs: 5400000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Internal",
   },
   {
     id: "LOC-006",
@@ -684,16 +456,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["R&D / innovation"],
     tags: ["test", "reemploi"],
     notionRef: "",
-    objectivePole: "",
-    objectiveOkr: "",
-    objectiveKr: "",
     notes: "Premier test avec deux clients pilotes.",
     start: "2026-04-08T10:45:00+02:00",
     end: "2026-04-08T12:00:00+02:00",
     durationMs: 4500000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Innovation",
   },
   {
     id: "LOC-007",
@@ -703,16 +471,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Prospection commerciale"],
     tags: ["prospection", "retail"],
     notionRef: "",
-    objectivePole: "",
-    objectiveOkr: "",
-    objectiveKr: "",
     notes: "Filtre charge exploitation dans le brief commercial.",
     start: "2026-04-08T14:00:00+02:00",
     end: "2026-04-08T15:20:00+02:00",
     durationMs: 4800000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Business",
   },
   {
     id: "LOC-008",
@@ -722,16 +486,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Expéditions"],
     tags: ["dispatch", "tournees"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O3 · On a renforce l'excellence operationnelle",
-    objectiveKr: "On a atteint 95% de respect des cut-off",
     notes: "",
     start: "2026-04-09T06:50:00+02:00",
     end: "2026-04-09T08:00:00+02:00",
     durationMs: 4200000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Monceau Bio",
-    dbKpiCategoryLabel: "Operations",
   },
   {
     id: "LOC-009",
@@ -741,16 +501,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["QHSE / amélioration continue"],
     tags: ["qhse", "standard"],
     notionRef: "",
-    objectivePole: "Cercle de management",
-    objectiveOkr: "O3 · Nous investissons dans le matériel et l’équipement nécessaires à des conditions de travail optimales",
-    objectiveKr: "100% du materiel a duree de vie definie est renouvele dans les delais",
     notes: "",
     start: "2026-04-09T08:15:00+02:00",
     end: "2026-04-09T09:30:00+02:00",
     durationMs: 4500000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Internal",
   },
   {
     id: "LOC-010",
@@ -760,16 +516,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Développement outil interne"],
     tags: ["manager", "reporting"],
     notionRef: "",
-    objectivePole: "Cyke",
-    objectiveOkr: "O2 · Cyke couvre mieux les differents cas d'usage de la cyclologistique",
-    objectiveKr: "On sait comment chaque client utilise Cyke et on en tire des pistes d'amelioration",
     notes: "",
     start: "2026-04-09T09:40:00+02:00",
     end: "2026-04-09T11:20:00+02:00",
     durationMs: 6000000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Product",
   },
   {
     id: "LOC-011",
@@ -779,16 +531,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Incident client / qualité"],
     tags: ["sav", "qualite"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O3 · On a renforce l'excellence operationnelle",
-    objectiveKr: "On a optimise le chargement au depart et le dechargement au retour de tournee",
     notes: "Retards dus aux informations de preparation incompletes.",
     start: "2026-04-09T15:10:00+02:00",
     end: "2026-04-09T16:30:00+02:00",
     durationMs: 4800000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Support",
   },
   {
     id: "LOC-012",
@@ -798,16 +546,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Finance & administration"],
     tags: ["budget", "pilotage"],
     notionRef: "",
-    objectivePole: "",
-    objectiveOkr: "",
-    objectiveKr: "",
     notes: "",
     start: "2026-04-09T11:00:00+02:00",
     end: "2026-04-09T12:20:00+02:00",
     durationMs: 4800000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Internal",
   },
   {
     id: "LOC-013",
@@ -817,16 +561,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Prospection commerciale"],
     tags: ["rdv", "client"],
     notionRef: "",
-    objectivePole: "",
-    objectiveOkr: "",
-    objectiveKr: "",
     notes: "",
     start: "2026-04-09T15:30:00+02:00",
     end: "2026-04-09T16:45:00+02:00",
     durationMs: 4500000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Business",
   },
   {
     id: "LOC-014",
@@ -836,16 +576,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["État des stocks"],
     tags: ["stock", "inventaire"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O5 · On a progresse en conformite et ameliore l'offre de services",
-    objectiveKr: "On a deploye un WMS qui couvre au moins 80% du volume transitant par l'entrepot",
     notes: "",
     start: "2026-04-10T07:00:00+02:00",
     end: "2026-04-10T08:10:00+02:00",
     durationMs: 4200000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Operations",
   },
   {
     id: "LOC-015",
@@ -855,16 +591,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Préparation de commandes"],
     tags: ["reappro", "cross-dock"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O3 · On a renforce l'excellence operationnelle",
-    objectiveKr: "On a atteint 95% de respect des cut-off",
     notes: "",
     start: "2026-04-10T08:15:00+02:00",
     end: "2026-04-10T10:00:00+02:00",
     durationMs: 6300000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Operations",
   },
   {
     id: "LOC-016",
@@ -874,16 +606,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["Développement outil interne"],
     tags: ["suggestions", "priorisation"],
     notionRef: "",
-    objectivePole: "Cyke",
-    objectiveOkr: "O4 · On utilise les projets annexes pour financer Cyke tout en ameliorant le socle de fonctionnalites",
-    objectiveKr: "100% des fonctionnalites liees a un projet annexe sont utilisees par d'autres utilisateurs",
     notes: "",
     start: "2026-04-10T10:15:00+02:00",
     end: "2026-04-10T12:00:00+02:00",
     durationMs: 6300000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Product",
   },
   {
     id: "LOC-017",
@@ -893,16 +621,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["R&D / innovation"],
     tags: ["prototype", "hub"],
     notionRef: "",
-    objectivePole: "Cercle de management",
-    objectiveOkr: "O1 · On anticipe mieux les besoins humains, le planning absorbe l'activite sans generer de tensions",
-    objectiveKr: "On utilise un dashboard pour mieux anticiper le volume de livraison",
     notes: "",
     start: "2026-04-10T13:40:00+02:00",
     end: "2026-04-10T15:10:00+02:00",
     durationMs: 5400000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Innovation",
   },
   {
     id: "LOC-018",
@@ -912,16 +636,12 @@ const LOCAL_DEMO_SESSIONS = [
     categories: ["QHSE / amélioration continue"],
     tags: ["sav", "plan action"],
     notionRef: "",
-    objectivePole: "Cyclologistique",
-    objectiveOkr: "O5 · On a progresse en conformite et ameliore l'offre de services",
-    objectiveKr: "On garantit 0 colis introuvable et 0 colis rackoone a tort",
     notes: "Travail avec Claire sur les causes racines.",
     start: "2026-04-10T15:20:00+02:00",
     end: "2026-04-10T16:40:00+02:00",
     durationMs: 4800000,
     dbTeamName: "Conseil Operations France",
     dbClientName: "Interne",
-    dbKpiCategoryLabel: "Internal",
   },
 ];
 
@@ -1093,7 +813,6 @@ window.scrollTo(0, 0);
 
 initializeAutocomplete();
 applyBookFavicon();
-initializeObjectiveSelections();
 initializeViewNavigation();
 
 hydrateFormFromActiveSession();
@@ -1435,9 +1154,6 @@ categoriesInput.addEventListener("blur", () => {
   taskInput,
   notionInput,
   tagsInput,
-  objectivePoleInput,
-  objectiveOkrInput,
-  objectiveKrInput,
 ].forEach((input) => {
   input.addEventListener("input", () => {
     updateFieldManageButtons();
@@ -1940,9 +1656,6 @@ retryPendingStopButton?.addEventListener("click", () => {
   manualCategoriesInput,
   manualTagsInput,
   manualNotionInput,
-  manualObjectivePoleInput,
-  manualObjectiveOkrInput,
-  manualObjectiveKrInput,
   manualNotesInput,
   manualStartDateInput,
   manualStartTimeInput,
@@ -2023,9 +1736,6 @@ adjustConflictButton.addEventListener("click", () => {
 
 [
   [manageLinkButton, "link"],
-  [managePoleButton, "pole"],
-  [manageOkrButton, "okr"],
-  [manageKrButton, "kr"],
 ].forEach(([button, kind]) => {
   button?.addEventListener("click", () => {
     openFieldManageDialog(kind);
@@ -2187,37 +1897,6 @@ function initializeAutocomplete() {
       },
     },
     {
-      input: objectivePoleInput,
-      anchor: objectivePoleInput.closest(".objective-block"),
-      getOptions: () => mergeSuggestionValues(OBJECTIVE_2026_PILLARS, uniqueValues("objectivePole")),
-      applyValue: (value) => {
-        objectivePoleInput.value = value;
-      },
-    },
-    {
-      input: objectiveOkrInput,
-      anchor: objectiveOkrInput.closest(".objective-block"),
-      getOptions: () => getObjectiveOkrOptions(objectivePoleInput.value.trim()),
-      applyValue: (value) => {
-        applyObjectiveOkrSelection(value, {
-          poleInput: objectivePoleInput,
-          okrInput: objectiveOkrInput,
-        });
-      },
-    },
-    {
-      input: objectiveKrInput,
-      anchor: objectiveKrInput.closest(".objective-block"),
-      getOptions: () => getObjectiveKrOptions(objectivePoleInput.value.trim(), objectiveOkrInput.value.trim()),
-      applyValue: (value) => {
-        applyObjectiveKrSelection(value, {
-          poleInput: objectivePoleInput,
-          okrInput: objectiveOkrInput,
-          krInput: objectiveKrInput,
-        });
-      },
-    },
-    {
       input: manualCollaboratorInput,
       getOptions: () =>
         getVisibleReferenceUsers().length
@@ -2316,78 +1995,10 @@ function initializeAutocomplete() {
       },
     },
     {
-      input: plannedObjectivePoleInput,
-      anchor: plannedObjectivePoleInput.closest(".objective-block"),
-      getOptions: () => mergeSuggestionValues(OBJECTIVE_2026_PILLARS, uniqueValues("objectivePole")),
-      applyValue: (value) => {
-        plannedObjectivePoleInput.value = value;
-      },
-    },
-    {
-      input: plannedObjectiveOkrInput,
-      anchor: plannedObjectiveOkrInput.closest(".objective-block"),
-      getOptions: () => getObjectiveOkrOptions(plannedObjectivePoleInput.value.trim()),
-      applyValue: (value) => {
-        applyObjectiveOkrSelection(value, {
-          poleInput: plannedObjectivePoleInput,
-          okrInput: plannedObjectiveOkrInput,
-        });
-      },
-    },
-    {
-      input: plannedObjectiveKrInput,
-      anchor: plannedObjectiveKrInput.closest(".objective-block"),
-      getOptions: () => getObjectiveKrOptions(
-        plannedObjectivePoleInput.value.trim(),
-        plannedObjectiveOkrInput.value.trim(),
-      ),
-      applyValue: (value) => {
-        applyObjectiveKrSelection(value, {
-          poleInput: plannedObjectivePoleInput,
-          okrInput: plannedObjectiveOkrInput,
-          krInput: plannedObjectiveKrInput,
-        });
-      },
-    },
-    {
       input: manualNotionInput,
       getOptions: () => uniqueValues("notionRef"),
       applyValue: (value) => {
         manualNotionInput.value = value;
-      },
-    },
-    {
-      input: manualObjectivePoleInput,
-      anchor: manualObjectivePoleInput.closest(".objective-block"),
-      getOptions: () => mergeSuggestionValues(OBJECTIVE_2026_PILLARS, uniqueValues("objectivePole")),
-      applyValue: (value) => {
-        manualObjectivePoleInput.value = value;
-      },
-    },
-    {
-      input: manualObjectiveOkrInput,
-      anchor: manualObjectiveOkrInput.closest(".objective-block"),
-      getOptions: () => getObjectiveOkrOptions(manualObjectivePoleInput.value.trim()),
-      applyValue: (value) => {
-        applyObjectiveOkrSelection(value, {
-          poleInput: manualObjectivePoleInput,
-          okrInput: manualObjectiveOkrInput,
-        });
-      },
-    },
-    {
-      input: manualObjectiveKrInput,
-      anchor: manualObjectiveKrInput.closest(".objective-block"),
-      getOptions: () => getObjectiveKrOptions(
-        manualObjectivePoleInput.value.trim(),
-        manualObjectiveOkrInput.value.trim(),
-      ),
-      applyValue: (value) => {
-        applyObjectiveKrSelection(value, {
-          poleInput: manualObjectivePoleInput,
-          okrInput: manualObjectiveOkrInput,
-          krInput: manualObjectiveKrInput,
-        });
       },
     },
   ];
@@ -2585,117 +2196,6 @@ function getAutocompleteScore(value, normalizedQuery) {
     return 4;
   }
   return Number.POSITIVE_INFINITY;
-}
-
-function getObjectiveCatalogRows() {
-  return OBJECTIVE_2026_CATALOG.map((item) => ({
-    pole: item.pole,
-    okr: `${item.okrCode} · ${item.okrLabel}`,
-    krs: item.krs,
-  }));
-}
-
-function getObjectiveOkrOptions(selectedPole = "") {
-  const normalizedPole = normalizeText(selectedPole);
-  const catalogOptions = getObjectiveCatalogRows()
-    .filter((item) => !normalizedPole || normalizeText(item.pole) === normalizedPole)
-    .map((item) => `${item.pole} · ${item.okr}`);
-
-  return mergeSuggestionValues(catalogOptions, uniqueValues("objectiveOkr"));
-}
-
-function getObjectiveKrOptions(selectedPole = "", selectedOkr = "") {
-  const normalizedPole = normalizeText(selectedPole);
-  const normalizedOkr = normalizeText(selectedOkr);
-  const catalogOptions = [];
-
-  for (const item of getObjectiveCatalogRows()) {
-    const poleMatches = !normalizedPole || normalizeText(item.pole) === normalizedPole;
-    const okrMatches =
-      !normalizedOkr ||
-      normalizeText(item.okr) === normalizedOkr ||
-      normalizeText(`${item.pole} · ${item.okr}`) === normalizedOkr;
-
-    if (!poleMatches || !okrMatches) {
-      continue;
-    }
-
-    for (const kr of item.krs) {
-      catalogOptions.push(extractObjectiveKrContent(kr));
-    }
-  }
-
-  return mergeSuggestionValues(catalogOptions, uniqueValues("objectiveKr").map(extractObjectiveKrContent));
-}
-
-function applyObjectiveOkrSelection(value, { poleInput, okrInput }) {
-  const match = findObjectiveOkrMatch(value);
-  if (match) {
-    poleInput.value = match.pole;
-    okrInput.value = match.okr;
-    renderObjectiveSelections();
-    return;
-  }
-
-  okrInput.value = value;
-  renderObjectiveSelections();
-}
-
-function applyObjectiveKrSelection(value, { poleInput, okrInput, krInput }) {
-  const match = findObjectiveKrMatch(value);
-  if (match) {
-    poleInput.value = match.pole;
-    okrInput.value = match.okr;
-    krInput.value = extractObjectiveKrContent(match.kr);
-    renderObjectiveSelections();
-    return;
-  }
-
-  krInput.value = extractObjectiveKrContent(value);
-  renderObjectiveSelections();
-}
-
-function findObjectiveOkrMatch(rawValue) {
-  const normalized = normalizeText(rawValue);
-  if (!normalized) {
-    return null;
-  }
-
-  for (const item of getObjectiveCatalogRows()) {
-    const candidate = `${item.pole} · ${item.okr}`;
-    if (normalizeText(candidate) === normalized || normalizeText(item.okr) === normalized) {
-      return item;
-    }
-  }
-
-  return null;
-}
-
-function findObjectiveKrMatch(rawValue) {
-  const normalized = normalizeText(rawValue);
-  if (!normalized) {
-    return null;
-  }
-
-  for (const item of getObjectiveCatalogRows()) {
-    for (const kr of item.krs) {
-      const candidates = [
-        kr,
-        `${item.pole} · ${item.okr} · ${kr}`,
-        extractObjectiveKrContent(kr),
-      ];
-
-      if (candidates.some((candidate) => normalizeText(candidate) === normalized)) {
-        return {
-          pole: item.pole,
-          okr: item.okr,
-          kr,
-        };
-      }
-    }
-  }
-
-  return null;
 }
 
 function renderAutocomplete(query) {
@@ -3074,90 +2574,6 @@ function getInitialView() {
   return ["cadre", "manager", "resources", "users", "journal", "guide"].includes(hash) ? hash : "guide";
 }
 
-function initializeObjectiveSelections() {
-  setupObjectiveDisclosure({
-    disclosure: objectiveDisclosure,
-    summaryText: objectiveSummaryText,
-    poleInput: objectivePoleInput,
-    okrInput: objectiveOkrInput,
-    krInput: objectiveKrInput,
-  });
-  setupObjectiveDisclosure({
-    disclosure: manualObjectiveDisclosure,
-    summaryText: manualObjectiveSummaryText,
-    poleInput: manualObjectivePoleInput,
-    okrInput: manualObjectiveOkrInput,
-    krInput: manualObjectiveKrInput,
-  });
-  setupObjectiveDisclosure({
-    disclosure: plannedObjectiveDisclosure,
-    summaryText: plannedObjectiveSummaryText,
-    poleInput: plannedObjectivePoleInput,
-    okrInput: plannedObjectiveOkrInput,
-    krInput: plannedObjectiveKrInput,
-  });
-
-  setupSingleSelectionDisplay({
-    input: objectivePoleInput,
-    container: objectivePoleSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: objectiveOkrInput,
-    container: objectiveOkrSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: objectiveKrInput,
-    container: objectiveKrSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: manualObjectivePoleInput,
-    container: manualObjectivePoleSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: manualObjectiveOkrInput,
-    container: manualObjectiveOkrSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: manualObjectiveKrInput,
-    container: manualObjectiveKrSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: plannedObjectivePoleInput,
-    container: plannedObjectivePoleSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: plannedObjectiveOkrInput,
-    container: plannedObjectiveOkrSelected,
-  });
-  setupSingleSelectionDisplay({
-    input: plannedObjectiveKrInput,
-    container: plannedObjectiveKrSelected,
-  });
-
-  renderObjectiveSelections();
-}
-
-function setupObjectiveDisclosure({ disclosure, summaryText, poleInput, okrInput, krInput }) {
-  if (!disclosure || !summaryText) {
-    return;
-  }
-
-  const updateSummary = () => {
-    renderObjectiveDisclosureSummary(summaryText, {
-      pole: poleInput?.value.trim() ?? "",
-      okr: okrInput?.value.trim() ?? "",
-      kr: krInput?.value.trim() ?? "",
-    });
-  };
-
-  for (const input of [poleInput, okrInput, krInput]) {
-    input?.addEventListener("input", updateSummary);
-    input?.addEventListener("blur", updateSummary);
-  }
-
-  updateSummary();
-}
-
 function setupSingleSelectionDisplay({ input, container }) {
   if (!input || !container) {
     return;
@@ -3174,80 +2590,6 @@ function setupSingleSelectionDisplay({ input, container }) {
   input.addEventListener("focus", () => {
     renderSingleSelectionTag(input, container, { forceHidden: true });
   });
-}
-
-function renderObjectiveSelections() {
-  renderSingleSelectionTag(objectivePoleInput, objectivePoleSelected);
-  renderSingleSelectionTag(objectiveOkrInput, objectiveOkrSelected);
-  renderSingleSelectionTag(objectiveKrInput, objectiveKrSelected);
-  renderSingleSelectionTag(manualObjectivePoleInput, manualObjectivePoleSelected);
-  renderSingleSelectionTag(manualObjectiveOkrInput, manualObjectiveOkrSelected);
-  renderSingleSelectionTag(manualObjectiveKrInput, manualObjectiveKrSelected);
-  renderSingleSelectionTag(plannedObjectivePoleInput, plannedObjectivePoleSelected);
-  renderSingleSelectionTag(plannedObjectiveOkrInput, plannedObjectiveOkrSelected);
-  renderSingleSelectionTag(plannedObjectiveKrInput, plannedObjectiveKrSelected);
-  renderObjectiveDisclosureSummary(objectiveSummaryText, {
-    pole: objectivePoleInput.value.trim(),
-    okr: objectiveOkrInput.value.trim(),
-    kr: objectiveKrInput.value.trim(),
-  });
-  renderObjectiveDisclosureSummary(manualObjectiveSummaryText, {
-    pole: manualObjectivePoleInput.value.trim(),
-    okr: manualObjectiveOkrInput.value.trim(),
-    kr: manualObjectiveKrInput.value.trim(),
-  });
-  renderObjectiveDisclosureSummary(plannedObjectiveSummaryText, {
-    pole: plannedObjectivePoleInput.value.trim(),
-    okr: plannedObjectiveOkrInput.value.trim(),
-    kr: plannedObjectiveKrInput.value.trim(),
-  });
-  updateFieldManageButtons();
-}
-
-function renderObjectiveDisclosureSummary(summaryNode, values) {
-  if (!summaryNode) {
-    return;
-  }
-
-  const parts = [
-    formatObjectiveSummaryPole(values.pole),
-    formatObjectiveSummaryOkr(values.okr),
-    formatObjectiveSummaryKr(values.kr),
-  ].filter(Boolean);
-
-  summaryNode.textContent = parts.length ? parts.join(" · ") : "";
-}
-
-function formatObjectiveSummaryPole(value) {
-  return value?.trim() || "";
-}
-
-function formatObjectiveSummaryOkr(value) {
-  const normalized = value?.trim();
-  if (!normalized) {
-    return "";
-  }
-
-  const match = normalized.match(/^O\d+/i);
-  return match ? match[0].toUpperCase() : truncateObjectiveSummary(normalized, 36);
-}
-
-function formatObjectiveSummaryKr(value) {
-  const normalized = value?.trim();
-  if (!normalized) {
-    return "";
-  }
-
-  const match = normalized.match(/^RC\s*\d+(?:\.\d+)?/i);
-  return match ? match[0].replace(/\s+/g, " ").toUpperCase() : truncateObjectiveSummary(normalized, 44);
-}
-
-function truncateObjectiveSummary(value, limit) {
-  if (value.length <= limit) {
-    return value;
-  }
-
-  return `${value.slice(0, Math.max(0, limit - 1)).trimEnd()}…`;
 }
 
 function renderSingleSelectionTag(input, container, options = {}) {
@@ -4261,9 +3603,6 @@ function normalizeSession(session) {
     categories: normalizedMeta.categories,
     tags: normalizedMeta.tags,
     notionRef: session.notionRef ?? "",
-    objectivePole: session.objectivePole ?? "",
-    objectiveOkr: session.objectiveOkr ?? "",
-    objectiveKr: session.objectiveKr ?? "",
     notes: session.notes ?? "",
     pausedAt: session.pausedAt ?? null,
     pausedDurationMs: Number(session.pausedDurationMs) || 0,
@@ -4275,7 +3614,6 @@ function normalizeSession(session) {
     dbActivityCategoryId: session.dbActivityCategoryId ?? null,
     dbTeamName: session.dbTeamName ?? "",
     dbClientName: session.dbClientName ?? "",
-    dbKpiCategoryLabel: session.dbKpiCategoryLabel ?? "",
     isServerBacked: Boolean(session.isServerBacked),
     isServerActive: Boolean(session.isServerActive),
     syncStatus: session.syncStatus ?? (session.isServerBacked ? "synced" : ""),
@@ -4343,9 +3681,6 @@ function mapTimeEntryRowToSession(row) {
     categories: row.activity_category_label ? [row.activity_category_label] : [],
     tags: parseCsvTokens(row.tags_text).map(normalizeTag).filter(Boolean),
     notionRef: row.notion_ref ?? "",
-    objectivePole: row.objective_pole ?? "",
-    objectiveOkr: row.objective_okr ?? "",
-    objectiveKr: row.objective_kr ?? "",
     notes: row.notes ?? "",
     start: start.toISOString(),
     end: endIso,
@@ -4356,7 +3691,6 @@ function mapTimeEntryRowToSession(row) {
     dbActivityCategoryId: row.activity_category_id ?? null,
     dbTeamName: row.team_name ?? "",
     dbClientName: row.client_name ?? "",
-    dbKpiCategoryLabel: row.kpi_category_label ?? "",
     isServerBacked: true,
   });
 }
@@ -4370,9 +3704,6 @@ function mapActiveSessionRowToSession(row) {
     categories: row.activity_category_label ? [row.activity_category_label] : [],
     tags: parseCsvTokens(row.tags_text).map(normalizeTag).filter(Boolean),
     notionRef: row.notion_ref ?? "",
-    objectivePole: row.objective_pole ?? "",
-    objectiveOkr: row.objective_okr ?? "",
-    objectiveKr: row.objective_kr ?? "",
     notes: row.notes ?? "",
     start: row.started_at ?? row.created_at ?? new Date().toISOString(),
     pausedAt: row.paused_at ?? null,
@@ -4384,7 +3715,6 @@ function mapActiveSessionRowToSession(row) {
     dbActivityCategoryId: row.activity_category_id ?? null,
     dbTeamName: row.team_name ?? "",
     dbClientName: row.client_name ?? "",
-    dbKpiCategoryLabel: row.kpi_category_label ?? "",
     isServerBacked: true,
     isServerActive: true,
   });
@@ -4813,15 +4143,11 @@ function hydrateFormFromActiveSession() {
   projectInput.value = activeSession?.project ?? "";
   taskInput.value = activeSession?.task ?? "";
   notionInput.value = activeSession?.notionRef ?? "";
-  objectivePoleInput.value = activeSession?.objectivePole ?? "";
-  objectiveOkrInput.value = activeSession?.objectiveOkr ?? "";
-  objectiveKrInput.value = activeSession?.objectiveKr ?? "";
   notesInput.value = activeSession?.notes ?? "";
   currentCategories = [...(activeSession?.categories ?? [])];
   currentTags = [...(activeSession?.tags ?? [])];
   renderCategoryTokens();
   renderTagTokens();
-  renderObjectiveSelections();
   updateFieldManageButtons();
   applyProjectMemoryFromInput();
 }
@@ -4835,15 +4161,11 @@ function resetComposerForm({ collaborator = "", hint = "Commencez à taper : un 
   projectInput.value = "";
   taskInput.value = "";
   notionInput.value = "";
-  objectivePoleInput.value = "";
-  objectiveOkrInput.value = "";
-  objectiveKrInput.value = "";
   notesInput.value = "";
   delete projectInput.dataset.lastHydratedKey;
   projectMemoryHint.textContent = hint;
   renderCategoryTokens();
   renderTagTokens();
-  renderObjectiveSelections();
   updateFieldManageButtons();
 }
 
@@ -4863,9 +4185,6 @@ function readFormValues() {
     categories: normalized.categories,
     tags: normalized.tags,
     notionRef: notionInput.value.trim(),
-    objectivePole: objectivePoleInput.value.trim(),
-    objectiveOkr: objectiveOkrInput.value.trim(),
-    objectiveKr: objectiveKrInput.value.trim(),
     notes: notesInput.value.trim(),
   };
 }
@@ -4929,9 +4248,6 @@ function showAuthRequiredMessage() {
 
 function updateFieldManageButtons() {
   syncFieldManageButton(manageLinkButton, Boolean(notionInput.value.trim()));
-  syncFieldManageButton(managePoleButton, Boolean(objectivePoleInput.value.trim()));
-  syncFieldManageButton(manageOkrButton, Boolean(objectiveOkrInput.value.trim()));
-  syncFieldManageButton(manageKrButton, Boolean(objectiveKrInput.value.trim()));
 }
 
 function syncFieldManageButton(button, isVisible) {
@@ -4995,27 +4311,6 @@ function getFieldManagePayload(kind) {
       copy: "Vous pouvez modifier ce lien ou le supprimer du contexte.",
       detail: notionInput.value.trim(),
       allowDelete: true,
-    },
-    pole: {
-      kind,
-      title: "Gérer le pôle",
-      copy: "Vous pouvez corriger ce choix ici. La gestion du catalogue d’objectifs se fait ailleurs.",
-      detail: objectivePoleInput.value.trim(),
-      allowDelete: false,
-    },
-    okr: {
-      kind,
-      title: "Gérer l'OKR",
-      copy: "Vous pouvez corriger ce choix ici. La gestion du catalogue d’objectifs se fait ailleurs.",
-      detail: objectiveOkrInput.value.trim(),
-      allowDelete: false,
-    },
-    kr: {
-      kind,
-      title: "Gérer le KR",
-      copy: "Vous pouvez corriger ce choix ici. La gestion du catalogue d’objectifs se fait ailleurs.",
-      detail: objectiveKrInput.value.trim(),
-      allowDelete: false,
     },
   };
 
@@ -5341,18 +4636,11 @@ function focusFieldForEditing(kind) {
     category: categoriesInput,
     tags: tagsInput,
     link: notionInput,
-    pole: objectivePoleInput,
-    okr: objectiveOkrInput,
-    kr: objectiveKrInput,
   };
 
   const input = map[kind];
   if (!input) {
     return;
-  }
-
-  if (kind === "pole" || kind === "okr" || kind === "kr") {
-    objectiveDisclosure.open = true;
   }
 
   input.focus();
@@ -5377,18 +4665,6 @@ function applyFieldManageDeletion(kind) {
     renderTagTokens();
   } else if (kind === "link") {
     notionInput.value = "";
-  } else if (kind === "pole") {
-    objectivePoleInput.value = "";
-    objectiveOkrInput.value = "";
-    objectiveKrInput.value = "";
-    renderObjectiveSelections();
-  } else if (kind === "okr") {
-    objectiveOkrInput.value = "";
-    objectiveKrInput.value = "";
-    renderObjectiveSelections();
-  } else if (kind === "kr") {
-    objectiveKrInput.value = "";
-    renderObjectiveSelections();
   }
 
   updateFieldManageButtons();
@@ -5673,7 +4949,7 @@ async function ensureReferenceCatalogLoaded(force = false) {
         ),
       window.supabase
         .from("categories")
-        .select("activity_category_id,activity_category_label,kpi_category_label,color_hex,team_name,active"),
+        .select("activity_category_id,activity_category_label,color_hex,team_name,active"),
     ]);
 
     if (usersResult.error || projectsResult.error || categoriesResult.error) {
@@ -6032,7 +5308,6 @@ async function createCategoryReference(rawLabel, options = {}) {
   const payload = {
     activity_category_id: nextId,
     activity_category_label: categoryLabel,
-    kpi_category_label: inheritedCategory?.kpi_category_label ?? "Internal / Admin",
     color_hex: getCategoryColor(categoryLabel),
     team_name: linkedUser?.team_name ?? getKnownUsers()[0]?.team_name ?? null,
     active: true,
@@ -6087,7 +5362,6 @@ function buildCanonicalSessionDraft(sessionDraft, resolved) {
     dbActivityCategoryId: resolved.category?.activity_category_id ?? null,
     dbTeamName: resolved.user?.team_name ?? "",
     dbClientName: resolved.project?.client_name ?? "",
-    dbKpiCategoryLabel: resolved.category?.kpi_category_label ?? "",
   };
 }
 
@@ -6098,7 +5372,6 @@ function applyCanonicalDraftToMainForm(sessionDraft) {
   currentTags = [...(sessionDraft.tags ?? [])];
   renderCategoryTokens();
   renderTagTokens();
-  renderObjectiveSelections();
 }
 
 async function canonicalizeCollaboratorInput() {
@@ -6276,15 +5549,11 @@ async function buildTimeEntryPayloadFromSession(session, source = "manual") {
     activity_category_id: references.category?.activity_category_id ?? session.dbActivityCategoryId ?? null,
     activity_category_label:
       normalizeCategorySelection(references.category?.activity_category_label ?? session.categories?.[0] ?? "").category || null,
-    kpi_category_label: references.category?.kpi_category_label ?? session.dbKpiCategoryLabel ?? null,
     duration_minutes: Math.max(1, Math.round(durationMs / 60000)),
     duration_hours: Number((durationMs / 3600000).toFixed(2)),
     task_label: session.task || "",
     tags_text: dedupePreservingOrder((session.tags ?? []).map(normalizeTag)).join(", "),
     notion_ref: session.notionRef || "",
-    objective_pole: session.objectivePole || "",
-    objective_okr: session.objectiveOkr || "",
-    objective_kr: session.objectiveKr || "",
     notes: session.notes || "",
     source: normalizeTimeEntrySource(source),
     status: "saved",
@@ -6397,13 +5666,9 @@ async function buildActiveSessionPayload(session) {
     activity_category_id: references?.category?.activity_category_id ?? session.dbActivityCategoryId ?? null,
     activity_category_label:
       normalizeCategorySelection(references?.category?.activity_category_label ?? session.categories?.[0] ?? "").category || null,
-    kpi_category_label: references?.category?.kpi_category_label ?? session.dbKpiCategoryLabel ?? null,
     task_label: session.task || "",
     tags_text: dedupePreservingOrder((session.tags ?? []).map(normalizeTag)).join(", "),
     notion_ref: session.notionRef || "",
-    objective_pole: session.objectivePole || "",
-    objective_okr: session.objectiveOkr || "",
-    objective_kr: session.objectiveKr || "",
     notes: session.notes || "",
     updated_at: new Date().toISOString(),
   };
@@ -6657,9 +5922,6 @@ async function logSessionChange(previousSession, nextSession, source = "manual")
     ["categories", "Catégorie"],
     ["tags", "Tags"],
     ["notionRef", "Lien d'intérêt"],
-    ["objectivePole", "Pole"],
-    ["objectiveOkr", "OKR"],
-    ["objectiveKr", "KR"],
     ["notes", "Note"],
   ];
 
@@ -6766,9 +6028,6 @@ function openManualDialog(session = null, preset = null) {
   manualCurrentTags = dedupePreservingOrder(session?.tags ?? preset?.tags ?? (inheritForm ? currentTags : []));
   manualTagsInput.value = "";
   manualNotionInput.value = session?.notionRef ?? preset?.notionRef ?? (inheritForm ? notionInput.value.trim() : "");
-  manualObjectivePoleInput.value = session?.objectivePole ?? preset?.objectivePole ?? (inheritForm ? objectivePoleInput.value.trim() : "");
-  manualObjectiveOkrInput.value = session?.objectiveOkr ?? preset?.objectiveOkr ?? (inheritForm ? objectiveOkrInput.value.trim() : "");
-  manualObjectiveKrInput.value = session?.objectiveKr ?? preset?.objectiveKr ?? (inheritForm ? objectiveKrInput.value.trim() : "");
   manualNotesInput.value = session?.notes ?? preset?.notes ?? (inheritForm ? notesInput.value.trim() : "");
   const startDateValue = session ? new Date(session.start) : start;
   const endDateValue = session ? new Date(session.end) : end;
@@ -6781,7 +6040,6 @@ function openManualDialog(session = null, preset = null) {
   }
   saveManualButton.textContent = session ? "Enregistrer les changements" : "Enregistrer";
   renderManualTagTokens();
-  renderObjectiveSelections();
   manualDialog.showModal();
 }
 
@@ -6870,9 +6128,6 @@ function saveManualEntry() {
       dedupePreservingOrder([...manualCurrentTags, ...parseTokenString(manualTagsInput.value)]),
     ),
     notionRef: manualNotionInput.value.trim(),
-    objectivePole: manualObjectivePoleInput.value.trim(),
-    objectiveOkr: manualObjectiveOkrInput.value.trim(),
-    objectiveKr: manualObjectiveKrInput.value.trim(),
     notes: manualNotesInput.value.trim(),
     start: start.toISOString(),
     end: end.toISOString(),
@@ -6898,7 +6153,6 @@ function saveManualEntry() {
           manualEditingSessionId = null;
           manualDialog.close();
           saveManualButton.textContent = "Enregistrer";
-          renderObjectiveSelections();
           void logSessionChange(activeSessionBeingEdited, sessionToSave, "manual-edit-active-stop");
           void completeStoppedSessionLocally(sessionToSave, "manual-edit-active");
         },
@@ -6919,7 +6173,6 @@ function saveManualEntry() {
     manualEditingSessionId = null;
     manualDialog.close();
     saveManualButton.textContent = "Enregistrer";
-    renderObjectiveSelections();
     render();
     void logSessionChange(activeSessionBeingEdited, nextActiveSession, "manual-edit-active");
     void upsertActiveSessionToSupabase(nextActiveSession);
@@ -6962,7 +6215,6 @@ function saveManualEntry() {
       manualEditingSessionId = null;
       manualDialog.close();
       saveManualButton.textContent = "Enregistrer";
-      renderObjectiveSelections();
       render();
     },
   });
@@ -7116,9 +6368,6 @@ function findExactDuplicate(session, excludeId = null) {
   const projectKey = normalizeText(session.project ?? "");
   const taskKey = normalizeText(session.task ?? "");
   const categoryKey = normalizeText((Array.isArray(session.categories) ? session.categories[0] : null) ?? "");
-  const poleKey = normalizeText(session.objectivePole ?? "");
-  const okrKey = normalizeText(session.objectiveOkr ?? "");
-  const krKey = normalizeText(session.objectiveKr ?? "");
   // When editing (excludeId set), also exclude by dbTimeEntryId — after a Supabase sync,
   // loadServerBackedState may create a new local copy with a different id but the same
   // dbTimeEntryId, which would otherwise be wrongly flagged as a duplicate.
@@ -7134,9 +6383,6 @@ function findExactDuplicate(session, excludeId = null) {
     if (normalizeText(existing.project ?? "") !== projectKey) return false;
     if (normalizeText(existing.task ?? "") !== taskKey) return false;
     if (normalizeText((Array.isArray(existing.categories) ? existing.categories[0] : null) ?? "") !== categoryKey) return false;
-    if (normalizeText(existing.objectivePole ?? "") !== poleKey) return false;
-    if (normalizeText(existing.objectiveOkr ?? "") !== okrKey) return false;
-    if (normalizeText(existing.objectiveKr ?? "") !== krKey) return false;
     const existingStart = new Date(existing.start).getTime();
     const existingEnd = new Date(existing.end).getTime();
     if (Number.isNaN(existingStart) || Number.isNaN(existingEnd)) return false;
@@ -8157,9 +7403,6 @@ function renderProjectMemoryList() {
     const tags = document.createElement("div");
     tags.className = "memory-meta";
 
-    if (memory.objectivePole) {
-      tags.append(createPill(memory.objectivePole, { kind: "neutral" }));
-    }
     for (const category of memory.categories) {
       tags.append(createPill(category, { kind: "category" }));
     }
@@ -8306,11 +7549,8 @@ function renderSessionList() {
       activityElement.hidden = !activityLabel;
 
       const secondaryElement = fragment.querySelector(".session-secondary");
-      const secondaryBits = [];
-      if (session.objectiveOkr) secondaryBits.push(formatObjectiveOkrDisplay(session.objectiveOkr));
-      if (session.objectiveKr) secondaryBits.push(formatObjectiveKrDisplay(session.objectiveKr));
-      secondaryElement.textContent = secondaryBits.join(" · ");
-      secondaryElement.hidden = !secondaryBits.length;
+      secondaryElement.textContent = "";
+      secondaryElement.hidden = true;
 
       fragment.querySelector(".session-duration").textContent = formatDuration(session.durationMs);
       const timeRangeElement = fragment.querySelector(".session-time-range");
@@ -8643,16 +7883,12 @@ async function autoFlushPendingSessions() {
         client_name:             s.dbClientName || "",
         activity_category_label: s.categories?.[0] || null,
         activity_category_id:    s.dbActivityCategoryId || null,
-        kpi_category_label:      s.dbKpiCategoryLabel || null,
         task_label:              s.task || "",
         tags_text:               dedupePreservingOrder((s.tags ?? []).map(normalizeTag)).join(", "),
         duration_minutes:        Math.max(1, Math.round(durationMs / 60000)),
         duration_hours:          Number((durationMs / 3600000).toFixed(2)),
         notes:                   s.notes || "",
         notion_ref:              s.notionRef || "",
-        objective_pole:          s.objectivePole || "",
-        objective_okr:           s.objectiveOkr || "",
-        objective_kr:            s.objectiveKr || "",
         source:                  normalizeTimeEntrySource(s.source || "manual"),
         status:                  "saved",
       };
@@ -8769,16 +8005,12 @@ async function syncAllLocalSessions() {
       client_name:              s.dbClientName || "",
       activity_category_label:  s.categories?.[0] || null,
       activity_category_id:     s.dbActivityCategoryId || null,
-      kpi_category_label:       s.dbKpiCategoryLabel || null,
       task_label:               s.task || "",
       tags_text:                dedupePreservingOrder((s.tags ?? []).map(normalizeTag)).join(", "),
       duration_minutes:         Math.max(1, Math.round(durationMs / 60000)),
       duration_hours:           Number((durationMs / 3600000).toFixed(2)),
       notes:                    s.notes || "",
       notion_ref:               s.notionRef || "",
-      objective_pole:           s.objectivePole || "",
-      objective_okr:            s.objectiveOkr || "",
-      objective_kr:             s.objectiveKr || "",
       source:                   "manual",
       status:                   "saved",
     };
@@ -8881,29 +8113,24 @@ function renderPersonalStats() {
 
 function renderPersonalDistribution() {
   const collaborator = getCurrentCollaborator();
-  const usesObjectives = statsMode === "objectives";
 
   const periodSuffix = personalPeriod === "week" ? "cette semaine"
     : personalPeriod === "month" ? "ce mois"
     : "sur cette période";
 
-  personalStatsTitle.textContent = usesObjectives ? `Objectifs ${periodSuffix}` : `Catégories ${periodSuffix}`;
-  personalStatsCopy.textContent = usesObjectives
-    ? `Répartition de ton temps par objectif ${periodSuffix}.`
-    : `Répartition de ton temps par catégorie ${periodSuffix}.`;
+  personalStatsTitle.textContent = `Catégories ${periodSuffix}`;
+  personalStatsCopy.textContent = `Répartition de ton temps par catégorie ${periodSuffix}.`;
 
   if (!collaborator) {
     if (topCategoryName) topCategoryName.textContent = "—";
     if (topCategoryTime) topCategoryTime.textContent = "0 h 00";
-    renderPersonalWeekDistribution([], 0, usesObjectives, "Choisissez votre nom pour voir vos données.");
+    renderPersonalWeekDistribution([], 0, "Choisissez votre nom pour voir vos données.");
     return;
   }
 
   const range = getPersonalPeriodRange();
   const rows = getSessionsForCollaborator(collaborator).filter((session) => isSessionInRange(session, range));
-  const objectiveRows = buildObjectiveOkrRows(rows);
-  const fallbackRows = buildReportRows(rows, "categories");
-  const displayRows = usesObjectives ? objectiveRows : fallbackRows;
+  const displayRows = buildReportRows(rows, "categories");
   const totalMs = displayRows.reduce((sum, row) => sum + row.durationMs, 0);
 
   const topRow = displayRows[0];
@@ -8913,10 +8140,7 @@ function renderPersonalDistribution() {
   renderPersonalWeekDistribution(
     displayRows,
     totalMs,
-    usesObjectives,
-    usesObjectives
-      ? `Aucun objectif 2026 renseigné ${periodSuffix} pour ce cargonaute.`
-      : `Aucune catégorie enregistrée ${periodSuffix} pour ce cargonaute.`,
+    `Aucune catégorie enregistrée ${periodSuffix} pour ce cargonaute.`,
   );
 }
 
@@ -9840,11 +9064,7 @@ function openPlannedDialog(plannedEvent) {
   renderPlannedCategoryTokens();
   plannedNotionInput.value = plannedEvent.notionRef || extractFirstUrl(plannedEvent.description || "") || "";
   plannedNotesInput.value = plannedEvent.notes || plannedEvent.description || "";
-  plannedObjectivePoleInput.value = plannedEvent.objectivePole || "";
-  plannedObjectiveOkrInput.value = plannedEvent.objectiveOkr || "";
-  plannedObjectiveKrInput.value = plannedEvent.objectiveKr || "";
   renderPlannedTagTokens();
-  renderObjectiveSelections();
   plannedDialogSubtitle.textContent = `${formatPlannedEventWeekday(plannedEvent.start_at)} · ${formatPlannedEventTime(plannedEvent)}`;
   syncPlannedDialogSuggestion(plannedEvent);
   plannedDialog.showModal();
@@ -9863,11 +9083,7 @@ function resetPlannedDialog() {
   renderPlannedCategoryTokens();
   plannedNotionInput.value = "";
   plannedNotesInput.value = "";
-  plannedObjectivePoleInput.value = "";
-  plannedObjectiveOkrInput.value = "";
-  plannedObjectiveKrInput.value = "";
   renderPlannedTagTokens();
-  renderObjectiveSelections();
   plannedDialogSubtitle.textContent = "";
   syncPlannedDialogSuggestion(null);
 }
@@ -9913,9 +9129,6 @@ function buildPlannedSessionDraft() {
     categories: normalized.categories,
     tags: normalized.tags,
     notionRef: plannedNotionInput.value.trim(),
-    objectivePole: plannedObjectivePoleInput.value.trim(),
-    objectiveOkr: plannedObjectiveOkrInput.value.trim(),
-    objectiveKr: plannedObjectiveKrInput.value.trim(),
     notes: plannedNotesInput.value.trim(),
     start: start.toISOString(),
     end: end.toISOString(),
@@ -9934,9 +9147,6 @@ function applyPlannedEventDecision(mode) {
     task: plannedTaskInput.value.trim(),
     description: plannedNotesInput.value.trim(),
     notionRef: plannedNotionInput.value.trim(),
-    objectivePole: plannedObjectivePoleInput.value.trim(),
-    objectiveOkr: plannedObjectiveOkrInput.value.trim(),
-    objectiveKr: plannedObjectiveKrInput.value.trim(),
     validated_category: plannedCurrentCategories[0] ?? plannedCategoryInput.value.trim(),
     validated_tags: dedupePreservingOrder([...plannedCurrentTags, ...parseTokenString(plannedTagsInput.value)]),
     updated_at: new Date().toISOString(),
@@ -10264,9 +9474,6 @@ function buildPlannedImportedEvent(snapshot, event, index) {
     matching_confidence: inferred.matching_confidence,
     task: override.task ?? "",
     notionRef: override.notionRef ?? "",
-    objectivePole: override.objectivePole ?? "",
-    objectiveOkr: override.objectiveOkr ?? "",
-    objectiveKr: override.objectiveKr ?? "",
     notes: override.description ?? event.description ?? "",
     status,
     updated_at: override.updated_at ?? snapshot.imported_at ?? null,
@@ -10313,7 +9520,7 @@ function storePlannedEventOverrides(value) {
 }
 
 function applyAgendaEventColor(element, session) {
-  const label = session.categories?.[0] || session.objectivePole || session.project || session.collaborator || "agenda";
+  const label = session.categories?.[0] || session.project || session.collaborator || "agenda";
   const baseColor = session.categories?.[0]
     ? getCategoryColor(session.categories[0], label)
     : getAgendaCategoryColor(label);
@@ -10429,7 +9636,6 @@ function renderManagerViews() {
       ? allPrevRows
       : allPrevRows.filter((session) => normalizeText(session.collaborator) === normalizeText(filterCollaborator));
 
-  const usesObjectives = statsMode === "objectives";
   renderManagerSummary(allRows, scopedRows, range, filterCollaborator);
 
   const currentTotalMs = scopedRows.reduce((sum, s) => sum + (Number(s.durationMs) || 0), 0);
@@ -10445,32 +9651,25 @@ function renderManagerViews() {
     prevProjectRows.find((r) => r.label === topProjectLabel)?.durationMs ?? 0,
   );
 
-  const managerObjectiveRows = buildObjectiveOkrRows(scopedRows);
   const managerCategoryRows = buildReportRows(scopedRows, "categories");
-  const managerDisplayRows = usesObjectives ? managerObjectiveRows : managerCategoryRows;
-  const prevCategoryRows = usesObjectives ? buildObjectiveOkrRows(prevRows) : buildReportRows(prevRows, "categories");
-  const topCategoryLabel = managerDisplayRows[0]?.label;
+  const prevCategoryRows = buildReportRows(prevRows, "categories");
+  const topCategoryLabel = managerCategoryRows[0]?.label;
   setKpiDelta(
     reportTopCategoryDelta,
-    managerDisplayRows[0]?.durationMs ?? 0,
+    managerCategoryRows[0]?.durationMs ?? 0,
     prevCategoryRows.find((r) => r.label === topCategoryLabel)?.durationMs ?? 0,
   );
 
-  const managerObjectiveTotalMs = managerObjectiveRows.reduce((sum, row) => sum + row.durationMs, 0);
   const managerCategoryTotalMs = scopedRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
-  managerDistributionTitle.textContent = usesObjectives ? "Répartition OKR" : "Répartition catégories";
-  managerDistributionCopy.textContent = usesObjectives
-    ? "Poids relatif des objectifs sur la période."
-    : "Poids relatif des catégories sur la période.";
-  reportCategoryHead.textContent = usesObjectives ? "OKR" : "Categorie";
-  managerObjectivesPanel.hidden = !usesObjectives;
-  reportKrShell.hidden = !usesObjectives;
+  managerDistributionTitle.textContent = "Répartition catégories";
+  managerDistributionCopy.textContent = "Poids relatif des catégories sur la période.";
+  reportCategoryHead.textContent = "Categorie";
   renderDistribution(
     managerDistributionBar,
     managerDistributionLegend,
-    managerDisplayRows,
-    usesObjectives ? managerObjectiveTotalMs : managerCategoryTotalMs,
-    usesObjectives ? "Aucun OKR renseigné sur cette plage." : "Aucune catégorie disponible sur cette plage.",
+    managerCategoryRows,
+    managerCategoryTotalMs,
+    "Aucune catégorie disponible sur cette plage.",
     {
       onLabelClick: (label) => {
         evolutionFilterLabel = evolutionFilterLabel === label ? null : label;
@@ -10481,11 +9680,6 @@ function renderManagerViews() {
     },
   );
   renderEvolutionGrid(evolutionGrid, anchor, filterCollaborator, evolutionFilterLabel);
-  if (usesObjectives) {
-    renderManagerObjectives(scopedRows);
-  } else {
-    managerObjectivesGrid.innerHTML = "";
-  }
   renderTeamTable(teamReportList, allRows, range, "Aucune donnée équipe sur cette plage.");
   renderReportTable(
     reportProjectList,
@@ -10495,20 +9689,10 @@ function renderManagerViews() {
   );
   renderReportTable(
     reportCategoryList,
-    managerDisplayRows,
-    usesObjectives ? managerObjectiveTotalMs : managerCategoryTotalMs,
-    usesObjectives ? "Aucun OKR pour cette plage." : "Aucune catégorie pour cette plage.",
+    managerCategoryRows,
+    managerCategoryTotalMs,
+    "Aucune catégorie pour cette plage.",
   );
-  if (usesObjectives) {
-    renderReportTable(
-      reportKrList,
-      buildObjectiveKrRowsFromSessions(scopedRows),
-      scopedRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0),
-      "Aucun KR pour cette plage.",
-    );
-  } else {
-    reportKrList.innerHTML = "";
-  }
 }
 
 function renderResourcesViews() {
@@ -10517,38 +9701,25 @@ function renderResourcesViews() {
   const prevRange = getPreviousPeriodRange(anchor, reportPeriod);
   const allRows = getScopedSessions(getAllSessionsWithActive().filter((session) => isSessionInRange(session, range)));
   const prevAllRows = getScopedSessions(getAllSessionsWithActive().filter((session) => isSessionInRange(session, prevRange)));
-  const usesObjectives = statsMode === "objectives";
   const totalMs = allRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
   const prevTotalMs = prevAllRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
   const projectTotals = buildReportRows(allRows, "project");
   const prevProjectTotals = buildReportRows(prevAllRows, "project");
-  const objectiveTotals = buildObjectiveOkrRows(allRows);
-  const prevObjectiveTotals = buildObjectiveOkrRows(prevAllRows);
   const categoryTotals = buildReportRows(allRows, "categories");
   const prevCategoryTotals = buildReportRows(prevAllRows, "categories");
-  const krTotals = buildObjectiveKrRowsFromSessions(allRows);
-  const displayRows = usesObjectives ? objectiveTotals : categoryTotals;
-  const prevDisplayRows = usesObjectives ? prevObjectiveTotals : prevCategoryTotals;
 
   resourceTotal.textContent = formatDuration(totalMs);
   resourceRange.textContent = formatPeriodLabel(range.start, range.end, reportPeriod);
   resourceTopProject.textContent = projectTotals[0]?.label ?? "-";
   resourceTopProjectTime.textContent = projectTotals[0] ? formatDuration(projectTotals[0].durationMs) : "0 h 00";
-  resourceDistributionTitle.textContent = usesObjectives ? "Répartition globale OKR" : "Répartition globale catégories";
-  resourceDistributionCopy.textContent = usesObjectives
-    ? "Lecture transversale des objectifs sur la plage choisie."
-    : "Lecture transversale des catégories sur la plage choisie.";
-  resourceCategoryHead.textContent = usesObjectives ? "OKR" : "Categorie";
-  resourceObjectivesPanel.hidden = !usesObjectives;
-  resourceKrShell.hidden = !usesObjectives;
-  resourceTopCategoryLabel.textContent = usesObjectives ? "OKR principal" : "Categorie principale";
-  resourceTopCategory.textContent = (usesObjectives ? objectiveTotals[0] : categoryTotals[0])?.label ?? "-";
-  resourceTopCategoryTime.textContent = (usesObjectives ? objectiveTotals[0] : categoryTotals[0])
-    ? formatDuration((usesObjectives ? objectiveTotals[0] : categoryTotals[0]).durationMs)
+  resourceDistributionTitle.textContent = "Répartition globale catégories";
+  resourceDistributionCopy.textContent = "Lecture transversale des catégories sur la plage choisie.";
+  resourceCategoryHead.textContent = "Categorie";
+  resourceTopCategoryLabel.textContent = "Categorie principale";
+  resourceTopCategory.textContent = categoryTotals[0]?.label ?? "-";
+  resourceTopCategoryTime.textContent = categoryTotals[0]
+    ? formatDuration(categoryTotals[0].durationMs)
     : "0 h 00";
-  resourceTopKrCard.hidden = !usesObjectives;
-  resourceTopKr.textContent = krTotals[0]?.label ?? "-";
-  resourceTopKrTime.textContent = krTotals[0] ? formatDuration(krTotals[0].durationMs) : "0 h 00";
 
   setKpiDelta(resourceTotalDelta, totalMs, prevTotalMs);
 
@@ -10559,21 +9730,21 @@ function renderResourcesViews() {
     prevProjectTotals.find((r) => r.label === topResProjectLabel)?.durationMs ?? 0,
   );
 
-  const topResCategoryLabel = displayRows[0]?.label;
+  const topResCategoryLabel = categoryTotals[0]?.label;
   setKpiDelta(
     resourceTopCategoryDelta,
-    displayRows[0]?.durationMs ?? 0,
-    prevDisplayRows.find((r) => r.label === topResCategoryLabel)?.durationMs ?? 0,
+    categoryTotals[0]?.durationMs ?? 0,
+    prevCategoryTotals.find((r) => r.label === topResCategoryLabel)?.durationMs ?? 0,
   );
 
   renderDistribution(
     resourceDistributionBar,
     resourceDistributionLegend,
-    displayRows,
+    categoryTotals,
     totalMs,
-    usesObjectives ? "Aucun OKR renseigné sur cette plage." : "Aucune catégorie disponible sur cette plage.",
+    "Aucune catégorie disponible sur cette plage.",
     {
-      colorResolver: (row) => (usesObjectives ? colorForLabel(row.label) : colorForPastelDistributionLabel(row.label)),
+      colorResolver: (row) => colorForPastelDistributionLabel(row.label),
       onLabelClick: (label) => {
         evolutionFilterLabel = evolutionFilterLabel === label ? null : label;
         renderManagerViews();
@@ -10583,11 +9754,6 @@ function renderResourcesViews() {
     },
   );
   renderEvolutionGrid(resourceEvolutionGrid, anchor, "all", evolutionFilterLabel);
-  if (usesObjectives) {
-    renderManagerObjectivesInto(resourceObjectivesGrid, allRows);
-  } else {
-    resourceObjectivesGrid.innerHTML = "";
-  }
   renderTeamTable(resourceTeamList, allRows, range, "Aucune donnée équipe sur cette plage.");
   renderReportTable(
     resourceProjectList,
@@ -10597,20 +9763,10 @@ function renderResourcesViews() {
   );
   renderReportTable(
     resourceCategoryList,
-    usesObjectives ? objectiveTotals : categoryTotals,
+    categoryTotals,
     totalMs,
-    usesObjectives ? "Aucun OKR sur cette plage." : "Aucune catégorie sur cette plage.",
+    "Aucune catégorie sur cette plage.",
   );
-  if (usesObjectives) {
-    renderReportTable(
-      resourceKrList,
-      krTotals,
-      totalMs,
-      "Aucun KR sur cette plage.",
-    );
-  } else {
-    resourceKrList.innerHTML = "";
-  }
 }
 
 function showSaveToast(session, options = {}) {
@@ -10730,7 +9886,7 @@ function buildGuideForGuest() {
     {
       icon: "📊",
       title: "Analyses d'équipe",
-      desc: "Rapports hebdo / mensuel / annuel par collaborateur, catégorie, projet ou objectif OKR. Zéro export manuel.",
+      desc: "Rapports hebdo / mensuel / annuel par collaborateur, catégorie et projet. Zéro export manuel.",
     },
   ];
 
@@ -10874,11 +10030,6 @@ function buildGuideForExistingUser(hasCalendar) {
       desc: hasCalendar
         ? "Clique « Sync calendrier » dans l'Agenda pour importer les événements de la semaine. Clique un événement fantôme pour le convertir en vraie session qualifiée."
         : "Colle l'URL iCal privée de ton Google Calendar dans ton profil. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
-    },
-    {
-      icon: "🎯",
-      title: "Lier à un objectif OKR",
-      desc: "Déplie la section « Objectifs » dans le formulaire pour rattacher chaque session à un Pôle, un OKR et un KR. Les analyses reflètent alors où va réellement le temps.",
     },
     {
       icon: "⚡",
@@ -11331,9 +10482,6 @@ function exportCurrentAnalysisCsv() {
       "client",
       "projet",
       "categorie",
-      "kpi_categorie",
-      "okr",
-      "kr",
       "debut",
       "fin",
       "duree_heures",
@@ -11348,9 +10496,6 @@ function exportCurrentAnalysisCsv() {
       getSessionClientLabel(session),
       session.project || "",
       session.categories?.[0] || "",
-      session.dbKpiCategoryLabel || "",
-      formatObjectiveOkrDisplay(session.objectiveOkr),
-      formatObjectiveKrDisplay(session.objectiveKr),
       session.start || "",
       session.end || "",
       Number(((Number(session.durationMs) || 0) / 3600000).toFixed(2)).toString(),
@@ -11382,168 +10527,6 @@ function escapeCsvValue(value) {
   return stringValue;
 }
 
-function renderManagerObjectives(rows) {
-  renderManagerObjectivesInto(managerObjectivesGrid, rows);
-}
-
-function renderManagerObjectivesInto(container, rows) {
-  container.innerHTML = "";
-
-  const cards = OBJECTIVE_2026_CATALOG.map((objective) => buildObjectiveReportCardData(objective, rows));
-  const nonEmptyCards = cards.filter((card) => card.totalMs > 0);
-  const visibleCards = nonEmptyCards.length ? nonEmptyCards : cards.slice(0, 6);
-
-  if (!visibleCards.length) {
-    container.append(createEmptyState("Les objectifs suivis apparaîtront ici."));
-    return;
-  }
-
-  for (const card of visibleCards) {
-    container.append(createObjectiveReportCard(card));
-  }
-}
-
-function buildObjectiveReportCardData(objective, rows) {
-  const scopedRows = rows.filter((session) => matchesObjectiveOkr(session.objectiveOkr, objective));
-  const totalMs = scopedRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
-  const krRows = buildObjectiveKrRows(scopedRows, objective);
-  const topKr = krRows[0]?.label ?? "Aucun KR dominant";
-
-  return {
-    ...objective,
-    totalMs,
-    sessionCount: scopedRows.length,
-    krRows,
-    topKr,
-  };
-}
-
-function buildObjectiveKrRows(rows, objective) {
-  const grouped = new Map();
-
-  for (const session of rows) {
-    const matchedKr = objective.krs.find((kr) => matchesObjectiveKr(session.objectiveKr, kr));
-    const label = matchedKr ? shortenObjectiveLegend(matchedKr) : "Sans KR";
-    const current = grouped.get(label) ?? { label, durationMs: 0, count: 0 };
-    current.durationMs += Number(session.durationMs) || 0;
-    current.count += 1;
-    grouped.set(label, current);
-  }
-
-  return Array.from(grouped.values()).sort((left, right) => right.durationMs - left.durationMs);
-}
-
-function matchesObjectiveOkr(rawValue, objective) {
-  const normalized = normalizeObjectiveLabel(rawValue);
-  if (!normalized) {
-    return false;
-  }
-
-  const code = normalizeObjectiveLabel(objective.okrCode);
-  const label = normalizeObjectiveLabel(objective.okrLabel);
-  return normalized === code || normalized.startsWith(`${code} ·`) || normalized === label || normalized.endsWith(label);
-}
-
-function matchesObjectiveKr(rawValue, targetKr) {
-  const normalized = normalizeObjectiveLabel(rawValue);
-  if (!normalized) {
-    return false;
-  }
-
-  const target = normalizeObjectiveLabel(targetKr);
-  const codeMatch = target.match(/^(rc\s*\d+(?:\.\d+)?|r\d+)/i)?.[0] ?? "";
-  return normalized === target || (codeMatch && normalized.startsWith(codeMatch));
-}
-
-function normalizeObjectiveLabel(value) {
-  return normalizeText(String(value ?? "").replace(/\s+/g, " ").trim());
-}
-
-function createObjectiveReportCard(card) {
-  const article = document.createElement("article");
-  article.className = "objective-report-card";
-
-  const header = document.createElement("div");
-  header.className = "objective-report-head";
-
-  const pole = document.createElement("p");
-  pole.className = "eyebrow";
-  pole.textContent = card.pole;
-
-  const title = document.createElement("h4");
-  title.textContent = `${card.okrCode} · ${card.okrLabel}`;
-
-  header.append(pole, title);
-
-  const content = document.createElement("div");
-  content.className = "objective-report-content";
-
-  const donut = document.createElement("div");
-  donut.className = "objective-donut";
-  donut.style.background = buildObjectiveDonutGradient(card.krRows, card.totalMs);
-
-  const donutInner = document.createElement("div");
-  donutInner.className = "objective-donut-inner";
-  donutInner.innerHTML = `<strong>${card.totalMs ? formatDurationHours(card.totalMs) : "0,0 h"}</strong><span>${card.sessionCount} session${card.sessionCount > 1 ? "s" : ""}</span>`;
-  donut.append(donutInner);
-
-  const details = document.createElement("div");
-  details.className = "objective-report-details";
-
-  const top = document.createElement("p");
-  top.className = "objective-report-top";
-  top.textContent = card.totalMs ? `KR dominant · ${card.topKr}` : "Aucun temps rattache sur la plage.";
-
-  const legend = document.createElement("div");
-  legend.className = "objective-report-legend";
-
-  if (!card.krRows.length) {
-    legend.append(createEmptyState("Aucune saisie rattachee."));
-  } else {
-    for (const [index, row] of card.krRows.slice(0, 4).entries()) {
-      const item = document.createElement("div");
-      item.className = "objective-legend-item";
-
-      const swatch = document.createElement("span");
-      swatch.className = "objective-legend-swatch";
-      swatch.style.background = colorForLabel(`${card.okrCode}-${row.label}-${index}`);
-
-      const label = document.createElement("span");
-      label.className = "objective-legend-label";
-      label.textContent = `${row.label} · ${formatDurationHours(row.durationMs)}`;
-
-      item.append(swatch, label);
-      legend.append(item);
-    }
-  }
-
-  details.append(top, legend);
-  content.append(donut, details);
-  article.append(header, content);
-  return article;
-}
-
-function buildObjectiveDonutGradient(rows, totalMs) {
-  if (!totalMs || !rows.length) {
-    return "conic-gradient(rgba(255, 192, 203, 0.22) 0deg 360deg)";
-  }
-
-  let cursor = 0;
-  const segments = rows.map((row, index) => {
-    const start = cursor;
-    cursor += (row.durationMs / totalMs) * 360;
-    const end = index === rows.length - 1 ? 360 : cursor;
-    return `${colorForLabel(`objective-${row.label}-${index}`)} ${start}deg ${end}deg`;
-  });
-
-  return `conic-gradient(${segments.join(", ")})`;
-}
-
-function shortenObjectiveLegend(value) {
-  const content = extractObjectiveKrContent(value);
-  return content.length <= 42 ? content : `${content.slice(0, 41).trimEnd()}…`;
-}
-
 function setKpiDelta(el, currentMs, previousMs) {
   if (!el) return;
   if (!previousMs) {
@@ -11560,97 +10543,19 @@ function setKpiDelta(el, currentMs, previousMs) {
 }
 
 function renderManagerSummary(allRows, scopedRows, range, filterCollaborator) {
-  const usesObjectives = statsMode === "objectives";
   const totalMs = scopedRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
   const projectTotals = buildReportRows(scopedRows, "project");
-  const categoryTotals = usesObjectives ? buildObjectiveOkrRows(scopedRows) : buildReportRows(scopedRows, "categories");
-  const krTotals = buildObjectiveKrRowsFromSessions(scopedRows);
+  const categoryTotals = buildReportRows(scopedRows, "categories");
   const topProject = projectTotals[0];
   const topCategory = categoryTotals[0];
-  const topKr = krTotals[0];
 
   reportTotal.textContent = formatDuration(totalMs);
   reportRange.textContent = formatPeriodLabel(range.start, range.end, reportPeriod);
   reportTopProject.textContent = topProject ? topProject.label : "-";
   reportTopProjectTime.textContent = topProject ? formatDuration(topProject.durationMs) : "0 h 00";
-  reportTopCategoryLabel.textContent = usesObjectives ? "OKR principal" : "Categorie principale";
+  reportTopCategoryLabel.textContent = "Categorie principale";
   reportTopCategory.textContent = topCategory ? topCategory.label : "-";
   reportTopCategoryTime.textContent = topCategory ? formatDuration(topCategory.durationMs) : "0 h 00";
-  reportTopKrCard.hidden = !usesObjectives;
-  reportTopKr.textContent = topKr ? topKr.label : "-";
-  reportTopKrTime.textContent = topKr ? formatDuration(topKr.durationMs) : "0 h 00";
-}
-
-function buildObjectiveOkrRows(rows) {
-  const grouped = new Map();
-
-  for (const row of rows) {
-    const label = formatObjectiveOkrDisplay(row.objectiveOkr);
-    if (!label) {
-      continue;
-    }
-
-    const current = grouped.get(label) ?? { label, durationMs: 0, count: 0 };
-    current.durationMs += Number(row.durationMs) || 0;
-    current.count += 1;
-    grouped.set(label, current);
-  }
-
-  return Array.from(grouped.values()).sort((left, right) => right.durationMs - left.durationMs);
-}
-
-function buildObjectiveKrRowsFromSessions(rows) {
-  const grouped = new Map();
-
-  for (const row of rows) {
-    const label = formatObjectiveKrDisplay(row.objectiveKr);
-    if (!label) {
-      continue;
-    }
-
-    const current = grouped.get(label) ?? { label, durationMs: 0, count: 0 };
-    current.durationMs += Number(row.durationMs) || 0;
-    current.count += 1;
-    grouped.set(label, current);
-  }
-
-  return Array.from(grouped.values()).sort((left, right) => right.durationMs - left.durationMs);
-}
-
-function formatObjectiveOkrDisplay(value) {
-  const normalized = String(value ?? "").trim();
-  if (!normalized) {
-    return "";
-  }
-
-  const codeMatch = normalized.match(/^O\d+/i)?.[0]?.toUpperCase();
-  const label = normalized.replace(/^O\d+\s*[·.-]?\s*/i, "").trim();
-
-  if (codeMatch && label) {
-    return `${codeMatch} · ${truncateObjectiveSummary(label, 44)}`;
-  }
-
-  if (codeMatch) {
-    return codeMatch;
-  }
-
-  return truncateObjectiveSummary(normalized, 50);
-}
-
-function formatObjectiveKrDisplay(value) {
-  const content = extractObjectiveKrContent(value);
-  return content ? truncateObjectiveSummary(content, 56) : "";
-}
-
-function extractObjectiveKrContent(value) {
-  const normalized = String(value ?? "").replace(/\s+/g, " ").trim();
-  if (!normalized) {
-    return "";
-  }
-
-  return normalized
-    .replace(/^(RC\s*\d+(?:\.\d+)?|R\d+)\s*[:·.-]?\s*/i, "")
-    .trim();
 }
 
 function renderEvolutionGrid(container, anchor, filterCollaborator, filterLabel) {
@@ -11686,8 +10591,7 @@ function renderEvolutionGrid(container, anchor, filterCollaborator, filterLabel)
       if (filterCollaborator !== "all" && normalizeText(session.collaborator) !== normalizeText(filterCollaborator)) return false;
       if (filterLabel) {
         const cats = session.categories?.length ? session.categories : ["Sans catégorie"];
-        const okr = formatObjectiveOkrDisplay(session.objectiveOkr);
-        if (!cats.includes(filterLabel) && okr !== filterLabel) return false;
+        if (!cats.includes(filterLabel)) return false;
       }
       return true;
     });
@@ -11857,15 +10761,15 @@ function renderDistribution(barContainer, legendContainer, rows, totalMs, emptyM
   }
 }
 
-function getDistributionColor(label, usesObjectives = false) {
-  return colorForLabel(`${usesObjectives ? "objective" : "category"}-${label}`);
+function getDistributionColor(label) {
+  return colorForLabel(`category-${label}`);
 }
 
 function colorForPastelDistributionLabel(label) {
   return colorForLabel(`pastel-${label}`);
 }
 
-function renderPersonalWeekDistribution(rows, totalMs, usesObjectives, emptyMessage) {
+function renderPersonalWeekDistribution(rows, totalMs, emptyMessage) {
   if (!personalDistributionBar || !personalCategoryRows) return;
 
   personalDistributionBar.innerHTML = "";
@@ -11881,21 +10785,21 @@ function renderPersonalWeekDistribution(rows, totalMs, usesObjectives, emptyMess
 
   // Stacked proportional bar (overview)
   for (const row of rows) {
-    const color = getDistributionColor(row.label, usesObjectives);
+    const color = getDistributionColor(row.label);
     const segment = document.createElement("div");
     segment.className = "distribution-segment";
     segment.style.width = `${Math.max((row.durationMs / totalMs) * 100, 2)}%`;
     segment.style.background = color;
-    const tooltip = usesObjectives ? "" : formatCategoryTagTooltip(row);
+    const tooltip = formatCategoryTagTooltip(row);
     attachHoverTooltip(segment, tooltip || `${row.label} · ${formatShare(row.durationMs, totalMs)}`);
     personalDistributionBar.append(segment);
   }
 
   // Per-category rows with individual bars
   for (const row of rows) {
-    const color = getDistributionColor(row.label, usesObjectives);
+    const color = getDistributionColor(row.label);
     const share = totalMs ? row.durationMs / totalMs : 0;
-    const tooltip = usesObjectives ? "" : formatCategoryTagTooltip(row);
+    const tooltip = formatCategoryTagTooltip(row);
 
     const item = document.createElement("div");
     item.className = "personal-cat-row";
@@ -12073,9 +10977,6 @@ function getProjectMemories(collaboratorName = "") {
         categories: [...(session.categories ?? []).slice(0, 1)],
         tags: [...(session.tags ?? [])],
         notionRef: session.notionRef ?? "",
-        objectivePole: session.objectivePole ?? "",
-        objectiveOkr: session.objectiveOkr ?? "",
-        objectiveKr: session.objectiveKr ?? "",
         notes: session.notes ?? "",
         start: session.start,
         usesCount: 0,
@@ -12096,9 +10997,6 @@ function getProjectMemories(collaboratorName = "") {
       memory.categories = [...(session.categories ?? []).slice(0, 1)];
       memory.tags = [...(session.tags ?? [])];
       memory.notionRef = session.notionRef ?? "";
-      memory.objectivePole = session.objectivePole ?? "";
-      memory.objectiveOkr = session.objectiveOkr ?? "";
-      memory.objectiveKr = session.objectiveKr ?? "";
       memory.notes = session.notes ?? "";
       memory.start = session.start;
     }
@@ -12136,12 +11034,8 @@ function fillFormFromMemory(memory) {
   currentCategories = [...memory.categories].slice(0, 1);
   currentTags = [...memory.tags];
   notionInput.value = memory.notionRef ?? "";
-  objectivePoleInput.value = memory.objectivePole ?? "";
-  objectiveOkrInput.value = memory.objectiveOkr ?? "";
-  objectiveKrInput.value = memory.objectiveKr ?? "";
   renderCategoryTokens();
   renderTagTokens();
-  renderObjectiveSelections();
   updateFieldManageButtons();
   projectInput.dataset.lastHydratedKey = memory.key;
   projectMemoryHint.textContent = `${memory.project} reconnu. Les champs reutilisables ont ete recharges.`;
@@ -12186,16 +11080,6 @@ function applyProjectMemoryFromInput() {
   if (!notionInput.value.trim()) {
     notionInput.value = memory.notionRef ?? "";
   }
-  if (!objectivePoleInput.value.trim()) {
-    objectivePoleInput.value = memory.objectivePole ?? "";
-  }
-  if (!objectiveOkrInput.value.trim()) {
-    objectiveOkrInput.value = memory.objectiveOkr ?? "";
-  }
-  if (!objectiveKrInput.value.trim()) {
-    objectiveKrInput.value = memory.objectiveKr ?? "";
-  }
-  renderObjectiveSelections();
   updateFieldManageButtons();
 
   projectInput.dataset.lastHydratedKey = memory.key;

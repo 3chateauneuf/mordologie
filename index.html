@@ -350,66 +350,6 @@
                       placeholder="Contexte, décision, suite à donner..."
                     ></textarea>
                   </label>
-
-                  <div class="field field-full objective-shell">
-                    <details id="objective-disclosure" class="objective-disclosure">
-                      <summary class="objective-summary">
-                        <div class="objective-summary-copy">
-                          <span class="objective-summary-title">Associer à un objectif 2026 (optionnel)</span>
-                          <span id="objective-summary-text" class="objective-summary-text"></span>
-                        </div>
-                      </summary>
-
-                      <div class="objective-block">
-                        <div class="objective-grid">
-                          <label class="field objective-subfield">
-                            <div class="field-head">
-                              <span>Pôle</span>
-                              <button id="manage-pole-button" type="button" class="field-manage-button" hidden>Gérer</button>
-                            </div>
-                            <div class="single-select-field">
-                              <div class="single-select-token" id="objective-pole-selected"></div>
-                              <input
-                                id="objective-pole-input"
-                                type="text"
-                                placeholder="Ex. Cyclologistique"
-                              />
-                            </div>
-                          </label>
-
-                          <label class="field objective-subfield">
-                            <div class="field-head">
-                              <span>OKR</span>
-                              <button id="manage-okr-button" type="button" class="field-manage-button" hidden>Gérer</button>
-                            </div>
-                            <div class="single-select-field">
-                              <div class="single-select-token" id="objective-okr-selected"></div>
-                              <input
-                                id="objective-okr-input"
-                                type="text"
-                                placeholder="Choisir un objectif 2026"
-                              />
-                            </div>
-                          </label>
-
-                          <label class="field objective-subfield objective-subfield-wide">
-                            <div class="field-head">
-                              <span>KR</span>
-                              <button id="manage-kr-button" type="button" class="field-manage-button" hidden>Gérer</button>
-                            </div>
-                            <div class="single-select-field">
-                              <div class="single-select-token" id="objective-kr-selected"></div>
-                              <input
-                                id="objective-kr-input"
-                                type="text"
-                                placeholder="Choisir un résultat clé si besoin"
-                              />
-                            </div>
-                          </label>
-                        </div>
-                      </div>
-                    </details>
-                  </div>
                 </div>
               </section>
             </div>
@@ -444,7 +384,6 @@
             <article class="inner-card personal-stats-card">
               <div class="personal-card-controls">
                 <div id="personal-stats-switch" class="personal-mode-switch">
-                  <button type="button" class="personal-mode-btn" data-stats-mode="objectives">Objectifs</button>
                   <button type="button" class="personal-mode-btn active" data-stats-mode="categories">Catégories</button>
                 </div>
                 <div class="personal-period-block">
@@ -549,14 +488,6 @@
               </svg>
               Catégories
             </button>
-            <button type="button" class="period-btn" data-stats-mode="objectives">
-              <svg class="btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-                <circle cx="7" cy="7" r="5.5"/>
-                <circle cx="7" cy="7" r="2.5"/>
-                <circle cx="7" cy="7" r="0.7" fill="currentColor" stroke="none"/>
-              </svg>
-              Objectifs
-            </button>
           </div>
 
           <span class="toolbar-sep" aria-hidden="true"></span>
@@ -632,14 +563,6 @@
             <div id="evolution-grid" class="evolution-grid"></div>
           </article>
         </div>
-
-        <article id="manager-objectives-panel" class="inner-card objective-report-panel">
-          <div class="section-minihead">
-            <h3>Objectifs 2026</h3>
-            <p>Lecture par objectif avec répartition interne des KR sur la plage active.</p>
-          </div>
-          <div id="manager-objectives-grid" class="objective-report-grid"></div>
-        </article>
 
         <div class="manager-analysis-grid">
           <article class="inner-card">
@@ -769,13 +692,6 @@
           </article>
         </div>
 
-        <article id="resource-objectives-panel" class="inner-card objective-report-panel">
-          <div class="section-minihead">
-            <h3>Objectifs 2026</h3>
-            <p>Lecture globale des OKR et repartition des KR sur la plage active.</p>
-          </div>
-          <div id="resource-objectives-grid" class="objective-report-grid"></div>
-        </article>
 
         <div class="manager-analysis-grid">
           <article class="inner-card">
@@ -990,44 +906,6 @@
                 <textarea id="manual-notes-input" class="note-textarea" placeholder="Contexte, précision, correction, décision..."></textarea>
               </label>
 
-              <div class="field field-full objective-shell">
-                <details id="manual-objective-disclosure" class="objective-disclosure">
-                  <summary class="objective-summary">
-                    <div class="objective-summary-copy">
-                      <span class="objective-summary-title">Associer à un objectif 2026 (optionnel)</span>
-                      <span id="manual-objective-summary-text" class="objective-summary-text"></span>
-                    </div>
-                  </summary>
-
-                  <div class="objective-block">
-                    <div class="objective-grid">
-                      <label class="field objective-subfield">
-                        <span>Pôle</span>
-                        <div class="single-select-field">
-                          <div class="single-select-token" id="manual-objective-pole-selected"></div>
-                          <input id="manual-objective-pole-input" type="text" placeholder="Pole principal" />
-                        </div>
-                      </label>
-
-                      <label class="field objective-subfield">
-                        <span>OKR</span>
-                        <div class="single-select-field">
-                          <div class="single-select-token" id="manual-objective-okr-selected"></div>
-                          <input id="manual-objective-okr-input" type="text" placeholder="Objectif principal" />
-                        </div>
-                      </label>
-
-                      <label class="field objective-subfield objective-subfield-wide">
-                        <span>KR</span>
-                        <div class="single-select-field">
-                          <div class="single-select-token" id="manual-objective-kr-selected"></div>
-                          <input id="manual-objective-kr-input" type="text" placeholder="Résultat clé si besoin" />
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                </details>
-              </div>
             </div>
           </section>
 
@@ -1167,44 +1045,6 @@
                 <textarea id="planned-notes-input" class="note-textarea" placeholder="Contexte, décision, suite à donner..."></textarea>
               </label>
 
-              <div class="field field-full objective-shell">
-                <details id="planned-objective-disclosure" class="objective-disclosure">
-                  <summary class="objective-summary">
-                    <div class="objective-summary-copy">
-                      <span class="objective-summary-title">Associer à un objectif 2026 (optionnel)</span>
-                      <span id="planned-objective-summary-text" class="objective-summary-text"></span>
-                    </div>
-                  </summary>
-
-                  <div class="objective-block">
-                    <div class="objective-grid">
-                      <label class="field objective-subfield">
-                        <span>Pôle</span>
-                        <div class="single-select-field">
-                          <div class="single-select-token" id="planned-objective-pole-selected"></div>
-                          <input id="planned-objective-pole-input" type="text" placeholder="Pole principal" />
-                        </div>
-                      </label>
-
-                      <label class="field objective-subfield">
-                        <span>OKR</span>
-                        <div class="single-select-field">
-                          <div class="single-select-token" id="planned-objective-okr-selected"></div>
-                          <input id="planned-objective-okr-input" type="text" placeholder="Objectif principal" />
-                        </div>
-                      </label>
-
-                      <label class="field objective-subfield objective-subfield-wide">
-                        <span>KR</span>
-                        <div class="single-select-field">
-                          <div class="single-select-token" id="planned-objective-kr-selected"></div>
-                          <input id="planned-objective-kr-input" type="text" placeholder="Résultat clé si besoin" />
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                </details>
-              </div>
             </div>
           </section>
           <p id="planned-dialog-status" class="dialog-status" hidden></p>

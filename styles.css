@@ -744,96 +744,6 @@ button {
   grid-column: 1 / -1;
 }
 
-.objective-shell {
-  gap: 0;
-}
-
-.objective-disclosure {
-  border-radius: var(--radius-card);
-  border: 1px solid var(--ink-soft-strong);
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.objective-disclosure[open] {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.objective-summary {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
-  cursor: pointer;
-  position: relative;
-}
-
-.objective-summary::-webkit-details-marker {
-  display: none;
-}
-
-.objective-summary::after {
-  content: "";
-  width: 10px;
-  height: 10px;
-  flex: 0 0 auto;
-  border-right: 2px solid rgba(6, 148, 148, 0.55);
-  border-bottom: 2px solid rgba(6, 148, 148, 0.55);
-  transform: rotate(45deg);
-  margin-right: 4px;
-  transition: transform 160ms ease;
-}
-
-.objective-disclosure[open] .objective-summary::after {
-  transform: rotate(225deg);
-}
-
-.objective-summary-copy {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.objective-summary-title {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.objective-summary-text {
-  font-size: 0.84rem;
-  color: var(--muted);
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.objective-summary-text:empty {
-  display: none;
-}
-
-.objective-block {
-  display: grid;
-  gap: 12px;
-  padding: 0 16px 16px;
-}
-
-.objective-grid {
-  display: grid;
-  grid-template-columns: minmax(180px, 0.65fr) minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
-
-.objective-subfield {
-  gap: 8px;
-}
-
-.objective-subfield-wide {
-  grid-column: 1 / -1;
-}
 
 .single-select-field {
   display: grid;
@@ -2430,112 +2340,6 @@ select.select-input {
   background: var(--accent);
 }
 
-.objective-report-panel {
-  display: grid;
-  gap: 16px;
-}
-
-.objective-report-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
-}
-
-.objective-report-card {
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--ink-soft-strong);
-  background: var(--panel-strong);
-}
-
-.objective-report-head {
-  display: grid;
-  gap: 6px;
-}
-
-.objective-report-head h4 {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-}
-
-.objective-report-content {
-  display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
-}
-
-.objective-donut {
-  width: 116px;
-  height: 116px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(rgba(0, 0, 0, 0.07) 0deg 360deg);
-}
-
-.objective-donut-inner {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: var(--panel-strong);
-  display: grid;
-  place-items: center;
-  text-align: center;
-  gap: 2px;
-}
-
-.objective-donut-inner strong {
-  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.objective-donut-inner span,
-.objective-report-top,
-.objective-legend-label {
-  color: var(--muted);
-}
-
-.objective-donut-inner span {
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.objective-report-details,
-.objective-report-legend {
-  display: grid;
-  gap: 10px;
-}
-
-.objective-report-top {
-  margin: 0;
-  font-size: 0.84rem;
-  line-height: 1.4;
-}
-
-.objective-legend-item {
-  display: flex;
-  align-items: start;
-  gap: 8px;
-}
-
-.objective-legend-swatch {
-  width: 10px;
-  height: 10px;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  margin-top: 4px;
-}
-
-.objective-legend-label {
-  font-size: 0.82rem;
-  line-height: 1.35;
-}
 
 .table-shell {
   overflow-x: auto;
@@ -3126,9 +2930,6 @@ select.select-input {
   margin-top: -2px;
 }
 
-.dialog-section .objective-shell {
-  margin-top: 2px;
-}
 
 .dialog-time-card-title {
   color: var(--text);
@@ -3158,9 +2959,6 @@ select.select-input {
   min-height: 118px;
 }
 
-.dialog-card--planned .objective-shell {
-  margin-top: 2px;
-}
 
 
 .planned-dialog-suggestion {
@@ -3326,10 +3124,6 @@ select.select-input {
     grid-template-columns: 52px repeat(7, minmax(148px, 1fr));
   }
 
-  .objective-grid {
-    grid-template-columns: 1fr;
-  }
-
   .dialog-grid,
   .dialog-time-grid,
   .dialog-time-inputs {
@@ -3340,9 +3134,7 @@ select.select-input {
     grid-template-columns: 1fr;
   }
 
-  .objective-summary-text {
-    white-space: normal;
-  }
+
 
   .timer-actions {
     grid-template-columns: 1fr;

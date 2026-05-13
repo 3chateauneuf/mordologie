@@ -70,8 +70,6 @@ function buildProperties(e) {
     "Tâche":     { rich_text: rt(e.task_label) },
     "Tags":      { rich_text: rt(e.tags_text) },
     "Note":      { rich_text: rt(e.notes) },
-    "OKR":       { rich_text: rt(e.objective_okr) },
-    "KR":        { rich_text: rt(e.objective_kr) },
   };
 
   if (e.entry_date)               props["Date"]          = { date: { start: e.entry_date } };
@@ -79,8 +77,6 @@ function buildProperties(e) {
   if (e.user_name)                props["Cargonaute"]    = { select: { name: e.user_name } };
   if (e.client_name)              props["Client"]        = { select: { name: e.client_name } };
   if (e.activity_category_label)  props["Catégorie"]     = { select: { name: e.activity_category_label } };
-  if (e.kpi_category_label)       props["Catégorie KPI"] = { select: { name: e.kpi_category_label } };
-  if (e.objective_pole)           props["Pôle"]          = { select: { name: e.objective_pole } };
   if (e.source)                   props["Source"]        = { select: { name: e.source } };
 
   return props;
