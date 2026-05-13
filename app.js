@@ -230,6 +230,7 @@ const TIMER_ICON_PLAY  = `<svg viewBox="0 0 24 24" aria-hidden="true" class="btn
 const TIMER_ICON_STOP  = `<svg viewBox="0 0 24 24" aria-hidden="true" class="btn-icon btn-icon--fill"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>`;
 const TIMER_ICON_PAUSE = `<svg viewBox="0 0 24 24" aria-hidden="true" class="btn-icon btn-icon--fill"><rect x="5.5" y="4" width="4.5" height="16" rx="1.5"/><rect x="14" y="4" width="4.5" height="16" rx="1.5"/></svg>`;
 const openManualButton = document.querySelector("#open-manual-button");
+const clearFormButton = document.querySelector("#clear-form-button");
 const activeStartDisplay = document.querySelector("#active-start-display");
 const timerDisplay = document.querySelector("#timer-display");
 const timerStateLabel = document.querySelector("#timer-state-label");
@@ -1313,6 +1314,10 @@ document.addEventListener("keydown", (event) => {
 
 openManualButton.addEventListener("click", () => {
   openManualDialog();
+});
+
+clearFormButton?.addEventListener("click", () => {
+  resetComposerForm({ collaborator: getEffectiveCollaboratorValue(collaboratorInput.value) });
 });
 
 activeStartDisplay.addEventListener("click", () => {
@@ -7532,6 +7537,8 @@ function renderActiveSession() {
   if (activeSessionStatusActions) {
     activeSessionStatusActions.hidden = true;
   }
+
+  if (clearFormButton) clearFormButton.hidden = Boolean(activeSession);
 
   if (!activeSession) {
     timerDisplay.textContent = "00:00:00";
