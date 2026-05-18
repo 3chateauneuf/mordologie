@@ -647,7 +647,13 @@ button {
 }
 
 .capture-col--timer .timer-actions {
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  gap: 8px;
+}
+
+.capture-col--timer .timer-actions .btn {
+  flex: 1;
+  min-width: 0;
 }
 
 .col-head {
