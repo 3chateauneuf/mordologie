@@ -188,6 +188,8 @@ const authUserDropdown = document.querySelector("#auth-user-dropdown");
 const authChangeAvatarButton = document.querySelector("#auth-change-avatar-button");
 const authCalendarIcsInput = document.querySelector("#auth-calendar-ics-input");
 const authCalendarIcsSave = document.querySelector("#auth-calendar-ics-save");
+const authCalendarIcsClear = document.querySelector("#auth-calendar-ics-clear");
+const authCalendarStatus = document.querySelector("#auth-calendar-status");
 const authStatusShell = document.querySelector("#auth-status-shell");
 const authStatus = document.querySelector("#auth-status");
 const collaboratorInput = document.querySelector("#collaborator-input");
@@ -831,8 +833,10 @@ authUserAvatar?.addEventListener("click", () => {
   const opening = authUserDropdown.hidden;
   authUserDropdown.hidden = !opening;
   authUserAvatar.setAttribute("aria-expanded", String(opening));
-  if (opening && authCalendarIcsInput) {
-    authCalendarIcsInput.value = getCalendarIcsUrls(getCurrentCollaborator() || "").join("\n");
+  if (opening) {
+    const urls = getCalendarIcsUrls(getCurrentCollaborator() || "");
+    if (authCalendarIcsInput) authCalendarIcsInput.value = urls.join("\n");
+    updateCalendarDropdownState(urls.length > 0);
   }
 });
 
@@ -1560,6 +1564,32 @@ authCalendarIcsSave?.addEventListener("click", async () => {
   authUserAvatar?.setAttribute("aria-expanded", "false");
   await saveCalendarIcsUrl(collaborator, url);
   setAuthStatusMessage("URL du calendrier enregistrée.", "success", { persistMs: 2400 });
+});
+
+authCalendarIcsClear?.addEventListener("click", async () => {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator) return;
+  if (authUserDropdown) authUserDropdown.hidden = true;
+  authUserAvatar?.setAttribute("aria-expanded", "false");
+
+  await saveCalendarIcsUrl(collaborator, "");
+
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(PLANNED_CALENDAR_SNAPSHOTS_KEY) ?? "[]");
+    const filtered = (Array.isArray(stored) ? stored : []).filter(
+      (s) => normalizeText(s.collaborator ?? "") !== normalizeText(collaborator),
+    );
+    window.localStorage.setItem(PLANNED_CALENDAR_SNAPSHOTS_KEY, JSON.stringify(filtered));
+  } catch { /* ignore */ }
+  plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+
+  if (authCalendarIcsInput) authCalendarIcsInput.value = "";
+  setAuthStatusMessage("Calendrier supprimé.", "success", { persistMs: 2400 });
+  render();
+});
+
+authCalendarIcsInput?.addEventListener("input", () => {
+  updateCalendarDropdownState(Boolean(authCalendarIcsInput.value.trim()));
 });
 
 agendaCalendarSyncButton?.addEventListener("click", () => {
@@ -9222,6 +9252,14 @@ function storeCalendarIcsUrls(urls) {
     window.localStorage.setItem(CALENDAR_ICS_URLS_KEY, JSON.stringify(urls));
   } catch {
     // ignore
+  }
+}
+
+function updateCalendarDropdownState(hasUrl) {
+  if (authCalendarIcsClear) authCalendarIcsClear.hidden = !hasUrl;
+  if (authCalendarStatus) {
+    authCalendarStatus.hidden = !hasUrl;
+    authCalendarStatus.textContent = hasUrl ? "● connecté" : "";
   }
 }
 
