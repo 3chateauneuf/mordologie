@@ -199,6 +199,7 @@ const projectInput = document.querySelector("#project-input");
 const projectSuggestions = document.querySelector("#project-suggestions");
 const projectMemoryHint = document.querySelector("#project-memory-hint");
 const taskInput = document.querySelector("#task-input");
+const taskTokenList = document.querySelector("#task-token-list");
 const categoriesInput = document.querySelector("#categories-input");
 const categoriesList = document.querySelector("#categories-list");
 const categorySuggestions = document.querySelector("#category-suggestions");
@@ -1153,6 +1154,17 @@ categoriesInput.addEventListener("input", () => {
 
 categoriesInput.addEventListener("blur", () => {
   void canonicalizeCategorySelection();
+});
+
+taskInput?.addEventListener("blur", () => {
+  if (taskInput.value.trim()) renderTaskToken();
+});
+
+taskInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && taskInput.value.trim()) {
+    e.preventDefault();
+    renderTaskToken();
+  }
 });
 
 [
@@ -4191,6 +4203,7 @@ function hydrateFormFromActiveSession() {
   currentTags = [...(activeSession?.tags ?? [])];
   renderCategoryTokens();
   renderTagTokens();
+  renderTaskToken();
   updateFieldManageButtons();
   applyProjectMemoryFromInput();
 }
@@ -4209,6 +4222,7 @@ function resetComposerForm({ collaborator = "", hint = "Commencez à taper : un 
   projectMemoryHint.textContent = hint;
   renderCategoryTokens();
   renderTagTokens();
+  renderTaskToken();
   updateFieldManageButtons();
 }
 
@@ -11112,6 +11126,7 @@ function fillFormFromMemory(memory) {
   notionInput.value = memory.notionRef ?? "";
   renderCategoryTokens();
   renderTagTokens();
+  renderTaskToken();
   updateFieldManageButtons();
   projectInput.dataset.lastHydratedKey = memory.key;
   projectMemoryHint.textContent = `${memory.project} reconnu. Les champs reutilisables ont ete recharges.`;
@@ -11622,6 +11637,19 @@ function commitTokenInput(input, config) {
 
   config.setValues(nextValues);
   input.value = "";
+}
+
+function renderTaskToken() {
+  if (!taskTokenList || !taskInput) return;
+  const value = taskInput.value.trim();
+  renderTokenList(taskTokenList, value ? [value] : [], () => {
+    taskInput.value = "";
+    taskInput.hidden = false;
+    taskInput.focus();
+    renderTaskToken();
+    updateFieldManageButtons();
+  });
+  taskInput.hidden = Boolean(value);
 }
 
 function renderCategoryTokens() {

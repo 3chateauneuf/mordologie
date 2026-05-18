@@ -211,19 +211,22 @@
         <section class="workspace-grid">
         <section class="panel composer-panel">
           <form id="time-form" class="time-form">
-            <section class="day-themes-bar day-themes-panel">
-              <div class="section-minihead section-minihead-compact">
-                <h3>Thèmes du jour</h3>
-              </div>
-              <div id="day-themes-list" class="chip-row"></div>
-              <div class="day-inline-form">
-                <input id="day-theme-input" class="select-input" type="text" placeholder="Ajouter un thème" />
-                <button id="add-day-theme-button" type="button" class="btn btn-secondary">Ajouter</button>
-              </div>
-            </section>
+            <div class="capture-3col">
 
-            <div class="capture-layout">
-              <section class="capture-quick-column focus-rail">
+              <!-- ── Colonne 1 : Thèmes du jour ── -->
+              <div class="capture-col capture-col--themes">
+                <div class="col-head">
+                  <span class="col-label">Thèmes du jour</span>
+                </div>
+                <div id="day-themes-list" class="chip-row chip-row--fill"></div>
+                <div class="day-inline-form">
+                  <input id="day-theme-input" class="select-input" type="text" placeholder="Ajouter un thème" />
+                  <button id="add-day-theme-button" type="button" class="btn btn-secondary">Ajouter</button>
+                </div>
+              </div>
+
+              <!-- ── Colonne 2 : Timer + Reprises ── -->
+              <div class="capture-col capture-col--timer">
                 <section class="timer-panel">
                   <div class="timer-head">
                     <p id="timer-state-label" class="timer-label">Prêt</p>
@@ -249,9 +252,11 @@
                   </div>
                 </section>
 
-                <section class="memory-strip memory-strip-inline quick-strip">
-                  <div class="section-minihead section-minihead-compact">
-                    <h3>Reprises probables</h3>
+                <div class="col-divider"></div>
+
+                <div class="reprises-strip">
+                  <div class="col-subhead">
+                    <span class="col-sublabel">Reprises probables</span>
                   </div>
                   <div id="quick-projects" class="chip-row"></div>
                   <div id="reprise-actions" class="reprise-actions" hidden>
@@ -264,100 +269,99 @@
                       <span>Traité</span>
                     </div>
                   </div>
-                </section>
-              </section>
+                </div>
+              </div>
 
-              <section class="capture-form-panel">
-                <div class="section-minihead section-minihead-compact">
-                  <h3>Contexte</h3>
-                  <button id="clear-form-button" type="button" class="field-manage-button" hidden>Effacer</button>
+              <!-- ── Colonne 3 : Contexte ── -->
+              <div class="capture-col capture-col--form">
+                <div class="col-head">
+                  <span class="col-label">Contexte</span>
+                  <button id="clear-form-button" type="button" class="col-clear-btn" hidden>Effacer</button>
                 </div>
 
-                <div class="form-grid">
-                  <input id="collaborator-input" type="hidden" list="collaborator-suggestions" />
-                  <datalist id="collaborator-suggestions"></datalist>
+                <input id="collaborator-input" type="hidden" list="collaborator-suggestions" />
+                <datalist id="collaborator-suggestions"></datalist>
 
-                  <label class="field field-wide">
-                    <div class="field-head">
-                      <span>Sujet</span>
-                    </div>
+                <label class="field">
+                  <div class="field-head">
+                    <span>Sujet</span>
+                  </div>
+                  <input
+                    id="project-input"
+                    type="text"
+                    placeholder="Ex. Reunion Boussole, audit ADEME, synthese compta"
+                    list="project-suggestions"
+                  />
+                  <small id="project-memory-hint" class="hint">
+                    Un sujet déjà connu recharge automatiquement son contexte utile.
+                  </small>
+                  <datalist id="project-suggestions"></datalist>
+                </label>
+
+                <label class="field">
+                  <div class="field-head">
+                    <span>Client</span>
+                  </div>
+                  <div class="token-field token-field--single">
+                    <div class="token-list" id="task-token-list"></div>
+                    <input id="task-input" type="text" placeholder="Ex. Yumi" />
+                  </div>
+                </label>
+
+                <label class="field">
+                  <div class="field-head">
+                    <span>Catégorie</span>
+                  </div>
+                  <div class="token-field">
+                    <div class="token-list" id="categories-list"></div>
                     <input
-                      id="project-input"
+                      id="categories-input"
                       type="text"
-                      placeholder="Ex. Reunion Boussole, audit ADEME, synthese compta"
-                      list="project-suggestions"
+                      placeholder="Choisir une catégorie"
+                      list="category-suggestions"
                     />
-                    <small id="project-memory-hint" class="hint">
-                      Un sujet déjà connu recharge automatiquement son contexte utile.
-                    </small>
-                    <datalist id="project-suggestions"></datalist>
-                  </label>
+                  </div>
+                  <datalist id="category-suggestions"></datalist>
+                </label>
 
-                  <label class="field">
-                    <div class="field-head">
-                      <span>Client</span>
-                    </div>
+                <label class="field">
+                  <div class="field-head">
+                    <span>Tags</span>
+                  </div>
+                  <div class="token-field token-field--tags">
+                    <div class="token-list" id="tags-list"></div>
                     <input
-                      id="task-input"
+                      id="tags-input"
                       type="text"
-                      placeholder="Ex. Yumi"
+                      placeholder="Atelier, revue, suivi client..."
+                      list="tag-suggestions"
                     />
-                  </label>
+                  </div>
+                  <datalist id="tag-suggestions"></datalist>
+                </label>
 
-                  <label class="field">
-                    <div class="field-head">
-                      <span>Catégorie</span>
-                    </div>
-                    <div class="token-field">
-                      <div class="token-list" id="categories-list"></div>
-                      <input
-                        id="categories-input"
-                        type="text"
-                        placeholder="Choisir une catégorie"
-                        list="category-suggestions"
-                      />
-                    </div>
-                    <datalist id="category-suggestions"></datalist>
-                  </label>
+                <label class="field">
+                  <div class="field-head">
+                    <span>Lien d'intérêt</span>
+                    <button id="manage-link-button" type="button" class="field-manage-button" hidden>Gérer</button>
+                  </div>
+                  <input
+                    id="notion-input"
+                    type="text"
+                    placeholder="Notion, Google Sheets ou autre lien utile"
+                  />
+                </label>
 
-                  <label class="field">
-                    <div class="field-head">
-                      <span>Tags</span>
-                    </div>
-                    <div class="token-field token-field--tags">
-                      <div class="token-list" id="tags-list"></div>
-                      <input
-                        id="tags-input"
-                        type="text"
-                        placeholder="Atelier, revue, suivi client..."
-                        list="tag-suggestions"
-                      />
-                    </div>
-                    <datalist id="tag-suggestions"></datalist>
-                  </label>
+                <label class="field">
+                  <span>Notes</span>
+                  <textarea
+                    id="notes-input"
+                    class="note-textarea"
+                    placeholder="Contexte, décision, suite à donner..."
+                  ></textarea>
+                </label>
+              </div>
 
-                  <label class="field">
-                    <div class="field-head">
-                      <span>Lien d'intérêt</span>
-                      <button id="manage-link-button" type="button" class="field-manage-button" hidden>Gérer</button>
-                    </div>
-                    <input
-                      id="notion-input"
-                      type="text"
-                      placeholder="Notion, Google Sheets ou autre lien utile"
-                    />
-                  </label>
-
-                  <label class="field field-wide">
-                    <span>Notes</span>
-                    <textarea
-                      id="notes-input"
-                      class="note-textarea"
-                      placeholder="Contexte, décision, suite à donner..."
-                    ></textarea>
-                  </label>
-                </div>
-              </section>
             </div>
           </form>
         </section>
