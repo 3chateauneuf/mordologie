@@ -251,6 +251,7 @@ const personalCustomRange = document.querySelector("#personal-custom-range");
 const personalCustomFromInput = document.querySelector("#personal-custom-from");
 const personalCustomToInput = document.querySelector("#personal-custom-to");
 const agendaBoard = document.querySelector("#agenda-board");
+const agendaBoardScroll = document.querySelector(".agenda-board-scroll");
 const agendaPrevWeekButton = document.querySelector("#agenda-prev-week");
 const agendaCurrentWeekButton = document.querySelector("#agenda-current-week");
 const agendaNextWeekButton = document.querySelector("#agenda-next-week");
@@ -8395,8 +8396,11 @@ function renderAgenda() {
     agendaLastScrolledWeekStart = weekKey;
     requestAnimationFrame(() => {
       const nowEl = agendaBoard.querySelector(".agenda-now-marker");
-      if (nowEl) {
-        nowEl.scrollIntoView({ behavior: "instant", block: "center" });
+      if (nowEl && agendaBoardScroll) {
+        const containerTop = agendaBoardScroll.getBoundingClientRect().top;
+        const elTop = nowEl.getBoundingClientRect().top;
+        const offset = elTop - containerTop + agendaBoardScroll.scrollTop;
+        agendaBoardScroll.scrollTop = offset - agendaBoardScroll.clientHeight / 2;
       }
     });
   }
