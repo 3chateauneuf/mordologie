@@ -7567,7 +7567,11 @@ function renderSessionList() {
 
     const title = document.createElement("h3");
     title.className = "journal-day-title";
-    title.textContent = formatDate(daySessions[0].start);
+    title.textContent = new Intl.DateTimeFormat("fr-FR", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(new Date(daySessions[0].start));
 
     const subtitle = document.createElement("p");
     subtitle.className = "journal-day-subtitle";
