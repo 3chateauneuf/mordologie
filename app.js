@@ -9331,6 +9331,7 @@ async function syncGoogleCalendar(collaborator) {
 
   let totalEvents = 0;
   const allWeeks = new Set();
+  const fetchErrors = [];
 
   // Load base row set — never mutate until we have successful results per URL
   let storedRows = [];
@@ -9347,11 +9348,16 @@ async function syncGoogleCalendar(collaborator) {
       const response = await fetch(proxyUrl);
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        console.warn("Calendar sync failed for URL:", icsUrl, data.error || `HTTP ${response.status}`);
+        const errMsg = data.error || `HTTP ${response.status}`;
+        console.warn("Calendar sync failed for URL:", icsUrl, errMsg);
+        fetchErrors.push(errMsg);
         continue;
       }
       const { events } = await response.json();
-      if (!Array.isArray(events) || events.length === 0) continue;
+      if (!Array.isArray(events) || events.length === 0) {
+        fetchErrors.push("Calendrier vide ou URL publique (utilisez l'adresse secrète iCal)");
+        continue;
+      }
 
       const snapshotsByWeek = new Map();
       for (const event of events) {
@@ -9431,7 +9437,10 @@ async function syncGoogleCalendar(collaborator) {
   void syncSharedUiPreference(CALENDAR_SNAPSHOTS_PREFERENCE_KEY, collaborator, snapshotsToSync);
 
   if (totalEvents === 0) {
-    setAuthStatusMessage("Aucun événement trouvé dans les calendriers configurés.", "warning", { persistMs: 3200 });
+    const hint = fetchErrors.length
+      ? fetchErrors[0]
+      : "Aucun événement trouvé — vérifiez que l'URL est l'adresse secrète (pas /public/).";
+    setAuthStatusMessage(hint, "warning", { persistMs: 5000 });
   } else {
     setAuthStatusMessage(
       `${totalEvents} événement${totalEvents !== 1 ? "s" : ""} importé${totalEvents !== 1 ? "s" : ""} (${allWeeks.size} semaine${allWeeks.size !== 1 ? "s" : ""}).`,
