@@ -12,6 +12,7 @@ const DAY_THEMES_PREFERENCE_KEY = "day_themes";
 const REPRISES_ORDER_PREFERENCE_KEY = "reprises_order";
 const PROFILE_AVATAR_PREFERENCE_KEY = "profile_avatar";
 const CALENDAR_ICS_PREFERENCE_KEY = "calendar_ics_url";
+const CALENDAR_SNAPSHOTS_PREFERENCE_KEY = "calendar_snapshots_v1";
 const CALENDAR_ICS_URLS_KEY = "mordologie-calendar-ics-urls-v1";
 const LOCAL_RESCUE_ACCESS_KEY = "mordologie-local-rescue-access-v1";
 const PENDING_STOP_STATE_KEY = "mordologie-pending-stop-v1";
@@ -1582,6 +1583,7 @@ authCalendarIcsClear?.addEventListener("click", async () => {
     window.localStorage.setItem(PLANNED_CALENDAR_SNAPSHOTS_KEY, JSON.stringify(filtered));
   } catch { /* ignore */ }
   plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+  void syncSharedUiPreference(CALENDAR_SNAPSHOTS_PREFERENCE_KEY, collaborator, []);
 
   if (authCalendarIcsInput) authCalendarIcsInput.value = "";
   setAuthStatusMessage("Calendrier supprimé.", "success", { persistMs: 2400 });
@@ -2823,6 +2825,16 @@ function hydrateSharedUiPreferences(rows = []) {
         calendarIcsUrlsByCollaborator[normalizeText(collaborator)] = value;
       }
     }
+    if (row?.preference_key === CALENDAR_SNAPSHOTS_PREFERENCE_KEY && Array.isArray(value)) {
+      try {
+        const localRaw = JSON.parse(window.localStorage.getItem(PLANNED_CALENDAR_SNAPSHOTS_KEY) ?? "[]");
+        const localRows = sanitizePlannedCalendarSnapshots(Array.isArray(localRaw) ? localRaw : []);
+        const remoteRows = sanitizePlannedCalendarSnapshots(value);
+        // Local wins over remote (local may be more recent after a just-completed sync)
+        const merged = mergePlannedCalendarSnapshots(remoteRows, localRows);
+        window.localStorage.setItem(PLANNED_CALENDAR_SNAPSHOTS_KEY, JSON.stringify(merged));
+      } catch { /* ignore */ }
+    }
   }
 
   storeCalendarIcsUrls(calendarIcsUrlsByCollaborator);
@@ -2830,6 +2842,7 @@ function hydrateSharedUiPreferences(rows = []) {
   sharedDayThemesByScope = nextDayThemesByScope;
   sharedReprisesOrderByScope = nextReprisesOrderByScope;
   sharedProfileAvatarsByOwner = nextProfileAvatarsByOwner;
+  plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
 }
 
 function isMissingSharedPreferencesTableError(error) {
@@ -9408,6 +9421,14 @@ async function syncGoogleCalendar(collaborator) {
 
   storePlannedCalendarSnapshots(storedRows);
   plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+
+  // Sync this collaborator's snapshots to Supabase (rolling 30-day window)
+  const snapshotCutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const snapshotsToSync = storedRows.filter(
+    (s) => normalizeText(s.collaborator ?? "") === normalizeText(collaborator) &&
+           String(s.week_start ?? "") >= snapshotCutoff,
+  );
+  void syncSharedUiPreference(CALENDAR_SNAPSHOTS_PREFERENCE_KEY, collaborator, snapshotsToSync);
 
   if (totalEvents === 0) {
     setAuthStatusMessage("Aucun événement trouvé dans les calendriers configurés.", "warning", { persistMs: 3200 });
