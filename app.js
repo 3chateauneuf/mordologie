@@ -1096,6 +1096,10 @@ addDayThemeButton?.addEventListener("click", () => {
     },
   ];
   setLocalScopedDayThemes(collaborator, nextScopedThemes);
+  // Update the remote cache before rendering so getEffectiveScopedDayThemes
+  // returns the new list immediately instead of waiting for the Supabase round-trip.
+  const scopeKey = getSharedPreferenceScopeKey(collaborator);
+  sharedDayThemesByScope[scopeKey] = nextScopedThemes.map((item) => ({ ...item }));
   dayThemeInput.value = "";
   renderDayThemes();
   void syncDayThemesPreferenceForCollaborator(collaborator);
@@ -1117,6 +1121,7 @@ dayThemesList?.addEventListener("click", (event) => {
   const collaborator = getCurrentCollaborator();
   const remainingThemes = getScopedDayThemes(collaborator).filter((item) => item.id !== removeButton.dataset.removeThemeId);
   setLocalScopedDayThemes(collaborator, remainingThemes);
+  if (collaborator) sharedDayThemesByScope[getSharedPreferenceScopeKey(collaborator)] = remainingThemes.map((t) => ({ ...t }));
   renderDayThemes();
   if (collaborator) {
     void syncDayThemesPreferenceForCollaborator(collaborator);
@@ -6886,7 +6891,9 @@ function renderDayThemes() {
       const reordered = [...current];
       const [moved] = reordered.splice(fromIdx, 1);
       reordered.splice(toIdx, 0, moved);
-      setLocalScopedDayThemes(col, reordered.map((t, i) => ({ ...t, order: i })));
+      const reorderedWithOrder = reordered.map((t, i) => ({ ...t, order: i }));
+      setLocalScopedDayThemes(col, reorderedWithOrder);
+      sharedDayThemesByScope[getSharedPreferenceScopeKey(col)] = reorderedWithOrder.map((t) => ({ ...t }));
       void syncDayThemesPreferenceForCollaborator(col);
       renderDayThemes();
     });
