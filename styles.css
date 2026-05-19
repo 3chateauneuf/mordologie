@@ -3681,7 +3681,7 @@ select.select-input {
 }
 
 .journal-day-group + .journal-day-group {
-  margin-top: 16px;
+  margin-top: 28px;
 }
 
 .journal-day-header {
@@ -3689,29 +3689,32 @@ select.select-input {
   align-items: end;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 6px 0;
+  padding: 0 6px 10px;
+  border-bottom: 1.5px solid var(--line);
 }
 
 .journal-day-copy {
   display: grid;
-  gap: 3px;
+  gap: 2px;
 }
 
 .journal-day-title {
   margin: 0;
-  font-size: 1rem;
+  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+  font-size: 1.18rem;
   font-weight: 800;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .journal-day-subtitle {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--muted);
 }
 
 .journal-day-total {
-  font-size: 0.96rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--text);
   white-space: nowrap;
