@@ -6803,6 +6803,8 @@ function getScopedDayThemes(collaborator) {
   return getEffectiveScopedDayThemes(collaborator);
 }
 
+let _dragThemeId = null;
+
 function renderDayThemes() {
   if (!dayThemesList) {
     return;
@@ -6822,11 +6824,11 @@ function renderDayThemes() {
   }
 
   for (const item of items) {
-    const chip = document.createElement("button");
-    chip.type = "button";
+    const chip = document.createElement("div");
     chip.className = "chip chip--theme";
     chip.dataset.themeId = item.id;
-    chip.setAttribute("aria-label", `Theme du jour ${item.label}`);
+    chip.setAttribute("role", "listitem");
+    chip.draggable = true;
     applyCategorySurface(chip, generateStableHexColor(item.label));
 
     const label = document.createElement("span");
@@ -6841,6 +6843,54 @@ function renderDayThemes() {
     remove.textContent = "×";
 
     chip.append(label, remove);
+
+    // ── Drag & drop ──
+    chip.addEventListener("dragstart", (e) => {
+      _dragThemeId = item.id;
+      chip.classList.add("chip--dragging");
+      dayThemesList.classList.add("chip-row--sorting");
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    chip.addEventListener("dragend", () => {
+      _dragThemeId = null;
+      chip.classList.remove("chip--dragging");
+      dayThemesList.classList.remove("chip-row--sorting");
+      dayThemesList.querySelectorAll(".chip--drag-over").forEach((el) => el.classList.remove("chip--drag-over"));
+    });
+
+    chip.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (_dragThemeId && _dragThemeId !== item.id) {
+        dayThemesList.querySelectorAll(".chip--drag-over").forEach((el) => el.classList.remove("chip--drag-over"));
+        chip.classList.add("chip--drag-over");
+      }
+    });
+
+    chip.addEventListener("dragleave", (e) => {
+      if (!chip.contains(e.relatedTarget)) {
+        chip.classList.remove("chip--drag-over");
+      }
+    });
+
+    chip.addEventListener("drop", (e) => {
+      e.preventDefault();
+      if (!_dragThemeId || _dragThemeId === item.id) return;
+      const col = getCurrentCollaborator();
+      if (!col) return;
+      const current = getScopedDayThemes(col);
+      const fromIdx = current.findIndex((t) => t.id === _dragThemeId);
+      const toIdx   = current.findIndex((t) => t.id === item.id);
+      if (fromIdx < 0 || toIdx < 0) return;
+      const reordered = [...current];
+      const [moved] = reordered.splice(fromIdx, 1);
+      reordered.splice(toIdx, 0, moved);
+      setLocalScopedDayThemes(col, reordered.map((t, i) => ({ ...t, order: i })));
+      void syncDayThemesPreferenceForCollaborator(col);
+      renderDayThemes();
+    });
+
     dayThemesList.append(chip);
   }
 }
