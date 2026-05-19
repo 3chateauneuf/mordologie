@@ -3643,6 +3643,10 @@ async function completeStoppedSessionLocally(sessionToSave, source = "timer") {
   });
   render();
   void syncPendingStoppedSession();
+  // Fallback: if the primary sync fails for any reason, silently push the
+  // session to DB 6 s later. autoSyncMissingSessions is idempotent — it
+  // checks source_session_id before inserting.
+  setTimeout(() => void autoSyncMissingSessions(), 6000);
 }
 
 function normalizeSession(session) {
@@ -8098,6 +8102,77 @@ async function syncAllLocalSessions() {
     if (label) label.textContent = "Synchroniser vers DB";
     btn.disabled = false;
   }, 2000);
+}
+
+// Silent background fallback: push any locally-saved sessions that are
+// missing from time_entries. Called automatically after each stop.
+// Idempotent: checks source_session_id before inserting.
+async function autoSyncMissingSessions() {
+  if (!window.supabase) return;
+
+  const { data: existing, error } = await window.supabase
+    .from("time_entries")
+    .select("source_session_id, time_entry_id");
+  if (error) return;
+
+  const existingSourceIds = new Set((existing ?? []).map((r) => normalizeText(r.source_session_id ?? "")));
+  const existingTeIds     = new Set((existing ?? []).map((r) => normalizeText(r.time_entry_id ?? "")));
+
+  const missing = sessions.filter((s) => {
+    if (!s.end || !(Number(s.durationMs) > 0) || isDemoSession(s)) return false;
+    if (existingSourceIds.has(normalizeText(s.id))) return false;
+    if (s.dbTimeEntryId && existingTeIds.has(normalizeText(s.dbTimeEntryId))) return false;
+    return true;
+  });
+  if (!missing.length) return;
+
+  const { data: lastTeRow } = await window.supabase
+    .from("time_entries")
+    .select("time_entry_id")
+    .order("time_entry_id", { ascending: false })
+    .limit(1);
+
+  const lastNum = lastTeRow?.[0]?.time_entry_id
+    ? parseInt(String(lastTeRow[0].time_entry_id).replace("TE-", ""), 10)
+    : 0;
+
+  const userName = accessProfile.appUser?.user_name ?? "";
+  const userId   = accessProfile.appUser?.user_id ?? null;
+
+  const payloads = missing.map((s, i) => {
+    const start = new Date(s.start);
+    const durationMs = Math.max(Number(s.durationMs) || 0, 0);
+    return {
+      time_entry_id:            s.dbTimeEntryId && !existingTeIds.has(normalizeText(s.dbTimeEntryId))
+                                  ? s.dbTimeEntryId
+                                  : `TE-${String(lastNum + 1 + i).padStart(6, "0")}`,
+      source_session_id:        s.id,
+      entry_date:               start.toISOString().slice(0, 10),
+      started_at:               s.start,
+      ended_at:                 s.end,
+      user_name:                s.collaborator || userName,
+      user_id:                  s.dbUserId || userId,
+      team_name:                s.dbTeamName || "",
+      project_name:             s.project || "",
+      project_id:               s.dbProjectId || null,
+      client_name:              s.dbClientName || "",
+      activity_category_label:  s.categories?.[0] || null,
+      activity_category_id:     s.dbActivityCategoryId || null,
+      task_label:               s.task || "",
+      tags_text:                dedupePreservingOrder((s.tags ?? []).map(normalizeTag)).join(", "),
+      duration_minutes:         Math.max(1, Math.round(durationMs / 60000)),
+      duration_hours:           Number((durationMs / 3600000).toFixed(2)),
+      notes:                    s.notes || "",
+      notion_ref:               s.notionRef || "",
+      source:                   "manual",
+      status:                   "saved",
+    };
+  });
+
+  for (let i = 0; i < payloads.length; i += 50) {
+    const batch = payloads.slice(i, i + 50);
+    await window.supabase.from("time_entries").insert(batch);
+  }
 }
 
 function renderCadreViews() {
