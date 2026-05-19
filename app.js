@@ -1475,6 +1475,10 @@ document.getElementById("journal-sync-btn")?.addEventListener("click", () => {
   void syncAllLocalSessions();
 });
 
+document.getElementById("journal-add-btn")?.addEventListener("click", () => {
+  openManualDialog();
+});
+
 journalFilterResetButton?.addEventListener("click", () => {
   if (journalFilterFromInput) journalFilterFromInput.value = "";
   if (journalFilterToInput) journalFilterToInput.value = "";

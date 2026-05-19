@@ -588,6 +588,12 @@ button {
   gap: 4px;
 }
 
+.journal-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .panel-head-inline {
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
   align-items: end;
