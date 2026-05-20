@@ -1053,6 +1053,13 @@ select.select-input {
   transition: opacity 120ms ease, background 120ms ease;
 }
 
+.chip-theme-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .chip--theme:hover .chip-theme-send,
 .chip--theme:hover .chip-theme-remove {
   opacity: 1;

@@ -6863,7 +6863,10 @@ function renderDayThemes() {
     remove.setAttribute("aria-label", `Retirer ${item.label}`);
     remove.textContent = "×";
 
-    chip.append(label, send, remove);
+    const actions = document.createElement("div");
+    actions.className = "chip-theme-actions";
+    actions.append(send, remove);
+    chip.append(label, actions);
 
     // ── Drag & drop ──
     chip.addEventListener("dragstart", (e) => {
