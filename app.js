@@ -9740,7 +9740,7 @@ function getImportedPlannedEventsForCollaborator(collaborator, range) {
       (snapshot) =>
         normalizeText(snapshot.collaborator) === normalizedCollaborator &&
         String(snapshot.week_start ?? "") === targetWeekStart &&
-        (configuredUrls.length === 0 || configuredUrls.includes(snapshot.source_calendar_id)),
+        configuredUrls.includes(snapshot.source_calendar_id),
     )
     .flatMap((snapshot) =>
       (snapshot.events ?? [])
