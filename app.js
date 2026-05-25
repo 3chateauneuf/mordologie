@@ -1644,7 +1644,11 @@ agendaBoard.addEventListener("click", (event) => {
   if (target) {
     const session = findSessionById(target.dataset.sessionId);
     if (session) {
-      openManualDialog(session);
+      if (event.altKey) {
+        openManualDialog(null, { ...session });
+      } else {
+        openManualDialog(session);
+      }
     }
     return;
   }
