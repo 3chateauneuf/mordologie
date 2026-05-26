@@ -1,47 +1,71 @@
 -- Mordologie Pocket — Preflight
--- Step 1 of 2: run this BEFORE pocket_stop_session.sql
+-- ─────────────────────────────────────────────────────────────────────────────
+-- EXECUTION RULES — read before running anything.
 --
--- Purpose:
---   1. Detect any duplicate source_session_id values in time_entries.
---   2. If the query below returns zero rows, create the partial unique index.
---   3. If it returns any rows, DO NOT proceed — investigate duplicates first.
+-- This file contains THREE independent statements.
+-- Each must be run in isolation, in order, with a manual stop between them.
+-- Do NOT select-all and execute the entire file at once.
 --
--- Run order: execute this file, verify output, then run pocket_stop_session.sql.
+-- ORDER:
+--   Step 1 — run the duplicate SELECT.  Read the result.  Stop.
+--   Step 2 — only if step 1 returned ZERO rows: run the CREATE UNIQUE INDEX.
+--   Step 3 — run the verification SELECT to confirm the index exists.
+-- ─────────────────────────────────────────────────────────────────────────────
 
--- ── 1. Duplicate check ──────────────────────────────────────────────────────
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 1 — Duplicate check
+-- Run this statement alone first.
 --
--- Expected result: zero rows.
--- If any rows appear, stop. Resolve duplicates manually before adding the index.
+-- Expected result: ZERO rows.
+-- If any rows appear → stop, do not proceed, investigate duplicates manually.
+-- ═══════════════════════════════════════════════════════════════════════════════
 
 SELECT
   source_session_id,
-  COUNT(*)          AS occurrences,
-  array_agg(time_entry_id ORDER BY created_at) AS te_ids
-FROM time_entries
+  COUNT(*)                                        AS occurrences,
+  array_agg(time_entry_id ORDER BY created_at)    AS te_ids,
+  array_agg(created_at   ORDER BY created_at)     AS created_ats
+FROM public.time_entries
 WHERE source_session_id IS NOT NULL
 GROUP BY source_session_id
 HAVING COUNT(*) > 1;
 
--- ── 2. Partial unique index ──────────────────────────────────────────────────
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 2 — Create partial unique index
 --
--- Run only after confirming the query above returned 0 rows.
--- CONCURRENTLY: does not lock the table for reads/writes during build.
--- IF NOT EXISTS: safe to re-run.
--- WHERE source_session_id IS NOT NULL: does not constrain rows where it is null
--- (historical entries without a session reference remain untouched).
+-- !! ONLY RUN if step 1 returned zero rows !!
+--
+-- IMPORTANT: CREATE INDEX CONCURRENTLY cannot run inside an explicit transaction
+-- block. Run this statement ALONE in the SQL Editor (do not wrap in BEGIN/COMMIT,
+-- do not select it together with other statements).
+--
+-- IF NOT EXISTS: safe to re-run if the step was interrupted.
+-- WHERE source_session_id IS NOT NULL: NULL rows are excluded from the constraint
+-- (historical entries logged without a timer session reference are unaffected).
+-- ═══════════════════════════════════════════════════════════════════════════════
 
 CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS
   idx_time_entries_source_session_id_unique
 ON public.time_entries (source_session_id)
 WHERE source_session_id IS NOT NULL;
 
--- ── 3. Verify index was created ──────────────────────────────────────────────
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- STEP 3 — Verify the index exists
+-- Run this after step 2 completes.
+--
+-- Expected: one row.
+-- indexname  = idx_time_entries_source_session_id_unique
+-- indexdef   contains UNIQUE and WHERE (source_session_id IS NOT NULL)
+--
+-- If zero rows: step 2 failed silently. Do not install the RPC yet.
+-- ═══════════════════════════════════════════════════════════════════════════════
 
 SELECT
   indexname,
   indexdef
 FROM pg_indexes
-WHERE tablename  = 'time_entries'
-  AND indexname  = 'idx_time_entries_source_session_id_unique';
-
--- Expected: one row showing a UNIQUE index with WHERE clause.
+WHERE tablename = 'time_entries'
+  AND indexname = 'idx_time_entries_source_session_id_unique';
