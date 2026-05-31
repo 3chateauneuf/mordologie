@@ -331,6 +331,7 @@ btnStopConfirm.addEventListener("click", async () => {
   dialogStop.classList.add("hidden");
   setActiveSession(null);
   await loadRecentEntries();
+  listEntries.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 // ── Boot ───────────────────────────────────────────────────────────────────
