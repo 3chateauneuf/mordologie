@@ -20,6 +20,7 @@ const sessionProj  = $("session-project");
 const sessionTask  = $("session-task");
 const sessionBadge = $("session-badge");
 const sessionTimer = $("session-timer");
+const btnPause     = $("btn-pause");
 const btnStop      = $("btn-stop");
 
 const listEntries  = $("list-entries");
@@ -198,17 +199,53 @@ function setActiveSession(row) {
   sessionBadge.textContent = isPaused ? "En pause" : "En cours";
   sessionBadge.className   = "session-badge " + (isPaused ? "paused" : "running");
 
+  btnPause.textContent = isPaused ? "Reprendre" : "Pause";
+  btnPause.classList.toggle("resuming", isPaused);
+
+  const pausedMs = Number(row.paused_duration_ms) || 0;
+
   if (isPaused) {
-    const elapsed = new Date(row.paused_at) - new Date(row.started_at);
-    sessionTimer.textContent = formatDuration(elapsed);
+    const activeMs = new Date(row.paused_at) - new Date(row.started_at) - pausedMs;
+    sessionTimer.textContent = formatDuration(Math.max(activeMs, 0));
   } else {
     const tick = () => {
-      sessionTimer.textContent = formatDuration(Date.now() - new Date(row.started_at));
+      const activeMs = Date.now() - new Date(row.started_at) - pausedMs;
+      sessionTimer.textContent = formatDuration(Math.max(activeMs, 0));
     };
     tick();
     timerInterval = setInterval(tick, 1000);
   }
 }
+
+// ── Pause / Resume ─────────────────────────────────────────────────────────
+
+btnPause.addEventListener("click", async () => {
+  if (!activeSession) return;
+  btnPause.disabled = true;
+
+  const isPaused = !!activeSession.paused_at;
+  let patch;
+
+  if (isPaused) {
+    const elapsed = Date.now() - new Date(activeSession.paused_at).getTime();
+    patch = {
+      paused_at:         null,
+      paused_duration_ms: (Number(activeSession.paused_duration_ms) || 0) + elapsed,
+    };
+  } else {
+    patch = { paused_at: new Date().toISOString() };
+  }
+
+  const { error } = await db
+    .from("active_sessions")
+    .update(patch)
+    .eq("active_session_id", activeSession.active_session_id);
+
+  btnPause.disabled = false;
+
+  if (error) { console.error("pause/resume:", error); return; }
+  await loadActiveSession();
+});
 
 // ── Polling ────────────────────────────────────────────────────────────────
 

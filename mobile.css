@@ -215,7 +215,28 @@ button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
   color: var(--text);
 }
 
-.card-session .btn-stop { width: 100%; padding: 14px; font-size: 15px; }
+.session-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+.session-actions button { padding: 13px; font-size: 15px; }
+
+.btn-pause {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border: 1px solid rgba(13, 148, 136, 0.20);
+}
+
+.btn-pause:hover:not(:disabled) { background: rgba(13, 148, 136, 0.16); }
+
+.btn-pause.resuming {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+}
+
+.btn-pause.resuming:hover:not(:disabled) { background: var(--accent-strong); }
 
 /* No session card */
 .card-no-session {
