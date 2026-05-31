@@ -108,7 +108,10 @@ function showMain() {
 async function sendMagicLink(email) {
   const { error } = await db.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: "https://mordologie.eduardodo.com/mobile",
+    },
   });
   return error;
 }
