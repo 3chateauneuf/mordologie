@@ -1,0 +1,326 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0d1017;
+  --surface:   #161b27;
+  --surface2:  #1e2435;
+  --border:    #2a3147;
+  --text:      #e8eaf0;
+  --muted:     #7a8299;
+  --accent:    #4f79e8;
+  --stop:      #e05555;
+  --stop-dark: #b83c3c;
+  --green:     #3dba7a;
+  --amber:     #e0a040;
+  --radius:    12px;
+  --radius-sm: 8px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Screens ────────────────────────────────────────────────────── */
+
+.screen { display: flex; flex-direction: column; min-height: 100dvh; }
+.screen.hidden { display: none; }
+
+/* ── Auth ────────────────────────────────────────────────────────── */
+
+#screen-auth {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-box {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-logo {
+  width: 56px; height: 56px;
+  background: var(--accent);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: #fff;
+}
+
+.auth-box h1 {
+  font-size: 24px; font-weight: 700;
+  display: flex; align-items: baseline; gap: 8px;
+}
+
+.pocket-label {
+  font-size: 14px; font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+#form-login {
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 13px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  transition: border-color .15s;
+}
+
+input[type="email"]:focus, input[type="password"]:focus {
+  border-color: var(--accent);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 20px;
+  transition: opacity .15s, background .15s;
+}
+
+button:active { opacity: .8; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+#btn-login {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-stop {
+  background: var(--stop);
+  color: #fff;
+}
+
+.btn-stop:hover:not(:disabled) { background: var(--stop-dark); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* ── Header ──────────────────────────────────────────────────────── */
+
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.app-title {
+  font-size: 17px; font-weight: 700;
+  letter-spacing: .03em;
+  color: var(--text);
+}
+
+/* ── Main content ────────────────────────────────────────────────── */
+
+.main-content {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 20px 16px 40px;
+  flex: 1;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.card.hidden { display: none; }
+
+/* Session card */
+.card-session { display: flex; flex-direction: column; gap: 16px; }
+
+.session-top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+
+.session-meta { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+.session-project {
+  font-size: 16px; font-weight: 700; color: var(--text);
+}
+
+.session-task {
+  font-size: 13px; color: var(--muted);
+}
+
+.session-badge {
+  font-size: 11px; font-weight: 600; padding: 3px 9px;
+  border-radius: 99px; white-space: nowrap; flex-shrink: 0;
+}
+
+.session-badge.running { background: #1e3a20; color: var(--green); }
+.session-badge.paused  { background: #3a2e10; color: var(--amber); }
+
+.session-timer {
+  font-size: 42px; font-weight: 200;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "SF Mono", monospace;
+  letter-spacing: .04em;
+  color: var(--text);
+}
+
+.card-session .btn-stop { width: 100%; padding: 15px; font-size: 16px; }
+
+/* No session card */
+.card-no-session {
+  text-align: center;
+  color: var(--muted);
+  padding: 32px 20px;
+}
+
+/* ── Recent entries ──────────────────────────────────────────────── */
+
+.section-recent h2 {
+  font-size: 12px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.entries-list { display: flex; flex-direction: column; gap: 8px; }
+
+.entry-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.entry-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+
+.entry-project { font-size: 14px; font-weight: 600; }
+.entry-duration { font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+.entry-task {
+  font-size: 12px; color: var(--muted);
+}
+
+.entry-date {
+  font-size: 11px; color: var(--muted); margin-top: 2px;
+}
+
+.entry-notes {
+  font-size: 12px; color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* ── Dialog ──────────────────────────────────────────────────────── */
+
+.dialog-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 100;
+  padding: 0;
+}
+
+.dialog-backdrop.hidden { display: none; }
+
+.dialog-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 24px 20px 36px;
+  width: 100%;
+  max-width: 480px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.dialog-box h2 { font-size: 18px; font-weight: 700; }
+
+.notice {
+  background: #2e2a10;
+  border: 1px solid #4a3d0d;
+  border-radius: var(--radius-sm);
+  color: var(--amber);
+  font-size: 13px;
+  padding: 10px 13px;
+}
+
+.notice.hidden { display: none; }
+
+.dialog-field { display: flex; flex-direction: column; gap: 6px; }
+
+.dialog-field label {
+  font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted);
+}
+
+input[type="datetime-local"], textarea {
+  width: 100%;
+  padding: 12px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+}
+
+input[type="datetime-local"]:disabled {
+  opacity: .55; cursor: not-allowed;
+}
+
+input[type="datetime-local"]:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+.dialog-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-top: 4px;
+}
+
+.dialog-actions .btn-stop { width: 100%; }
+.dialog-actions .btn-ghost { width: 100%; }
+
+/* ── Shared ──────────────────────────────────────────────────────── */
+
+.error {
+  color: #e05555;
+  font-size: 13px;
+}
+
+.error.hidden { display: none; }
+
+.loading {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 8px 0;
+}

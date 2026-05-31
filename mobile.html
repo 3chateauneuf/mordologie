@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Mordologie Pocket</title>
+  <link rel="stylesheet" href="mobile.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Auth screen -->
+  <div id="screen-auth" class="screen">
+    <div class="auth-box">
+      <div class="auth-logo">M</div>
+      <h1>Mordologie<span class="pocket-label">Pocket</span></h1>
+      <form id="form-login">
+        <input type="email" id="input-email" placeholder="Email" autocomplete="email" required />
+        <input type="password" id="input-password" placeholder="Mot de passe" autocomplete="current-password" required />
+        <button type="submit" id="btn-login">Connexion</button>
+        <p id="auth-error" class="error hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main screen -->
+  <div id="screen-main" class="screen hidden">
+    <header class="app-header">
+      <span class="app-title">Pocket</span>
+      <button id="btn-logout" class="btn-ghost">Déco</button>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Active session card -->
+      <div id="card-session" class="card card-session hidden">
+        <div class="session-top">
+          <div class="session-meta">
+            <span id="session-project" class="session-project"></span>
+            <span id="session-task" class="session-task"></span>
+          </div>
+          <span id="session-badge" class="session-badge"></span>
+        </div>
+        <div id="session-timer" class="session-timer">--:--:--</div>
+        <button id="btn-stop" class="btn-stop">Arrêter</button>
+      </div>
+
+      <!-- No session -->
+      <div id="card-no-session" class="card card-no-session hidden">
+        <p>Aucune session active</p>
+      </div>
+
+      <!-- Recent entries -->
+      <section class="section-recent">
+        <h2>Récent</h2>
+        <div id="list-entries" class="entries-list"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Stop dialog -->
+  <div id="dialog-stop" class="dialog-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="dialog-box">
+      <h2>Arrêter la session</h2>
+
+      <div id="stop-paused-notice" class="notice hidden">
+        Session en pause — l'heure de fin est figée.
+      </div>
+
+      <div class="dialog-field">
+        <label for="input-end-time">Heure de fin</label>
+        <input type="datetime-local" id="input-end-time" />
+      </div>
+      <div class="dialog-field">
+        <label for="input-stop-notes">Notes</label>
+        <textarea id="input-stop-notes" rows="3" placeholder="Note de fin (optionnel)"></textarea>
+      </div>
+      <p id="stop-error" class="error hidden"></p>
+      <div class="dialog-actions">
+        <button id="btn-stop-cancel" class="btn-ghost">Annuler</button>
+        <button id="btn-stop-confirm" class="btn-stop">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="mobile.js"></script>
+</body>
+</html>
