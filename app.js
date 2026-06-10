@@ -1147,24 +1147,11 @@ dayThemesList?.addEventListener("click", (event) => {
   }
 });
 
+// Typing no longer triggers project-memory load or canonicalization.
+// Side-effects fire only from autocomplete applyValue (Enter/click confirmation).
 projectInput.addEventListener("input", () => {
   projectInput.setCustomValidity("");
-  applyProjectMemoryFromInput();
   updateFieldManageButtons();
-});
-
-projectInput.addEventListener("blur", () => {
-  applyProjectMemoryFromInput();
-  void canonicalizeProjectInput();
-});
-
-collaboratorInput.addEventListener("change", () => {
-  collaboratorInput.setCustomValidity("");
-  applyProjectMemoryFromInput();
-  renderQuickProjects();
-  renderProjectMemoryList();
-  renderCadreViews();
-  void canonicalizeCollaboratorInput();
 });
 
 collaboratorInput.addEventListener("input", () => {
@@ -1175,10 +1162,6 @@ collaboratorInput.addEventListener("input", () => {
 categoriesInput.addEventListener("input", () => {
   categoriesInput.setCustomValidity("");
   updateFieldManageButtons();
-});
-
-categoriesInput.addEventListener("blur", () => {
-  void canonicalizeCategorySelection();
 });
 
 taskInput?.addEventListener("blur", () => {
@@ -1891,7 +1874,12 @@ function initializeAutocomplete() {
           : uniqueValues("collaborator"),
       applyValue: (value) => {
         collaboratorInput.value = value;
-        collaboratorInput.dispatchEvent(new Event("change", { bubbles: true }));
+        collaboratorInput.setCustomValidity("");
+        applyProjectMemoryFromInput();
+        renderQuickProjects();
+        renderProjectMemoryList();
+        renderCadreViews();
+        void canonicalizeCollaboratorInput();
       },
       allowCreate: () => canCreateCollaboratorReference(),
       createLabel: (value) => `Ajouter "${value}" comme nouveau cargonaute`,
@@ -1904,6 +1892,7 @@ function initializeAutocomplete() {
       applyValue: (value) => {
         projectInput.value = value;
         applyProjectMemoryFromInput();
+        void canonicalizeProjectInput();
       },
       allowCreate: () => canCreateSharedReferenceCatalog(),
       createLabel: (value) => `Ajouter "${value}" comme nouveau projet`,
@@ -1957,6 +1946,7 @@ function initializeAutocomplete() {
         renderCategoryTokens();
         renderTagTokens();
         categoriesInput.value = "";
+        void canonicalizeCategorySelection();
       },
     },
     {
