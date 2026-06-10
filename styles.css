@@ -1,3 +1,46 @@
+/* ==========================================================================
+   MORDOLOGIE — main desktop stylesheet
+   ==========================================================================
+
+   Single global stylesheet driving the entire desktop UI. No preprocessor,
+   no methodology (BEM/utility) — selectors mirror the HTML structure.
+
+   Maintenance conventions:
+     • Design tokens (colors, radii, shadows) live in :root as CSS variables.
+       Add new tokens there, never inline magic numbers.
+     • Class naming is feature-prefixed (.composer-*, .journal-*, .agenda-*,
+       .timer-*, .users-admin-*) — keep new classes consistent with the
+       block they belong to.
+     • Component states use modifier classes (.X--running, .X--paused) and
+       data-attributes ([data-tone="warning"]) — prefer these over inline
+       styles.
+
+   Section index (search for "SECTION:" markers):
+     VARIABLES & BASE
+     APP SHELL & TOPBAR
+     AUTH SHELL & DROPDOWN
+     STATUS TOASTS
+     COMPOSER FORM (capture grid)
+     JOURNAL FILTERS & SESSION LIST
+     TIMER PANEL
+     PERSONAL STATS
+     CATEGORY & TAG ROWS
+     AGENDA INTERACTION (drag/clone)
+     SESSION ROW DISPLAY/EDIT
+     JOURNAL DAY HEADERS
+     TIMER STATES & UI POLISH
+     GUIDE VIEW
+
+   See CODEMAP.md for the cross-reference with app.js sections.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   SECTION: VARIABLES & BASE
+   Purpose: Design tokens (color palette, radii, shadows, content width)
+     and global resets. All other sections consume these via var(--name).
+   ========================================================================== */
+
 :root {
   --bg: #f0f2f5;
   --bg-gradient:
@@ -64,6 +107,13 @@ textarea {
 button {
   cursor: pointer;
 }
+
+
+/* ==========================================================================
+   SECTION: APP SHELL & TOPBAR
+   Purpose: Outer page grid, max-width wrapper, topbar with brand and
+     navigation buttons. Drives the global layout rhythm.
+   ========================================================================== */
 
 .app-shell {
   width: min(var(--content-width), calc(100% - 32px));
@@ -176,6 +226,12 @@ button {
   gap: 10px;
 }
 
+
+/* ==========================================================================
+   SECTION: AUTH SHELL & DROPDOWN
+   Purpose: Guest landing (rescue select), authenticated user identity
+     trigger, and the identity dropdown with role badge and sign-out.
+   ========================================================================== */
 
 /* ── Auth: guest shell ── */
 
@@ -363,6 +419,12 @@ button {
   color: var(--accent-strong);
   width: fit-content;
 }
+
+/* ==========================================================================
+   SECTION: STATUS TOASTS
+   Purpose: Floating status messages (success / warning / error tones)
+     used by auth, save, and sync feedback. Driven by data-tone attributes.
+   ========================================================================== */
 
 /* ── Status toast ── */
 
@@ -617,6 +679,13 @@ button {
   gap: 14px;
 }
 
+/* ==========================================================================
+   SECTION: COMPOSER FORM (capture grid)
+   Purpose: The main 3-column capture form (collaborator, project,
+     category/tags, notion, task, notes). Includes field-management
+     buttons, single-selection chips, and the manual/planned dialogs.
+   ========================================================================== */
+
 /* ── Composer: 3-column capture grid ── */
 
 .capture-3col {
@@ -774,6 +843,12 @@ button {
 .session-list {
   margin-top: 12px;
 }
+
+/* ==========================================================================
+   SECTION: JOURNAL FILTERS & SESSION LIST
+   Purpose: Journal toolbar (date range, category, tags, subject), session
+     list rows with inline edit affordances, and pagination/empty states.
+   ========================================================================== */
 
 .journal-filter-row {
   display: grid;
@@ -1473,6 +1548,13 @@ select.select-input {
     0 14px 28px rgba(39, 56, 68, 0.06);
 }
 
+
+/* ==========================================================================
+   SECTION: TIMER PANEL
+   Purpose: Live-session card with elapsed display, pause / resume / stop
+     controls, current project/category summary, and pending-sync hint.
+   ========================================================================== */
+
 .timer-head {
   display: grid;
   gap: 4px;
@@ -1711,6 +1793,12 @@ select.select-input {
   background: rgba(39, 56, 68, 0.08);
 }
 
+/* ==========================================================================
+   SECTION: PERSONAL STATS
+   Purpose: Solo dashboard card — period switcher, week bar, distribution
+     by category, top projects, evolution metrics.
+   ========================================================================== */
+
 /* ── Personal stats card ───────────────────────────────── */
 
 .personal-stats-card {
@@ -1811,6 +1899,12 @@ select.select-input {
 .personal-week-bar {
   margin-bottom: 14px;
 }
+
+/* ==========================================================================
+   SECTION: CATEGORY & TAG ROWS
+   Purpose: Reusable row layout for category and tag managers (color
+     swatch, label, count, rename/delete affordances).
+   ========================================================================== */
 
 /* ── Category rows ──────────────────────────────────────── */
 
@@ -2336,6 +2430,12 @@ select.select-input {
   z-index: 10;
 }
 
+/* ==========================================================================
+   SECTION: AGENDA INTERACTION (drag/clone)
+   Purpose: Cursor states, ghost previews, and Alt/Option clone styling
+     for the agenda drag/drop/resize interactions defined in app.js.
+   ========================================================================== */
+
 /* ── Alt / Option clone mode ─────────────────────────────── */
 body.alt-clone-mode .agenda-event[data-session-id] {
   cursor: copy !important;
@@ -2573,6 +2673,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   display: grid;
   gap: 6px;
 }
+
+/* ==========================================================================
+   SECTION: SESSION ROW DISPLAY/EDIT
+   Purpose: Two-mode journal entry row — collapsed display and inline edit
+     form. Toggling between them is driven by data-state in app.js.
+   ========================================================================== */
 
 /* ── Display row ── */
 
@@ -3770,6 +3876,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   gap: 2px;
 }
 
+/* ==========================================================================
+   SECTION: JOURNAL DAY HEADERS
+   Purpose: Sticky day headers in the journal list (date label, entry
+     count, daily total), plus the empty-state copy when filters yield none.
+   ========================================================================== */
+
 .journal-day-title {
   margin: 0;
   font-family: "Bricolage Grotesque", "Manrope", sans-serif;
@@ -4046,6 +4158,13 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   min-height: 120px;
 }
 
+/* ==========================================================================
+   SECTION: TIMER STATES & UI POLISH
+   Purpose: Running/paused visual states for the timer card, capture form
+     visual weight tweaks, button icons, token inline edit, and save toasts.
+     Late-in-file overrides — keep cascade order in mind when adding rules.
+   ========================================================================== */
+
 /* ── Timer running / paused visual states ── */
 
 @keyframes timer-pulse {
@@ -4254,6 +4373,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   from { transform: scaleX(1); }
   to   { transform: scaleX(0); }
 }
+
+/* ==========================================================================
+   SECTION: GUIDE VIEW
+   Purpose: Three guide variants — guest landing, new-user onboarding
+     steps, and existing-user tips grid. Each variant has its own scope.
+   ========================================================================== */
 
 /* --- Guide view --- */
 

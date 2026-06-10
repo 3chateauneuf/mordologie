@@ -1,3 +1,65 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// MORDOLOGIE — main desktop application (single-page, vanilla JS)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Monolithic legacy file (~12k lines). Renders the full desktop UI:
+// session capture, journal, agenda, planned events, manager reports,
+// cadre views, user admin. No framework — DOM is mutated directly,
+// state lives in module-scope `let` bindings.
+//
+// Maintenance conventions:
+//   • DOM refs are cached once at the top (one `const` per node).
+//   • Mutable global state lives in the GLOBAL STATE section.
+//   • Render functions are idempotent — call them after any state change.
+//   • Storage is dual: localStorage for offline + Supabase for sync.
+//   • Sync is eventual: writes go to localStorage first, then upserted.
+//
+// Sensitive zones — review and test carefully before editing:
+//   • Session stop / sync pipeline (search: stopSession, saveSession,
+//     syncStopToServer, autoSyncMissingSessions) — see SECTION SESSION
+//     SAVE / STOP / SYNC.
+//   • `.upsert([...], { onConflict: ... })` calls — race-tolerant
+//     idempotent paths. Do not change the conflict keys.
+//   • deleteSession — destructive and reviewed.
+//
+// Section index (search for "// SECTION:" markers):
+//   CONFIG & CONSTANTS                       (top)
+//   DOM REFERENCES
+//   GLOBAL STATE
+//   DIALOGS & MODAL HELPERS
+//   AUTOCOMPLETE SUBSYSTEM
+//   AGENDA INTERACTION
+//   VIEW NAVIGATION & UI CHROME
+//   STORAGE: PREFERENCES, PROFILES, THEMES
+//   SESSION LOAD & PERSISTENCE
+//   REMOTE SYNC ENGINE
+//   FORM HYDRATION
+//   STORAGE: COLORS & REPRISES
+//   FIELD MANAGEMENT DIALOG
+//   AUTH INITIALIZATION
+//   CANONICALIZATION & SAVE PIPELINE
+//   MANUAL ENTRY EDITOR
+//   TIMER & LIVE RENDER
+//   AUTH PANEL & ACCESS CONTROL
+//   SUGGESTIONS, JOURNAL & MEMORY
+//   SYNC INDICATOR & ORCHESTRATION
+//   CADRE, AGENDA & PLANNED RENDERING
+//   CALENDAR ICS
+//   RESOURCES, GUIDE & USERS ADMIN
+//   MANAGER & PERSONAL REPORTS
+//   TOKEN INPUTS & APPLY HELPERS
+//   SERVICE WORKER & BOOT                    (bottom)
+//
+// See CODEMAP.md at repo root for line-range estimates and entry points.
+// ═══════════════════════════════════════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: CONFIG & CONSTANTS
+// Purpose: Storage keys, color palettes, seed data, debug flags. Pure values
+//   only — no DOM or state reads. Constants are reused across the file.
+// ═══════════════════════════════════════════════════════════════════════════
+
 const STORAGE_KEY = "mordologie-sessions-v1";
 const ACTIVE_SESSION_KEY = "mordologie-active-session-v1";
 const CATEGORY_COLOR_KEY = "mordologie-category-colors-v1";
@@ -168,6 +230,13 @@ for (const [nextKey, legacyKey] of Object.entries(LEGACY_STORAGE_KEYS)) {
     }
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: DOM REFERENCES
+// Purpose: Cached `document.querySelector` results for every node the app
+//   interacts with. One `const` per node — fail loudly at boot if the HTML
+//   shape changes. Grouped roughly by feature area, not strictly ordered.
+// ═══════════════════════════════════════════════════════════════════════════
 
 const form = document.querySelector("#time-form");
 const viewTabs = Array.from(document.querySelectorAll("[data-view-target]"));
@@ -664,6 +733,15 @@ const DEMO_WEEKEND_SLOTS = [
 ];
 const ROLLING_DEMO_SESSIONS = buildRollingDemoSessions();
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: GLOBAL STATE
+// Purpose: Mutable, module-scope state. Direct mutation is intentional —
+//   any function may read or write these. After a write, call the matching
+//   `render*` to reflect the change in the DOM. Persistence is opt-in:
+//   the `loadX()` initializers hydrate from localStorage; explicit `storeX()`
+//   calls flush back. Remote sync happens via the REMOTE SYNC ENGINE.
+// ═══════════════════════════════════════════════════════════════════════════
+
 let sessions = loadSessions();
 let activeSession = loadActiveSession();
 let currentCategories = [];
@@ -893,6 +971,13 @@ authRescueSelect?.addEventListener("keydown", async (event) => {
   event.preventDefault();
   await applyLocalRescueAccess(authRescueSelect?.value ?? "");
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: DIALOGS & MODAL HELPERS
+// Purpose: Decision dialog (yes/no/cancel), field-management dialog wiring,
+//   and small UI helpers used across the app. These are promise-based —
+//   awaiters block until the user picks an outcome.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function resolveDecisionDialog(result) {
   const resolver = pendingDecisionResolver;
@@ -1845,6 +1930,14 @@ fieldManageColorSaveButton?.addEventListener("click", async () => {
   fieldManageDialog?.close();
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: AUTOCOMPLETE SUBSYSTEM
+// Purpose: Single shared popover + input wiring for every typeahead in the
+//   app (collaborator, project, category, tag, task, notion, journal filters).
+//   Behavior contract: typing only filters the dropdown — side effects fire
+//   only from `applyValue` (Enter / click / Tab confirmation).
+// ═══════════════════════════════════════════════════════════════════════════
+
 function createAutocompletePopover() {
   const popover = document.createElement("div");
   popover.className = "autocomplete-popover";
@@ -2416,6 +2509,13 @@ function beginAgendaDrag(event) {
   window.addEventListener("pointercancel", handleAgendaDragCancel, { once: true });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: AGENDA INTERACTION
+// Purpose: Pointer-level logic for the week/agenda view — drag to move
+//   sessions, resize, Alt+drag to clone, hit-testing tracks and slots.
+//   Pure interaction layer; rendering lives in CADRE, AGENDA & PLANNED.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function resolveAgendaDragMode(event, eventElement) {
   if (event.target.closest(".agenda-resize-handle--start")) {
     return "resize-start";
@@ -2701,6 +2801,13 @@ function renderSingleSelectionTag(input, container, options = {}) {
   container.hidden = false;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: VIEW NAVIGATION & UI CHROME
+// Purpose: Top-level view switching (journal / agenda / cadre / users / etc.),
+//   chrome (topbar, role pill), and the single-selection token display used
+//   in capture inputs.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function initializeViewNavigation() {
   for (const tab of viewTabs) {
     tab.addEventListener("click", () => {
@@ -2756,6 +2863,13 @@ function renderViewChrome() {
     analysisCollaboratorFilterWrap.hidden = currentView !== "manager";
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: STORAGE — PREFERENCES, PROFILES, THEMES
+// Purpose: localStorage helpers for day themes, profile avatars, and the
+//   Supabase-backed `user_ui_preferences` table (shared UI prefs hydrated
+//   per logged-in user).
+// ═══════════════════════════════════════════════════════════════════════════
 
 function loadDayThemes() {
   try {
@@ -3165,6 +3279,13 @@ function readLocalStorageJsonWithFallback(primaryKey, fallbackKeys = [], fallbac
   return fallbackValue;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: SESSION LOAD & PERSISTENCE
+// Purpose: Local read/write for sessions, active session, pending-stop
+//   state and recently-stopped guards. Migration from legacy storage keys
+//   happens here. Remote sync of the same data is in REMOTE SYNC ENGINE.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function loadSessions() {
   const parsed = readLocalStorageJsonWithFallback(STORAGE_KEY, [LEGACY_STORAGE_KEYS[STORAGE_KEY]], []);
   const normalized = Array.isArray(parsed)
@@ -3469,6 +3590,14 @@ function failUsersAdminDraft(message, tone = "error") {
   renderUsersAdmin();
   return false;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: REMOTE SYNC ENGINE
+// Purpose: Drives the eventual-consistency loop with Supabase. Tracks
+//   connection health, hydrates remote state into the local sessions array,
+//   reconciles drift, and pushes pending writes. Status surfaces are driven
+//   from here.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function updateRemoteSyncStatus(nextHealth, { silent = false } = {}) {
   remoteSyncHealth = nextHealth;
@@ -4209,6 +4338,14 @@ function isCurrentActiveSession(sessionLike) {
   return normalizeText(sessionLike.id ?? "") === normalizeText(activeSession.id ?? "");
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: FORM HYDRATION
+// Purpose: Two-way binding between the capture form (collaborator, project,
+//   category, tags, notion, task, notes) and the active-session draft.
+//   `hydrateFormFromActiveSession` reads draft → DOM; `syncActiveSession
+//   DraftFromForm` reads DOM → draft. Field-manage buttons live here too.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function syncActiveSessionDraftFromForm({ audit = false, source = "active-session-context" } = {}) {
   if (!activeSession) {
     return;
@@ -4412,6 +4549,12 @@ function getFieldManagePayload(kind) {
 
   return payload;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: STORAGE — COLORS & REPRISES
+// Purpose: Per-category color persistence and the reprises (recurring
+//   project memories) order/actions storage. Drag-reorder writes here.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function loadStoredCategoryColors() {
   try {
@@ -4692,6 +4835,13 @@ async function saveRepriseAction(memory, actionKind) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: FIELD MANAGEMENT DIALOG
+// Purpose: The "manage this field" dialog used to rename, delete, or color
+//   reference entities (categories, tags, projects) from the capture form
+//   without leaving context.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function syncFieldManageDialogMode() {
   if (!fieldManageDeleteButton || !fieldManageConfirmButton || !fieldManageCopy || !fieldManageState) {
     return;
@@ -4820,6 +4970,13 @@ function stopActiveSession() {
   });
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: AUTH INITIALIZATION
+// Purpose: Boot-time resolution of the active app user (name-based, not
+//   Supabase Auth — see CODEMAP). Hydrates `accessProfile`, triggers initial
+//   render, and recovers the local "rescue" name when no remote session.
+// ═══════════════════════════════════════════════════════════════════════════
 
 async function initializeAuth() {
   const rescueName = loadStoredLocalRescueName();
@@ -5433,6 +5590,15 @@ function findReferenceMatch(rows, labelField, rawValue) {
   const startsWithMatches = rows.filter((row) => normalizer(row[labelField] ?? "").startsWith(normalized));
   return startsWithMatches.length === 1 ? startsWithMatches[0] : null;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: CANONICALIZATION & SAVE PIPELINE
+// Purpose: Resolves typed values against the reference catalog (project_id,
+//   user_id, category_id, team_name) before saving. `buildCanonicalSession
+//   Draft` is the contract; `saveSession` / `stopSession` / `syncStopToServer`
+//   chain through it. Critical path for time-entry integrity — see CODEMAP
+//   for the sensitive list.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function buildCanonicalSessionDraft(sessionDraft, resolved) {
   const normalizedCategories = resolved.category
@@ -6146,6 +6312,13 @@ function formatManualCardDate(dateValue) {
   }).format(date);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: MANUAL ENTRY EDITOR
+// Purpose: Backfilling sessions after the fact — duration / start / end
+//   bidirectional binding, validation, and save handler. Reuses the
+//   canonicalization pipeline above.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function updateManualTimingCardTitles(startDate, endDate) {
   if (manualStartCardTitle) {
     const label = formatManualCardDate(startDate);
@@ -6684,6 +6857,13 @@ function stopTimerLoop() {
   timerIntervalId = null;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: TIMER & LIVE RENDER
+// Purpose: 1Hz tick that updates the running session's elapsed display
+//   and any live agenda preview. Lightweight: render functions check
+//   visibility before doing DOM work.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function updateLiveTimer() {
   timerDisplay.textContent = activeSession ? formatClock(getActiveSessionDurationMs(activeSession)) : "00:00:00";
 }
@@ -6723,6 +6903,12 @@ function render() {
   renderUsersAdmin();
   renderGuideView();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: AUTH PANEL & ACCESS CONTROL
+// Purpose: Renders the identity dropdown, role pill, and gates inputs/views
+//   based on `accessProfile.role` (admin / manager / cadre / open / guest).
+// ═══════════════════════════════════════════════════════════════════════════
 
 function renderCurrentUserContext() {
   // The active identity is handled by the auth shell in the topbar.
@@ -7022,6 +7208,14 @@ function showActiveStartEditor() {
     manualStartTimeInput?.select?.();
   }, 0);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: SUGGESTIONS, JOURNAL & MEMORY
+// Purpose: Quick-project chips, tag/category managers, project memory
+//   (the "Contextes mémorisés" panel), and the journal session list with
+//   filtering. `applyProjectMemoryFromInput` (further down) is the
+//   confirmation-only side-effect for the project autocomplete.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function renderSuggestions() {
   fillDatalist(
@@ -7879,6 +8073,13 @@ function countUnsyncedSessions() {
   ).length;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: SYNC INDICATOR & ORCHESTRATION
+// Purpose: User-facing sync UI — the "X/Y synchronisées" badge, the manual
+//   "Synchroniser vers DB" button, and the silent post-stop catch-up that
+//   pushes any locally-saved sessions still missing from `time_entries`.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function renderPendingSyncIndicator() {
   if (!authStatus) return;
   const count = countUnsyncedSessions();
@@ -8274,6 +8475,14 @@ async function autoSyncMissingSessions() {
     await window.supabase.from("time_entries").insert(batch);
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: CADRE, AGENDA & PLANNED RENDERING
+// Purpose: Visual rendering for the cadre stats, personal week view, the
+//   week agenda (with live preview overlay), and the planned-event layer
+//   sourced from iCal snapshots. Decision dialogs for planned events
+//   (intégrer / créer / ignorer) are wired here.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function renderCadreViews() {
   renderDayThemes();
@@ -9436,6 +9645,13 @@ function applyPlannedEventDecision(mode) {
   renderCadreViews();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: CALENDAR ICS
+// Purpose: Fetches and parses iCal URLs (via `/api/calendar-proxy`), stores
+//   per-collaborator snapshots, and produces planned-event rows for the
+//   agenda. Handles staleness, multi-URL merge, and DST-aware recurrence.
+// ═══════════════════════════════════════════════════════════════════════════
+
 function loadStoredPlannedCalendarSnapshots() {
   try {
     const stored = JSON.parse(window.localStorage.getItem(PLANNED_CALENDAR_SNAPSHOTS_KEY) ?? "[]");
@@ -9973,6 +10189,13 @@ function renderManagerViews() {
     "Aucune catégorie pour cette plage.",
   );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: RESOURCES, GUIDE & USERS ADMIN
+// Purpose: Read-only resource lists, the onboarding guide (different copy
+//   per role), and the manager-only users admin CRUD (display ↔ editor
+//   cards, save/delete, role and team assignment).
+// ═══════════════════════════════════════════════════════════════════════════
 
 function renderResourcesViews() {
   const anchor = getReportAnchorDate();
@@ -10820,6 +11043,13 @@ function setKpiDelta(el, currentMs, previousMs) {
   el.className = `kpi-delta ${pct > 1 ? "kpi-delta--up" : pct < -1 ? "kpi-delta--down" : "kpi-delta--flat"}`;
   el.hidden = false;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: MANAGER & PERSONAL REPORTS
+// Purpose: Manager dashboard (team table, evolution grid, report tables,
+//   distribution charts) and personal-period reports. Read-only aggregations
+//   over the in-memory sessions array; no writes.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function renderManagerSummary(allRows, scopedRows, range, filterCollaborator) {
   const totalMs = scopedRows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
@@ -11757,6 +11987,13 @@ function getMainProjectForCollaborator(rows, collaborator) {
   return projectRows[0]?.label ?? "";
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: TOKEN INPUTS & APPLY HELPERS
+// Purpose: Comma-separated tag/category token inputs (chip-style display,
+//   keyboard add/remove) and tail-end helpers used by various sections
+//   (color hashing, cell builders, clock formatting).
+// ═══════════════════════════════════════════════════════════════════════════
+
 function setupTokenInput(input, config) {
   const tokenField = input.closest(".token-field");
   if (tokenField && !tokenField.dataset.tokenFieldInteractive) {
@@ -12360,6 +12597,13 @@ function colorForLabel(label) {
   }
   return COLOR_PALETTE[Math.abs(hash) % COLOR_PALETTE.length];
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: SERVICE WORKER & BOOT
+// Purpose: Registers the PWA service worker (skipped on localhost so dev
+//   isn't cached). This is the last function defined; boot happens via
+//   the calls at the very bottom of the file.
+// ═══════════════════════════════════════════════════════════════════════════
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
