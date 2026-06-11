@@ -304,6 +304,7 @@ btnStop.addEventListener("click", () => {
   const endDefault = isPaused ? activeSession.paused_at : new Date().toISOString();
 
   inputEndTime.value    = toLocalInput(endDefault);
+  inputEndTime.dataset.originalValue = inputEndTime.value;
   inputEndTime.disabled = isPaused;
   inputNotes.value      = "";
 
@@ -326,9 +327,33 @@ btnStopConfirm.addEventListener("click", async () => {
   if (!activeSession) return;
   hideError(stopError);
 
-  const endedAt = inputEndTime.disabled
-    ? activeSession.paused_at
-    : new Date(inputEndTime.value).toISOString();
+  // datetime-local has minute precision: an unedited default captured at
+  // modal open loses the started_at seconds and the minutes drift while the
+  // dialog is visible. So:
+  //   • paused → keep paused_at verbatim (server ignores p_ended_at anyway).
+  //   • user edited the field → respect the value, validate against started_at.
+  //   • user did NOT edit → use a fresh now(), floored to ≥ started_at + 1 s
+  //     so the server-side check (ended_at >= started_at) cannot fail.
+  const startedAtMs = new Date(activeSession.started_at).getTime();
+  const userEdited = inputEndTime.value !== inputEndTime.dataset.originalValue;
+  let endedAt;
+  if (inputEndTime.disabled) {
+    endedAt = activeSession.paused_at;
+  } else if (userEdited) {
+    const editedMs = new Date(inputEndTime.value).getTime();
+    if (!Number.isFinite(editedMs)) {
+      showError(stopError, "Heure de fin invalide.");
+      return;
+    }
+    if (editedMs <= startedAtMs) {
+      showError(stopError, "L'heure de fin doit être après l'heure de début.");
+      return;
+    }
+    endedAt = new Date(editedMs).toISOString();
+  } else {
+    const nowMs = Date.now();
+    endedAt = new Date(Math.max(nowMs, startedAtMs + 1000)).toISOString();
+  }
 
   if (!endedAt || isNaN(new Date(endedAt))) {
     showError(stopError, "Heure de fin invalide.");
