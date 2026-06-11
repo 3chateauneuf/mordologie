@@ -2649,22 +2649,9 @@ function handleAgendaDragEnd(event) {
   attemptSaveSession(state.previewSession, {
     excludeId: state.originalSession.id,
     onSuccess: (sessionToSave) => {
-      upsertSession({ ...sessionToSave, syncStatus: "pending_update" });
-      persistSessions();
       void logSessionChange(state.originalSession, sessionToSave, `agenda-${state.mode}`);
       showSaveToast(sessionToSave, { label: "Horaires mis à jour" });
-      void (async () => {
-        const ok = await syncSessionToSupabase(sessionToSave, "manual", { refreshAfterSuccess: false });
-        if (ok) {
-          const stored = sessions.find((s) => s.id === sessionToSave.id);
-          if (stored?.syncStatus === "pending_update") {
-            upsertSession({ ...stored, syncStatus: "synced" });
-            persistSessions();
-          }
-          await loadServerBackedState({ silent: true });
-          render();
-        }
-      })();
+      persistAgendaSessionChange(sessionToSave, `agenda-${state.mode}`);
       render();
     },
   });
@@ -2684,6 +2671,83 @@ function cleanupAgendaDrag() {
   agendaDragState.eventElement.releasePointerCapture?.(agendaDragState.pointerId);
   agendaDragState = null;
   window.removeEventListener("pointermove", handleAgendaDragMove);
+}
+
+// Agenda drag/resize persistence wrapper.
+//
+// Replaces the previous fire-and-forget IIFE inside handleAgendaDragEnd.
+// Reuses syncSessionToSupabase (the same path used by stop/save) but:
+//   • Debounces (350 ms) so rapid drag/resize sequences collapse into one
+//     remote sync — the LAST state wins, no clobbering races.
+//   • The remote sync is await-able inside flushAgendaPersistQueue, with
+//     explicit try/catch and user-visible error toast on failure.
+//   • On failure the session keeps `syncStatus: "pending_update"`, which
+//     pushPendingLocalUpdates() retries at next boot (covers refresh-mid-
+//     flight). The `pending_update` branch of hydrateRemoteState's merge
+//     also protects the local state from being overwritten by stale remote
+//     rows in the meantime.
+const AGENDA_PERSIST_DEBOUNCE_MS = 350;
+let agendaPersistQueue = new Map();
+let agendaPersistTimer = null;
+
+function persistAgendaSessionChange(session, reason) {
+  upsertSession({ ...session, syncStatus: "pending_update" });
+  persistSessions();
+  agendaPersistQueue.set(session.id, session);
+
+  if (agendaPersistTimer) clearTimeout(agendaPersistTimer);
+  agendaPersistTimer = setTimeout(() => {
+    agendaPersistTimer = null;
+    void flushAgendaPersistQueue(reason);
+  }, AGENDA_PERSIST_DEBOUNCE_MS);
+}
+
+async function flushAgendaPersistQueue(reason) {
+  while (agendaPersistQueue.size > 0) {
+    const [id, sessionToSync] = agendaPersistQueue.entries().next().value;
+    agendaPersistQueue.delete(id);
+    try {
+      const ok = await syncSessionToSupabase(sessionToSync, "manual", { refreshAfterSuccess: false });
+      if (ok) {
+        const stored = sessions.find((s) => s.id === id);
+        if (stored?.syncStatus === "pending_update") {
+          upsertSession({ ...stored, syncStatus: "synced" });
+          persistSessions();
+        }
+        await loadServerBackedState({ silent: true });
+        render();
+      } else {
+        setAuthStatusMessage("Modification d'agenda non synchronisée — réessai au prochain rechargement.", "warning", { persistMs: 3000 });
+      }
+    } catch (error) {
+      console.error(`persistAgendaSessionChange (${reason}):`, error);
+      setAuthStatusMessage("Erreur lors de la synchronisation de l'agenda.", "error", { persistMs: 3000 });
+    }
+  }
+}
+
+// Boot-time retry: pushes sessions left in `pending_update` from a previous
+// session whose drag IIFE was killed by a refresh. Runs once inside
+// initializeAuth, before loadServerBackedState, so the server reflects the
+// latest local state when hydrateRemoteState merges.
+async function pushPendingLocalUpdates() {
+  if (!window.supabase) return;
+  const pending = sessions.filter((s) => s.syncStatus === "pending_update");
+  if (!pending.length) return;
+  for (const session of pending) {
+    try {
+      const ok = await syncSessionToSupabase(session, "manual", { refreshAfterSuccess: false });
+      if (ok) {
+        const stored = sessions.find((s) => s.id === session.id);
+        if (stored?.syncStatus === "pending_update") {
+          upsertSession({ ...stored, syncStatus: "synced" });
+        }
+      }
+    } catch (error) {
+      console.error("pushPendingLocalUpdates failed for session", session.id, error);
+    }
+  }
+  persistSessions();
 }
 
 function updateAgendaEventPreview(state) {
@@ -4986,6 +5050,7 @@ async function initializeAuth() {
   }
   if (window.supabase) {
     await ensureReferenceCatalogLoaded();
+    await pushPendingLocalUpdates();
     await loadServerBackedState({ silent: true });
     startRemoteSyncLoop();
   }
