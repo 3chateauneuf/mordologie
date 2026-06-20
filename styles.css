@@ -4919,16 +4919,44 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
    ========================================================================== */
 
 .tag-manager-search {
+  display: flex;
+  gap: 6px;
+  align-items: center;
   padding: 8px 0 4px;
 }
 
 .tag-manager-search-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
 }
 
 .tag-manager-search-input::placeholder {
   opacity: 0.5;
+}
+
+.tag-manager-sort {
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-input);
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.tag-manager-sort:hover {
+  color: var(--text);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.tag-manager-sort:focus-visible {
+  outline: 2px solid rgba(13, 148, 136, 0.30);
+  outline-offset: 1px;
 }
 
 
@@ -5197,6 +5225,9 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   display: grid;
   gap: 0;
   margin-top: 4px;
+  max-height: 380px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .memory-card {
@@ -5320,6 +5351,9 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   display: grid;
   gap: 0;
   margin-top: 2px;
+  max-height: 420px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .tag-manager-item {

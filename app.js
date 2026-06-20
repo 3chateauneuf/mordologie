@@ -364,6 +364,8 @@ const journalFilterHelpPanel     = document.querySelector("#journal-filter-help-
 const journalFilterResetButton = document.querySelector("#journal-filter-reset");
 const journalSideSwitch = document.querySelector("#journal-side-switch");
 const tagManagerSearchInput = document.querySelector("#tag-manager-search");
+const tagManagerSortSelect  = document.querySelector("#tag-manager-sort");
+let tagManagerSortMode = "usage"; // "usage" (count desc) | "alpha" (locale asc)
 const projectMemoryList = document.querySelector("#project-memory-list");
 const sessionItemTemplate = document.querySelector("#session-item-template");
 const resourceTotal = document.querySelector("#resource-total");
@@ -1567,6 +1569,11 @@ exportCsvButton?.addEventListener("click", () => {
 });
 
 tagManagerSearchInput?.addEventListener("input", () => {
+  renderTagManager();
+});
+
+tagManagerSortSelect?.addEventListener("change", () => {
+  tagManagerSortMode = tagManagerSortSelect.value === "alpha" ? "alpha" : "usage";
   renderTagManager();
 });
 
@@ -7464,9 +7471,10 @@ function renderTagManager() {
     }
   }
 
-  const sorted = Array.from(tagCounts.entries()).sort(
-    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"),
-  );
+  const sorted = Array.from(tagCounts.entries()).sort((a, b) => {
+    if (tagManagerSortMode === "alpha") return a[0].localeCompare(b[0], "fr");
+    return b[1] - a[1] || a[0].localeCompare(b[0], "fr");
+  });
 
   const search = normalizeText(tagManagerSearchInput?.value ?? "");
   const filtered = search
@@ -7726,9 +7734,10 @@ function renderCategoryManager(el, cleanupBtn) {
     }
   }
 
-  const sorted = Array.from(categoryCounts.entries()).sort(
-    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"),
-  );
+  const sorted = Array.from(categoryCounts.entries()).sort((a, b) => {
+    if (tagManagerSortMode === "alpha") return a[0].localeCompare(b[0], "fr");
+    return b[1] - a[1] || a[0].localeCompare(b[0], "fr");
+  });
 
   const search = normalizeText(tagManagerSearchInput?.value ?? "");
   const filtered = search
