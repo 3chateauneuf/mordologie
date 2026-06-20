@@ -4573,6 +4573,26 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 
 /* Existing user: tips grid */
 
+.guide-tips-group {
+  display: block;
+}
+
+.guide-tips-group + .guide-tips-group {
+  margin-top: 28px;
+}
+
+.guide-tips-group-heading {
+  font-family: "Manrope", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ink-soft);
+}
+
 .guide-tips-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

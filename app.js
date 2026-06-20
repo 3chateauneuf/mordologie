@@ -11027,17 +11027,22 @@ function buildGuideForGuest() {
     {
       icon: "⏱",
       title: "Chrono précis",
-      desc: "Démarre et arrête à tout moment. Remplis le contexte avant ou pendant — la saisie manuelle permet de corriger après coup.",
+      desc: "Démarre, mets en pause, reprends, arrête. Sujet, catégorie, tags et notes restent éditables après coup via la saisie manuelle.",
     },
     {
       icon: "📅",
-      title: "Agenda intégré",
-      desc: "Vue semaine avec tes sessions tracées et tes réunions Google Calendar superposées. Glisse un bloc pour ajuster les horaires.",
+      title: "Agenda hebdo",
+      desc: "Vue semaine avec tes sessions et tes réunions Google Calendar superposées. Glisse, redimensionne ou clone un bloc — la persistance est automatique.",
     },
     {
-      icon: "📊",
-      title: "Analyses d'équipe",
-      desc: "Rapports hebdo / mensuel / annuel par collaborateur, catégorie et projet. Zéro export manuel.",
+      icon: "📱",
+      title: "Pocket mobile",
+      desc: "Compagnon léger sur ton téléphone pour voir la session en cours et l'arrêter depuis le terrain. Accessible sur /mobile, lien magique par email.",
+    },
+    {
+      icon: "🔎",
+      title: "Recherche & analyses",
+      desc: "Journal filtrable par syntaxe (#tag, cat:, @collab, \"phrase\"). Rapports hebdo / mensuel / annuel par collaborateur, catégorie et projet.",
     },
   ];
 
@@ -11081,18 +11086,23 @@ function buildGuideForNewUser(sessionCount, hasCalendar) {
     {
       done: sessionCount > 0,
       label: "Lancer ton premier chrono",
-      detail: "Remplis Sujet + Catégorie, clique ▶ Démarrer. Arrête quand tu finis. Un toast confirme l'enregistrement en bas à droite.",
+      detail: "Remplis Sujet + Catégorie (l'autocomplétion suggère d'abord ce que tu utilises le plus), clique ▶ Démarrer. Arrête quand tu finis — un toast confirme l'enregistrement en bas à droite.",
       action: { label: "Aller saisir", view: "cadre" },
+    },
+    {
+      done: false,
+      label: "Installer Pocket sur ton téléphone",
+      detail: "Ouvre mordologie.eduardodo.com/mobile depuis ton mobile, demande un lien magique avec ton email, puis ajoute la page à l'écran d'accueil. Pratique pour stopper une session sans rouvrir l'ordi.",
     },
     {
       done: hasCalendar,
       label: "Connecter Google Calendar",
-      detail: "Dans ton profil (avatar en haut), colle l'URL iCal privée de ton Google Calendar (Paramètres → Agendas → Adresse secrète au format iCal). Puis clique « Sync calendrier » dans la vue Agenda.",
+      detail: "Dans ton profil (avatar en haut à gauche), colle l'URL iCal privée de ton Google Calendar (Paramètres → Agendas → Adresse secrète au format iCal). Puis clique « Sync calendrier » dans la vue Agenda.",
     },
     {
       done: sessionCount >= 3,
       label: "Explorer les analyses",
-      detail: "La vue Gandalf montre la répartition du temps. Passe le curseur sur une barre de catégorie pour voir les tags détaillés de cette catégorie.",
+      detail: "Ma semaine affiche tes KPIs en cours ; bascule en Mois ou Année pour la lecture longue. La vue Manager montre la répartition par collaborateur et catégorie.",
       action: { label: "Voir les analyses", view: "manager" },
     },
   ];
@@ -11154,65 +11164,115 @@ function buildGuideForExistingUser(hasCalendar) {
   sub.textContent = "Ce que la plupart des utilisateurs découvrent trop tard.";
   head.append(title, sub);
 
-  const tips = [
+  root.append(head);
+
+  // Tips grouped by usage area — easier to scan than a flat 9-card grid.
+  const groups = [
     {
-      icon: "↕",
-      title: "Agenda : déplacer & redimensionner",
-      desc: "Glisse un bloc pour le déplacer sur la semaine. Étire la poignée en haut ou en bas pour ajuster le début ou la fin — tout sans ouvrir de formulaire.",
+      heading: "Journal & recherche",
+      tips: [
+        {
+          icon: "✎",
+          title: "Modifier un tag ou une catégorie sur place",
+          desc: "Dans le Journal, clique sur n'importe quel chip d'une entrée — un popover offre Renommer, Couleur (catégorie) ou Supprimer. La modification se propage sur tout l'historique en un clic.",
+        },
+        {
+          icon: "🔎",
+          title: "Recherche avec syntaxe",
+          desc: "La barre Recherche du Journal accepte une syntaxe légère : mot pour chercher dans projet/tâche/notes, #tag pour filtrer par tag, cat:nom pour la catégorie, @nom pour le collaborateur, \"phrase exacte\" pour un littéral. Les filtres actifs s'affichent en chips dessous.",
+        },
+        {
+          icon: "↑",
+          title: "Suggestions par fréquence",
+          desc: "L'autocomplétion (catégories, tags, projets) ouvre par défaut sur ce que tu utilises le plus dans les 60 derniers jours. L'alphabétique sert de départage. Pour le manager Tags / Catégories, un sélecteur permet de basculer entre Plus utilisés et A → Z.",
+        },
+      ],
     },
     {
-      icon: "✏️",
-      title: "Édition inline des chips",
-      desc: "Double-clic sur un tag ou une catégorie dans le formulaire pour l'éditer directement sur place. Entrée pour valider, Échap pour annuler.",
+      heading: "Agenda & planification",
+      tips: [
+        {
+          icon: "↕",
+          title: "Déplacer, redimensionner, cloner",
+          desc: "Glisse un bloc pour le déplacer sur la semaine. Étire les poignées haut/bas pour ajuster début ou fin. Alt+glisser clone le bloc — pratique pour répliquer un shift récurrent.",
+        },
+        {
+          icon: "⚡",
+          title: "Clic sur un créneau vide",
+          desc: "Clique n'importe quelle heure vide dans l'Agenda pour ouvrir la saisie avec début et fin déjà positionnés.",
+        },
+        {
+          icon: "📅",
+          title: hasCalendar ? "Google Calendar synchronisé" : "Connecter Google Calendar",
+          desc: hasCalendar
+            ? "Clique « Sync calendrier » dans l'Agenda pour importer les événements de la semaine. Clique un événement fantôme pour le convertir en vraie session qualifiée."
+            : "Colle l'URL iCal privée de ton Google Calendar dans ton profil. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
+        },
+      ],
     },
     {
-      icon: "📊",
-      title: "Survol des graphiques",
-      desc: "Dans Hobbit et Gandalf, passe le curseur sur une catégorie (barre ou légende du donut) : un tooltip liste tous les tags utilisés dans cette catégorie.",
+      heading: "Pocket & temps réel",
+      tips: [
+        {
+          icon: "📱",
+          title: "Pocket mobile",
+          desc: "Sur ton téléphone, mordologie.eduardodo.com/mobile montre la session en cours avec le chrono vivant et te laisse l'arrêter avec ou sans correction d'heure. Idéal quand tu finis loin de l'ordi. Connecte-toi avec un lien magique par email.",
+        },
+        {
+          icon: "🧭",
+          title: "Navigation semaine unifiée",
+          desc: "Sur la page d'accueil, Vue semaine et Ma semaine partagent la même semaine en cours : un clic prev/next dans l'un déplace les KPIs et l'agenda ensemble.",
+        },
+      ],
     },
     {
-      icon: "#",
-      title: "Tags : renommer & fusionner",
-      desc: "Dans le panneau latéral du Journal, tu peux renommer un tag sur tout l'historique ou le fusionner dans un autre — utile pour corriger une saisie passée.",
-    },
-    {
-      icon: "📅",
-      title: hasCalendar ? "Sync Google Calendar active" : "Connecter Google Calendar",
-      desc: hasCalendar
-        ? "Clique « Sync calendrier » dans l'Agenda pour importer les événements de la semaine. Clique un événement fantôme pour le convertir en vraie session qualifiée."
-        : "Colle l'URL iCal privée de ton Google Calendar dans ton profil. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
-    },
-    {
-      icon: "⚡",
-      title: "Clic sur l'agenda pour pré-remplir",
-      desc: "Clique sur n'importe quelle heure vide dans l'Agenda pour ouvrir la saisie avec début et fin déjà positionnés.",
-    },
-    {
-      icon: "🧠",
-      title: "Mémoire des projets",
-      desc: "L'app retient tes projets récents avec leurs catégories et tags. Le panneau latéral les propose pour une saisie en un clic — sans retaper à chaque fois.",
+      heading: "Maintenance & contexte",
+      tips: [
+        {
+          icon: "🔠",
+          title: "Filtrer la liste des tags & catégories",
+          desc: "Le panneau latéral du Journal a un filtre rapide au-dessus de la liste. Tape quelques lettres pour réduire à ce qui te concerne. La recherche persiste quand tu bascules Tags ↔ Catégories.",
+        },
+        {
+          icon: "🧠",
+          title: "Contextes mémorisés",
+          desc: "L'app retient tes projets récents avec leurs catégories, tags et lien Notion. Le panneau latéral en propose le top — clique Recharger pour pré-remplir la saisie en un clic.",
+        },
+      ],
     },
   ];
 
-  const grid = document.createElement("div");
-  grid.className = "guide-tips-grid";
+  for (const group of groups) {
+    const section = document.createElement("section");
+    section.className = "guide-tips-group";
 
-  for (const tip of tips) {
-    const card = document.createElement("div");
-    card.className = "guide-tip-card";
-    const icon = document.createElement("span");
-    icon.className = "guide-tip-icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = tip.icon;
-    const h = document.createElement("h3");
-    h.textContent = tip.title;
-    const p = document.createElement("p");
-    p.textContent = tip.desc;
-    card.append(icon, h, p);
-    grid.append(card);
+    const groupHead = document.createElement("h3");
+    groupHead.className = "guide-tips-group-heading";
+    groupHead.textContent = group.heading;
+    section.append(groupHead);
+
+    const grid = document.createElement("div");
+    grid.className = "guide-tips-grid";
+
+    for (const tip of group.tips) {
+      const card = document.createElement("div");
+      card.className = "guide-tip-card";
+      const icon = document.createElement("span");
+      icon.className = "guide-tip-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = tip.icon;
+      const h = document.createElement("h4");
+      h.textContent = tip.title;
+      const p = document.createElement("p");
+      p.textContent = tip.desc;
+      card.append(icon, h, p);
+      grid.append(card);
+    }
+
+    section.append(grid);
+    root.append(section);
   }
 
-  root.append(head, grid);
   return root;
 }
 
