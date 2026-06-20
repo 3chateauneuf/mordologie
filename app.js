@@ -2053,13 +2053,16 @@ function initializeAutocomplete() {
     {
       input: categoriesInput,
       getOptions: () => getCategorySuggestionLabels(),
-      allowCreate: () => canCreateSharedReferenceCatalog(),
+      allowCreate: () => canCreateSharedCategory(),
       createLabel: (value) => `Ajouter "${value}" comme nouvelle catégorie`,
       createValue: (value) =>
         createCategoryReference(value, {
           userName: collaboratorInput.value.trim(),
           projectName: projectInput.value.trim(),
         }),
+      allowRequest: () => canRequestSharedCategory(),
+      requestLabel: (value) => `Demander « ${value} » à l'admin`,
+      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags([value], currentTags);
         currentCategories = normalized.categories;
@@ -2120,13 +2123,16 @@ function initializeAutocomplete() {
     {
       input: manualCategoriesInput,
       getOptions: () => getCategorySuggestionLabels(),
-      allowCreate: () => canCreateSharedReferenceCatalog(),
+      allowCreate: () => canCreateSharedCategory(),
       createLabel: (value) => `Ajouter "${value}" comme nouvelle catégorie`,
       createValue: (value) =>
         createCategoryReference(value, {
           userName: manualCollaboratorInput.value.trim(),
           projectName: manualProjectInput.value.trim(),
         }),
+      allowRequest: () => canRequestSharedCategory(),
+      requestLabel: (value) => `Demander « ${value} » à l'admin`,
+      requestValue: (value) => openCategoryRequestDialog(value, manualEditingSessionId ? findSessionById(manualEditingSessionId)?.dbTimeEntryId ?? null : null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags(
           [value],
@@ -2151,6 +2157,16 @@ function initializeAutocomplete() {
       input: plannedCategoryInput,
       anchor: plannedCategoryInput.closest(".dialog-card"),
       getOptions: () => getCategorySuggestionLabels(),
+      allowCreate: () => canCreateSharedCategory(),
+      createLabel: (value) => `Ajouter "${value}" comme nouvelle catégorie`,
+      createValue: (value) =>
+        createCategoryReference(value, {
+          userName: "",
+          projectName: "",
+        }),
+      allowRequest: () => canRequestSharedCategory(),
+      requestLabel: (value) => `Demander « ${value} » à l'admin`,
+      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags([value], plannedCurrentTags);
         plannedCurrentCategories = normalized.categories;
@@ -2418,6 +2434,17 @@ function buildAutocompleteItems(config, query) {
     });
   }
 
+  // Falls back to "request from admin" when the user can't create directly.
+  // Used today for categories so the team keeps a canonical taxonomy.
+  const allowRequest = typeof config.allowRequest === "function" ? config.allowRequest() : config.allowRequest;
+  if (allowRequest && !allowCreate && normalizedQuery && !exactMatch) {
+    matches.push({
+      type: "request",
+      value: query,
+      label: config.requestLabel ? config.requestLabel(query) : `Demander "${query}" à l'admin`,
+    });
+  }
+
   return matches;
 }
 
@@ -2540,6 +2567,14 @@ async function applyAutocompleteItem(item, config) {
     if (!nextValue) {
       return;
     }
+  }
+
+  // "request" items don't apply the typed value — they open a request
+  // dialog and leave the input untouched until the admin decides.
+  if (item.type === "request" && config.requestValue) {
+    hideAutocomplete();
+    await config.requestValue(item.value);
+    return;
   }
 
   config.applyValue(nextValue);
@@ -5469,6 +5504,19 @@ function canCreateSharedReferenceCatalog() {
 function canManageSharedCategoryColors() {
   const role = getAccessRole();
   return role === "manager" || role === "admin";
+}
+
+// Categories are canonical for the team. Only admin/manager can mint a new
+// one directly from autocomplete; everyone else who is signed in can ask
+// for one to be added through the request flow (canRequestSharedCategory).
+function canCreateSharedCategory() {
+  const role = getAccessRole();
+  return role === "manager" || role === "admin";
+}
+
+function canRequestSharedCategory() {
+  if (canCreateSharedCategory()) return false;
+  return Boolean(accessProfile.appUser?.user_id);
 }
 
 function getEffectiveCollaboratorValue(rawValue = "") {
@@ -13301,6 +13349,106 @@ function colorForLabel(label) {
 //   isn't cached). This is the last function defined; boot happens via
 //   the calls at the very bottom of the file.
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: CATEGORY REQUEST FLOW
+// Purpose: Categories are canonical for the team. Cadre users (non-admin /
+//   non-manager) can ask for a new one through this dialog instead of
+//   minting it directly. The request lands in public.category_requests
+//   and is decided later by an admin/manager. Phase B (admin decision +
+//   notifications + deep-link to source entry) is a separate commit.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const categoryRequestDialog          = document.querySelector("#category-request-dialog");
+const categoryRequestLabelInput      = document.querySelector("#category-request-label");
+const categoryRequestJustification   = document.querySelector("#category-request-justification");
+const categoryRequestError           = document.querySelector("#category-request-error");
+const categoryRequestSubmitBtn       = document.querySelector("#category-request-submit");
+const categoryRequestCancelBtn       = document.querySelector("#category-request-cancel");
+let categoryRequestState = null;
+
+function openCategoryRequestDialog(label, sourceTimeEntryId) {
+  if (!categoryRequestDialog) return;
+  const trimmed = String(label ?? "").trim();
+  if (!trimmed) return;
+  categoryRequestState = { label: trimmed, sourceTimeEntryId: sourceTimeEntryId ?? null };
+  if (categoryRequestLabelInput) categoryRequestLabelInput.value = trimmed;
+  if (categoryRequestJustification) categoryRequestJustification.value = "";
+  if (categoryRequestError) {
+    categoryRequestError.textContent = "";
+    categoryRequestError.hidden = true;
+  }
+  if (categoryRequestSubmitBtn) {
+    categoryRequestSubmitBtn.disabled = false;
+    categoryRequestSubmitBtn.textContent = "Envoyer la demande";
+  }
+  categoryRequestDialog.showModal();
+  requestAnimationFrame(() => categoryRequestJustification?.focus());
+}
+
+function closeCategoryRequestDialog() {
+  if (categoryRequestDialog?.open) categoryRequestDialog.close();
+  categoryRequestState = null;
+}
+
+async function submitCategoryRequestDraft() {
+  if (!categoryRequestState || !window.supabase) return;
+  const appUser = accessProfile.appUser;
+  if (!appUser?.user_id || !appUser?.user_name) {
+    if (categoryRequestError) {
+      categoryRequestError.textContent = "Identifie-toi pour envoyer une demande.";
+      categoryRequestError.hidden = false;
+    }
+    return;
+  }
+
+  const payload = {
+    user_id:              appUser.user_id,
+    user_name:            appUser.user_name,
+    label:                categoryRequestState.label,
+    justification:        (categoryRequestJustification?.value ?? "").trim() || null,
+    source_time_entry_id: categoryRequestState.sourceTimeEntryId,
+  };
+
+  if (categoryRequestSubmitBtn) {
+    categoryRequestSubmitBtn.disabled = true;
+    categoryRequestSubmitBtn.textContent = "Envoi…";
+  }
+
+  const { error } = await window.supabase
+    .from("category_requests")
+    .insert([payload]);
+
+  if (error) {
+    console.warn("category_requests insert failed:", error);
+    if (categoryRequestError) {
+      categoryRequestError.textContent = "Envoi impossible. Réessaie dans un instant.";
+      categoryRequestError.hidden = false;
+    }
+    if (categoryRequestSubmitBtn) {
+      categoryRequestSubmitBtn.disabled = false;
+      categoryRequestSubmitBtn.textContent = "Envoyer la demande";
+    }
+    return;
+  }
+
+  setAuthStatusMessage(`Demande envoyée pour « ${categoryRequestState.label} ».`, "success", { persistMs: 2800 });
+  closeCategoryRequestDialog();
+}
+
+categoryRequestSubmitBtn?.addEventListener("click", (event) => {
+  event.preventDefault();
+  void submitCategoryRequestDraft();
+});
+
+categoryRequestCancelBtn?.addEventListener("click", (event) => {
+  event.preventDefault();
+  closeCategoryRequestDialog();
+});
+
+categoryRequestDialog?.addEventListener("close", () => {
+  categoryRequestState = null;
+});
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {

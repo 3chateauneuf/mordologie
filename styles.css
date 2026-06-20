@@ -5635,3 +5635,51 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .guide-hero--compact .guide-hero-sub {
   font-size: 0.92rem;
 }
+
+
+/* ==========================================================================
+   SECTION: CATEGORY REQUEST DIALOG
+   Purpose: Minimal styling for the "Demander une catégorie" dialog —
+     readonly label field, justification textarea, error message hook.
+     Reuses the existing dialog-shell / dialog-card chrome.
+   ========================================================================== */
+
+#category-request-dialog .auth-field input[readonly],
+#category-request-dialog .auth-field input[readonly]:focus {
+  background: var(--ink-soft);
+  cursor: default;
+  color: var(--text);
+  font-weight: 600;
+}
+
+#category-request-dialog textarea {
+  width: 100%;
+  min-height: 86px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-input);
+  background: var(--panel-strong);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#category-request-dialog textarea:focus {
+  border-color: var(--accent);
+}
+
+#category-request-dialog textarea::placeholder {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.category-request-error {
+  color: var(--danger);
+  font-size: 0.82rem;
+  margin: 0;
+}

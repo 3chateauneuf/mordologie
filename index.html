@@ -1147,6 +1147,39 @@
       </form>
     </dialog>
 
+    <dialog id="category-request-dialog" class="dialog-shell">
+      <form method="dialog" class="dialog-card">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Catégorie</p>
+            <h2>Demander une nouvelle catégorie</h2>
+          </div>
+          <button type="submit" class="dialog-close" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        </div>
+
+        <div class="dialog-body">
+          <p class="muted-copy">Les catégories sont canoniques pour toute l'équipe. Un admin ou manager doit valider l'ajout avant qu'elle apparaisse dans la liste.</p>
+
+          <label class="auth-field">
+            <span>Libellé proposé</span>
+            <input id="category-request-label" type="text" readonly />
+          </label>
+
+          <label class="auth-field">
+            <span>Pourquoi cette catégorie ?</span>
+            <textarea id="category-request-justification" rows="3" placeholder="Ex. Sessions de support client niveau 2 — sortie de « Support client » pour distinguer la dette technique des nouvelles demandes."></textarea>
+          </label>
+
+          <p id="category-request-error" class="muted-copy category-request-error" hidden></p>
+        </div>
+
+        <div class="dialog-actions">
+          <button id="category-request-cancel" type="button" class="btn btn-secondary">Annuler</button>
+          <button id="category-request-submit" type="button" class="btn btn-primary">Envoyer la demande</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="field-manage-dialog" class="dialog-shell">
       <form method="dialog" class="dialog-card">
         <div class="dialog-head">
