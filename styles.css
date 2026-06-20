@@ -4621,3 +4621,155 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
     display: none;
   }
 }
+
+
+/* ==========================================================================
+   SECTION: CHIP ACTION POPOVER
+   Purpose: Anchored popover triggered by clicking a tag or category chip
+     in a journal entry — actions for rename, color (categories only),
+     and global delete. Positioned absolutely via JS in setupChipAction*.
+   ========================================================================== */
+
+.session-categories .pill,
+.session-tags .pill {
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.08s;
+}
+
+.session-categories .pill:hover,
+.session-tags .pill:hover {
+  filter: brightness(0.95);
+}
+
+.session-categories .pill:active,
+.session-tags .pill:active {
+  transform: scale(0.97);
+}
+
+.chip-action-popover {
+  position: absolute;
+  z-index: 200;
+  min-width: 200px;
+  max-width: 280px;
+  padding: 8px;
+  background: var(--panel-strong);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-panel);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.46),
+    0 8px 24px rgba(39, 56, 68, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chip-action-popover[hidden] {
+  display: none;
+}
+
+.chip-action-header {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 4px 6px 6px;
+}
+
+.chip-action-label {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+}
+
+.chip-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chip-action-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: var(--radius-input);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.chip-action-btn:hover:not(:disabled) {
+  background: var(--ink-soft);
+}
+
+.chip-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.chip-action-btn.is-primary {
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+}
+
+.chip-action-btn.is-primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.chip-action-btn.is-danger {
+  color: var(--danger);
+}
+
+.chip-action-btn.is-danger:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.10);
+}
+
+.chip-action-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.chip-action-buttons .chip-action-btn {
+  flex: 1;
+  text-align: center;
+}
+
+.chip-action-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-input);
+  font: inherit;
+  font-size: 14px;
+  background: var(--panel-soft);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.chip-action-input:focus {
+  border-color: var(--accent);
+}
+
+.chip-action-color-input {
+  width: 100%;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-input);
+  cursor: pointer;
+}
+
+.chip-action-explain {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 0 6px;
+  line-height: 1.45;
+}

@@ -898,6 +898,7 @@ window.scrollTo(0, 0);
 initializeAutocomplete();
 applyBookFavicon();
 initializeViewNavigation();
+setupChipActionDelegation();
 
 hydrateFormFromActiveSession();
 setDefaultReportAnchor();
@@ -7647,6 +7648,25 @@ async function applyTagRename(oldTag, newTag) {
   await loadServerBackedState({ silent: false });
 }
 
+// Global tag deletion — mirrors applyTagRename but removes the tag from
+// the array on every affected row. Used by the chip-action popover.
+async function applyTagDeletion(tag) {
+  if (!window.supabase) return;
+  const affected = getSessionsWithPendingStopped().filter(
+    (s) => (s.tags ?? []).includes(tag) && s.dbTimeEntryId,
+  );
+  for (const session of affected) {
+    const tags = dedupePreservingOrder(
+      (session.tags ?? []).filter((t) => t !== tag),
+    );
+    await window.supabase
+      .from("time_entries")
+      .update({ tags_text: tags.join(", "), updated_at: new Date().toISOString() })
+      .eq("time_entry_id", session.dbTimeEntryId);
+  }
+  await loadServerBackedState({ silent: false });
+}
+
 async function cleanupHistoricalTags(btn) {
   if (!window.supabase) return;
   if (btn) { btn.disabled = true; btn.textContent = "…"; }
@@ -7866,6 +7886,26 @@ async function applyCategoryRename(oldCat, newCat) {
   await loadServerBackedState({ silent: false });
 }
 
+// Global category deletion — mirrors applyCategoryRename but clears the
+// category fields on every affected row. Used by the chip-action popover.
+async function applyCategoryDeletion(cat) {
+  if (!window.supabase) return;
+  const affected = getSessionsWithPendingStopped().filter(
+    (s) => (s.categories ?? []).includes(cat) && s.dbTimeEntryId,
+  );
+  for (const session of affected) {
+    await window.supabase
+      .from("time_entries")
+      .update({
+        activity_category_label: null,
+        activity_category_id:    null,
+        updated_at:              new Date().toISOString(),
+      })
+      .eq("time_entry_id", session.dbTimeEntryId);
+  }
+  await loadServerBackedState({ silent: false });
+}
+
 function renderProjectMemoryList() {
   projectMemoryList.innerHTML = "";
   const collaborator = getCurrentCollaborator();
@@ -7956,6 +7996,287 @@ function getFilteredJournalSessions(rows) {
     }
 
     return true;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: CHIP ACTION POPOVER
+// Purpose: Tap/click on a category or tag chip inside a journal entry
+//   opens an anchored popover with Renommer / Couleur (categories only) /
+//   Supprimer. Capture-form chips are unaffected — only pills inside
+//   .session-categories and .session-tags react to the click. Reuses
+//   applyTagRename, applyCategoryRename, and saveCategoryColor; delegates
+//   global delete to applyTagDeletion / applyCategoryDeletion above.
+// ═══════════════════════════════════════════════════════════════════════════
+
+let chipActionPopover = null;
+let chipActionState = null;
+
+function ensureChipActionPopover() {
+  if (chipActionPopover) return chipActionPopover;
+  chipActionPopover = document.createElement("div");
+  chipActionPopover.className = "chip-action-popover";
+  chipActionPopover.hidden = true;
+  document.body.append(chipActionPopover);
+
+  document.addEventListener("pointerdown", (event) => {
+    if (chipActionPopover.hidden) return;
+    if (chipActionPopover.contains(event.target)) return;
+    if (chipActionState?.chip === event.target) return;
+    closeChipActionPopover();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !chipActionPopover.hidden) {
+      closeChipActionPopover();
+    }
+  });
+  window.addEventListener("resize", () => {
+    if (chipActionState?.chip) positionChipActionPopover(chipActionState.chip);
+  });
+  window.addEventListener("scroll", () => {
+    if (chipActionState?.chip) positionChipActionPopover(chipActionState.chip);
+  }, true);
+  return chipActionPopover;
+}
+
+function openChipActionPopover(chip, kind, value) {
+  ensureChipActionPopover();
+  chipActionState = { chip, kind, value };
+  renderChipActionDefault();
+  chipActionPopover.hidden = false;
+  positionChipActionPopover(chip);
+}
+
+function closeChipActionPopover() {
+  if (!chipActionPopover) return;
+  chipActionPopover.hidden = true;
+  chipActionState = null;
+}
+
+function positionChipActionPopover(chip) {
+  if (!chipActionPopover) return;
+  const rect = chip.getBoundingClientRect();
+  const popRect = chipActionPopover.getBoundingClientRect();
+  const margin = 6;
+  let top = rect.bottom + window.scrollY + margin;
+  let left = rect.left + window.scrollX;
+  if (rect.bottom + popRect.height + margin > window.innerHeight) {
+    top = rect.top + window.scrollY - popRect.height - margin;
+  }
+  const maxLeft = window.scrollX + window.innerWidth - popRect.width - 8;
+  if (left > maxLeft) left = Math.max(window.scrollX + 8, maxLeft);
+  if (left < window.scrollX + 8) left = window.scrollX + 8;
+  chipActionPopover.style.top = `${top}px`;
+  chipActionPopover.style.left = `${left}px`;
+}
+
+function renderChipActionDefault() {
+  if (!chipActionState) return;
+  const { kind, value } = chipActionState;
+  chipActionPopover.innerHTML = "";
+
+  const header = document.createElement("div");
+  header.className = "chip-action-header";
+  const label = document.createElement("span");
+  label.className = "chip-action-label";
+  label.textContent = kind === "tag" ? `#${value}` : value;
+  header.append(label);
+  chipActionPopover.append(header);
+
+  const list = document.createElement("div");
+  list.className = "chip-action-list";
+
+  const renameBtn = document.createElement("button");
+  renameBtn.type = "button";
+  renameBtn.className = "chip-action-btn";
+  renameBtn.textContent = "Renommer";
+  renameBtn.addEventListener("click", () => renderChipActionRename());
+  list.append(renameBtn);
+
+  if (kind === "category") {
+    const colorBtn = document.createElement("button");
+    colorBtn.type = "button";
+    colorBtn.className = "chip-action-btn";
+    colorBtn.textContent = "Couleur";
+    colorBtn.addEventListener("click", () => renderChipActionColor());
+    list.append(colorBtn);
+  }
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "chip-action-btn is-danger";
+  deleteBtn.textContent = "Supprimer";
+  deleteBtn.addEventListener("click", () => renderChipActionDeleteConfirm());
+  list.append(deleteBtn);
+
+  chipActionPopover.append(list);
+}
+
+function renderChipActionRename() {
+  if (!chipActionState) return;
+  const { kind, value } = chipActionState;
+  chipActionPopover.innerHTML = "";
+
+  const title = document.createElement("div");
+  title.className = "chip-action-header";
+  title.textContent = "Renommer";
+  chipActionPopover.append(title);
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "chip-action-input";
+  input.value = value;
+  chipActionPopover.append(input);
+
+  const buttons = document.createElement("div");
+  buttons.className = "chip-action-buttons";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "chip-action-btn";
+  cancelBtn.textContent = "Annuler";
+  cancelBtn.addEventListener("click", () => renderChipActionDefault());
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "chip-action-btn is-primary";
+  confirmBtn.textContent = "Valider";
+
+  const doRename = async () => {
+    const raw = input.value;
+    const newValue = kind === "tag" ? normalizeTag(raw) : raw.trim();
+    if (!newValue || newValue === value) {
+      renderChipActionDefault();
+      return;
+    }
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "…";
+    if (kind === "tag") {
+      await applyTagRename(value, newValue);
+    } else {
+      await applyCategoryRename(value, newValue);
+    }
+    closeChipActionPopover();
+  };
+
+  confirmBtn.addEventListener("click", doRename);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); doRename(); }
+    if (e.key === "Escape") { e.preventDefault(); renderChipActionDefault(); }
+  });
+
+  buttons.append(cancelBtn, confirmBtn);
+  chipActionPopover.append(buttons);
+  requestAnimationFrame(() => { input.focus(); input.select(); });
+  if (chipActionState?.chip) positionChipActionPopover(chipActionState.chip);
+}
+
+function renderChipActionColor() {
+  if (!chipActionState || chipActionState.kind !== "category") return;
+  const { value } = chipActionState;
+  chipActionPopover.innerHTML = "";
+
+  const title = document.createElement("div");
+  title.className = "chip-action-header";
+  title.textContent = "Couleur";
+  chipActionPopover.append(title);
+
+  const input = document.createElement("input");
+  input.type = "color";
+  input.className = "chip-action-color-input";
+  input.value = getCategoryColor(value);
+  chipActionPopover.append(input);
+
+  const buttons = document.createElement("div");
+  buttons.className = "chip-action-buttons";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "chip-action-btn";
+  cancelBtn.textContent = "Annuler";
+  cancelBtn.addEventListener("click", () => renderChipActionDefault());
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "chip-action-btn is-primary";
+  confirmBtn.textContent = "Valider";
+  confirmBtn.addEventListener("click", async () => {
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "…";
+    await saveCategoryColor(value, input.value);
+    closeChipActionPopover();
+  });
+
+  buttons.append(cancelBtn, confirmBtn);
+  chipActionPopover.append(buttons);
+  if (chipActionState?.chip) positionChipActionPopover(chipActionState.chip);
+}
+
+function renderChipActionDeleteConfirm() {
+  if (!chipActionState) return;
+  const { kind, value } = chipActionState;
+  chipActionPopover.innerHTML = "";
+
+  const title = document.createElement("div");
+  title.className = "chip-action-header";
+  title.textContent = "Supprimer ?";
+  chipActionPopover.append(title);
+
+  const explain = document.createElement("p");
+  explain.className = "chip-action-explain";
+  explain.textContent = kind === "tag"
+    ? `Le tag #${value} sera retiré de toutes les entrées.`
+    : `La catégorie « ${value} » sera retirée de toutes les entrées.`;
+  chipActionPopover.append(explain);
+
+  const buttons = document.createElement("div");
+  buttons.className = "chip-action-buttons";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "chip-action-btn";
+  cancelBtn.textContent = "Annuler";
+  cancelBtn.addEventListener("click", () => renderChipActionDefault());
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "chip-action-btn is-danger";
+  confirmBtn.textContent = "Supprimer";
+  confirmBtn.addEventListener("click", async () => {
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "…";
+    if (kind === "tag") {
+      await applyTagDeletion(value);
+    } else {
+      await applyCategoryDeletion(value);
+    }
+    closeChipActionPopover();
+  });
+
+  buttons.append(cancelBtn, confirmBtn);
+  chipActionPopover.append(buttons);
+  if (chipActionState?.chip) positionChipActionPopover(chipActionState.chip);
+}
+
+function setupChipActionDelegation() {
+  if (!sessionList) return;
+  sessionList.addEventListener("click", (event) => {
+    const chip = event.target.closest(".pill");
+    if (!chip || !sessionList.contains(chip)) return;
+    if (!chip.closest(".session-categories, .session-tags")) return;
+
+    const kind = chip.dataset.kind;
+    if (kind !== "category" && kind !== "tag") return;
+
+    let value = chip.textContent.trim();
+    if (kind === "tag" && value.startsWith("#")) value = value.slice(1);
+    if (!value) return;
+
+    event.stopPropagation();
+    openChipActionPopover(chip, kind, value);
   });
 }
 
