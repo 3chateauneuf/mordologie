@@ -4927,3 +4927,253 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .tag-manager-search-input::placeholder {
   opacity: 0.5;
 }
+
+
+/* ==========================================================================
+   SECTION: JOURNAL EDITORIAL HIERARCHY (visual redesign)
+   Purpose: Project-first hierarchy for the journal. Reduces visual noise,
+     establishes a clear typographic scale, anchors each entry to its primary
+     category color via a left bar, moves actions out of the default state
+     and into hover-reveal. Numbers are monospace for vertical scanning.
+     Pure CSS override — no DOM changes. Loads last so the cascade resolves
+     in favor of these rules over the legacy session-item styles above.
+   ========================================================================== */
+
+/* ── Day header ─────────────────────────────────────────────────────────── */
+
+.journal-day-group + .journal-day-group {
+  margin-top: 36px;
+}
+
+.journal-day-header {
+  align-items: baseline;
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid var(--ink-soft);
+}
+
+.journal-day-title {
+  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+  font-size: 1.32rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+  color: var(--text);
+  line-height: 1.15;
+}
+
+.journal-day-subtitle {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.journal-day-total {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.journal-day-list {
+  gap: 0;
+  margin-top: 2px;
+}
+
+/* ── Entry row ──────────────────────────────────────────────────────────── */
+
+.session-item {
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--ink-soft);
+  border-left: 3px solid var(--journal-entry-bar, rgba(0, 0, 0, 0.10));
+  padding: 14px 14px 14px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 18px;
+  align-items: start;
+  transition: background 0.15s ease, border-left-color 0.15s ease;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.journal-day-list .session-item:last-child {
+  border-bottom: none;
+}
+
+.session-item:hover {
+  background: rgba(13, 148, 136, 0.04);
+  transform: none;
+  box-shadow: none;
+  border-color: transparent transparent var(--ink-soft) var(--journal-entry-bar, rgba(0, 0, 0, 0.20));
+}
+
+.session-item:focus-visible {
+  outline: 2px solid rgba(13, 148, 136, 0.30);
+  outline-offset: -2px;
+}
+
+/* ── Left content column ────────────────────────────────────────────────── */
+
+.session-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 1px 0;
+}
+
+.session-task {
+  font-family: "Manrope", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-activity {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: 0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-meta-row {
+  margin-top: 6px;
+  gap: 5px;
+  min-height: 0;
+  padding-top: 0;
+}
+
+/* ── Pills — desaturated, outlined, low chrome ──────────────────────────── */
+
+.session-categories .pill {
+  padding: 2px 9px;
+  background: transparent;
+  border: 1px solid var(--journal-entry-bar, rgba(13, 148, 136, 0.30));
+  color: var(--journal-entry-bar, var(--accent-strong));
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-height: 0;
+  border-radius: 99px;
+  line-height: 1.6;
+}
+
+.session-tags .pill {
+  padding: 2px 9px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  min-height: 0;
+  border-radius: 99px;
+  line-height: 1.6;
+}
+
+.session-notes {
+  font-size: 0.81rem;
+  line-height: 1.5;
+  color: var(--muted);
+  font-style: italic;
+  margin: 8px 0 0;
+  padding: 0 0 0 8px;
+  border-left: 2px solid var(--ink-soft);
+}
+
+/* ── Right side column — timing + actions ───────────────────────────────── */
+
+.session-side {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 6px;
+  justify-items: end;
+  text-align: right;
+  align-content: start;
+  padding: 1px 0;
+}
+
+.session-timing {
+  display: grid;
+  gap: 1px;
+  justify-items: end;
+  align-content: start;
+}
+
+.session-time-range {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.session-duration {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  letter-spacing: 0;
+  margin: 0;
+  line-height: 1.15;
+}
+
+/* ── Actions — hover-reveal ─────────────────────────────────────────────── */
+
+.session-actions {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.session-item:hover .session-actions,
+.session-item:focus-within .session-actions {
+  opacity: 1;
+}
+
+.session-edit-button,
+.session-delete-button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.session-edit-button:hover {
+  transform: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+
+.session-delete-button:hover {
+  transform: none;
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  border: none;
+}

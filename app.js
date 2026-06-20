@@ -8578,6 +8578,11 @@ function renderSessionList() {
       renderPills(categoriesElement, (session.categories ?? []).slice(0, 1), { kind: "category" });
       categoriesElement.hidden = !(session.categories ?? []).length;
 
+      // Expose the primary category color as a CSS var so the entry row can
+      // anchor its left bar (and pill outline) to the category's identity.
+      const primaryCategory = (session.categories ?? [])[0];
+      if (primaryCategory) item.style.setProperty("--journal-entry-bar", getCategoryColor(primaryCategory));
+
       const tagsElement = fragment.querySelector(".session-tags");
       tagsElement.innerHTML = "";
       renderPills(tagsElement, (session.tags ?? []).slice(0, 3).map((tag) => `#${tag}`), { kind: "tag" });
