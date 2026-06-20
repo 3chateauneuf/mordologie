@@ -4906,3 +4906,24 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   font-family: ui-monospace, "SF Mono", monospace;
   color: var(--text);
 }
+
+
+/* ==========================================================================
+   SECTION: TAG / CATEGORY MANAGER SEARCH
+   Purpose: Quick-filter input above the tag and category manager list.
+     One input filters both modes (Tags / Catégories) — switching modes
+     keeps the search value so the filter context is consistent.
+   ========================================================================== */
+
+.tag-manager-search {
+  padding: 8px 0 4px;
+}
+
+.tag-manager-search-input {
+  width: 100%;
+  font-size: 13px;
+}
+
+.tag-manager-search-input::placeholder {
+  opacity: 0.5;
+}

@@ -363,6 +363,7 @@ const journalFilterHelpButton    = document.querySelector("#journal-filter-help"
 const journalFilterHelpPanel     = document.querySelector("#journal-filter-help-panel");
 const journalFilterResetButton = document.querySelector("#journal-filter-reset");
 const journalSideSwitch = document.querySelector("#journal-side-switch");
+const tagManagerSearchInput = document.querySelector("#tag-manager-search");
 const projectMemoryList = document.querySelector("#project-memory-list");
 const sessionItemTemplate = document.querySelector("#session-item-template");
 const resourceTotal = document.querySelector("#resource-total");
@@ -1563,6 +1564,10 @@ exportCsvButton?.addEventListener("click", () => {
   input?.addEventListener("change", () => {
     renderSessionList();
   });
+});
+
+tagManagerSearchInput?.addEventListener("input", () => {
+  renderTagManager();
 });
 
 journalSideSwitch?.addEventListener("click", (event) => {
@@ -7463,10 +7468,21 @@ function renderTagManager() {
     (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"),
   );
 
+  const search = normalizeText(tagManagerSearchInput?.value ?? "");
+  const filtered = search
+    ? sorted.filter(([tag]) => normalizeText(tag).includes(search))
+    : sorted;
+
   el.innerHTML = "";
 
   if (!sorted.length) {
     el.append(createEmptyState("Aucun tag enregistré."));
+    if (cleanupBtn) cleanupBtn.hidden = true;
+    return;
+  }
+
+  if (!filtered.length) {
+    el.append(createEmptyState("Aucun tag ne correspond à la recherche."));
     if (cleanupBtn) cleanupBtn.hidden = true;
     return;
   }
@@ -7480,7 +7496,7 @@ function renderTagManager() {
   }
 
   const allTags = sorted.map(([tag]) => tag);
-  for (const [tag, count] of sorted) {
+  for (const [tag, count] of filtered) {
     el.append(buildTagItem(tag, count, allTags));
   }
 }
@@ -7714,13 +7730,23 @@ function renderCategoryManager(el, cleanupBtn) {
     (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"),
   );
 
+  const search = normalizeText(tagManagerSearchInput?.value ?? "");
+  const filtered = search
+    ? sorted.filter(([cat]) => normalizeText(cat).includes(search))
+    : sorted;
+
   if (!sorted.length) {
     el.append(createEmptyState("Aucune catégorie enregistrée."));
     return;
   }
 
+  if (!filtered.length) {
+    el.append(createEmptyState("Aucune catégorie ne correspond à la recherche."));
+    return;
+  }
+
   const allCategories = sorted.map(([cat]) => cat);
-  for (const [cat, count] of sorted) {
+  for (const [cat, count] of filtered) {
     el.append(buildCategoryItem(cat, count, allCategories));
   }
 }
