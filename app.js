@@ -352,9 +352,15 @@ const usersAdminShell = document.querySelector("#users-admin-shell");
 const sessionList = document.querySelector("#session-list");
 const journalFilterFromInput = document.querySelector("#journal-filter-from");
 const journalFilterToInput = document.querySelector("#journal-filter-to");
+// Legacy filter inputs replaced by the unified search — refs kept null-safe
+// so callers using `?.value` still work; the actual DOM nodes no longer exist.
 const journalFilterCategoryInput = document.querySelector("#journal-filter-category");
 const journalFilterTagsInput = document.querySelector("#journal-filter-tags");
 const journalFilterSubjectInput = document.querySelector("#journal-filter-subject");
+const journalFilterSearchInput   = document.querySelector("#journal-filter-search");
+const journalFilterActiveChips   = document.querySelector("#journal-filter-active-chips");
+const journalFilterHelpButton    = document.querySelector("#journal-filter-help");
+const journalFilterHelpPanel     = document.querySelector("#journal-filter-help-panel");
 const journalFilterResetButton = document.querySelector("#journal-filter-reset");
 const journalSideSwitch = document.querySelector("#journal-side-switch");
 const projectMemoryList = document.querySelector("#project-memory-list");
@@ -899,6 +905,8 @@ initializeAutocomplete();
 applyBookFavicon();
 initializeViewNavigation();
 setupChipActionDelegation();
+setupJournalUnifiedSearch();
+applyDefaultJournalDateRange();
 
 hydrateFormFromActiveSession();
 setDefaultReportAnchor();
@@ -1573,11 +1581,12 @@ document.getElementById("journal-add-btn")?.addEventListener("click", () => {
 });
 
 journalFilterResetButton?.addEventListener("click", () => {
-  if (journalFilterFromInput) journalFilterFromInput.value = "";
-  if (journalFilterToInput) journalFilterToInput.value = "";
   if (journalFilterCategoryInput) journalFilterCategoryInput.value = "";
   if (journalFilterTagsInput) journalFilterTagsInput.value = "";
   if (journalFilterSubjectInput) journalFilterSubjectInput.value = "";
+  if (journalFilterSearchInput) journalFilterSearchInput.value = "";
+  applyDefaultJournalDateRange();
+  renderJournalActiveFilterChips();
   renderSessionList();
 });
 
@@ -2167,6 +2176,7 @@ function initializeAutocomplete() {
   ];
 
   for (const config of configs) {
+    if (!config.input) continue;
     setupAutocompleteInput(config);
   }
 
@@ -7965,9 +7975,7 @@ function renderProjectMemoryList() {
 function getFilteredJournalSessions(rows) {
   const fromDate = journalFilterFromInput?.value ? new Date(`${journalFilterFromInput.value}T00:00:00`) : null;
   const toDate = journalFilterToInput?.value ? new Date(`${journalFilterToInput.value}T23:59:59.999`) : null;
-  const categoryFilter = normalizeText(journalFilterCategoryInput?.value ?? "");
-  const tagFilter = normalizeText(String(journalFilterTagsInput?.value ?? "").replace(/^#/, ""));
-  const subjectFilter = normalizeText(journalFilterSubjectInput?.value ?? "");
+  const searchTokens = getJournalSearchTokens();
 
   return rows.filter((session) => {
     const start = new Date(session.start);
@@ -7977,24 +7985,9 @@ function getFilteredJournalSessions(rows) {
     if (toDate && start > toDate) {
       return false;
     }
-    if (
-      categoryFilter &&
-      !(session.categories ?? []).some((category) => normalizeText(category).includes(categoryFilter))
-    ) {
+    if (!sessionMatchesJournalTokens(session, searchTokens)) {
       return false;
     }
-    if (
-      tagFilter &&
-      !(session.tags ?? []).some((tag) => normalizeText(tag).includes(tagFilter))
-    ) {
-      return false;
-    }
-
-    const subjectHaystack = normalizeText([session.project, session.task].filter(Boolean).join(" · "));
-    if (subjectFilter && !subjectHaystack.includes(subjectFilter)) {
-      return false;
-    }
-
     return true;
   });
 }
@@ -8278,6 +8271,175 @@ function setupChipActionDelegation() {
     event.stopPropagation();
     openChipActionPopover(chip, kind, value);
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: JOURNAL UNIFIED SEARCH
+// Purpose: Single-input filter that replaces the legacy three-input filter
+//   row (category, tags, subject). Lightweight syntax:
+//     bare word  → substring in project, task, or notes
+//     #tag       → tag must contain
+//     cat:value  → category must contain
+//     @collab    → collaborator must contain
+//     "phrase"   → literal substring in project, task, or notes
+//   Active tokens render as dismissible chips below the input. Date range
+//   inputs and renderSessionList's own logic are unchanged otherwise.
+// ═══════════════════════════════════════════════════════════════════════════
+
+function parseJournalSearchQuery(input) {
+  const tokens = [];
+  const text = String(input ?? "");
+  let i = 0;
+  while (i < text.length) {
+    while (i < text.length && /\s/.test(text[i])) i++;
+    if (i >= text.length) break;
+
+    if (text[i] === '"') {
+      const start = i + 1;
+      let end = text.indexOf('"', start);
+      if (end === -1) end = text.length;
+      const value = text.slice(start, end).trim();
+      i = end < text.length ? end + 1 : end;
+      if (value) tokens.push({ type: "phrase", value, raw: `"${value}"` });
+      continue;
+    }
+
+    let end = i;
+    while (end < text.length && !/\s/.test(text[end])) end++;
+    const word = text.slice(i, end);
+    i = end;
+    if (!word) continue;
+
+    if (word.startsWith("#") && word.length > 1) {
+      tokens.push({ type: "tag", value: word.slice(1), raw: word });
+    } else if (word.startsWith("@") && word.length > 1) {
+      tokens.push({ type: "collaborator", value: word.slice(1), raw: word });
+    } else if (/^cat:/i.test(word) && word.length > 4) {
+      tokens.push({ type: "category", value: word.slice(4), raw: word });
+    } else {
+      tokens.push({ type: "word", value: word, raw: word });
+    }
+  }
+  return tokens;
+}
+
+function sessionMatchesJournalTokens(session, tokens) {
+  if (!tokens.length) return true;
+  const subjectText = normalizeText(
+    [session.project, session.task, session.notes].filter(Boolean).join(" "),
+  );
+  const tags       = (session.tags ?? []).map(normalizeText);
+  const categories = (session.categories ?? []).map(normalizeText);
+  const collab     = normalizeText(session.collaborator ?? "");
+
+  for (const token of tokens) {
+    const v = normalizeText(token.value);
+    if (!v) continue;
+    switch (token.type) {
+      case "word":
+      case "phrase":
+        if (!subjectText.includes(v)) return false;
+        break;
+      case "tag":
+        if (!tags.some((t) => t.includes(v))) return false;
+        break;
+      case "category":
+        if (!categories.some((c) => c.includes(v))) return false;
+        break;
+      case "collaborator":
+        if (!collab.includes(v)) return false;
+        break;
+      default:
+        break;
+    }
+  }
+  return true;
+}
+
+function getJournalSearchTokens() {
+  return parseJournalSearchQuery(journalFilterSearchInput?.value ?? "");
+}
+
+function renderJournalActiveFilterChips() {
+  const container = journalFilterActiveChips;
+  if (!container) return;
+  const tokens = getJournalSearchTokens();
+  container.innerHTML = "";
+  if (!tokens.length) {
+    container.hidden = true;
+    return;
+  }
+  container.hidden = false;
+  for (const token of tokens) {
+    const chip = document.createElement("span");
+    chip.className = `journal-filter-chip is-${token.type}`;
+    const label =
+      token.type === "tag"          ? `#${token.value}` :
+      token.type === "category"     ? `cat: ${token.value}` :
+      token.type === "collaborator" ? `@${token.value}` :
+      token.type === "phrase"       ? `"${token.value}"` :
+      token.value;
+    chip.append(document.createTextNode(label));
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "journal-filter-chip-close";
+    close.setAttribute("aria-label", "Supprimer le filtre");
+    close.textContent = "×";
+    close.addEventListener("click", () => removeJournalSearchToken(token));
+    chip.append(close);
+    container.append(chip);
+  }
+}
+
+function removeJournalSearchToken(token) {
+  if (!journalFilterSearchInput) return;
+  const tokens = getJournalSearchTokens();
+  let removed = false;
+  const next = tokens.filter((t) => {
+    if (!removed && t.type === token.type && t.value === token.value && t.raw === token.raw) {
+      removed = true;
+      return false;
+    }
+    return true;
+  });
+  journalFilterSearchInput.value = next.map((t) => t.raw).join(" ");
+  renderJournalActiveFilterChips();
+  renderSessionList();
+}
+
+// Default journal range = current week (Monday → Sunday). Pre-filling the
+// date inputs at boot keeps the vertical size of the list bounded; clearing
+// either input falls back to "no date filter" so the user can see everything
+// when needed.
+function applyDefaultJournalDateRange() {
+  if (!journalFilterFromInput || !journalFilterToInput) return;
+  const start = getStartOfWeek(new Date());
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  journalFilterFromInput.value = formatDateInput(start);
+  journalFilterToInput.value = formatDateInput(end);
+}
+
+function setupJournalUnifiedSearch() {
+  if (journalFilterSearchInput) {
+    journalFilterSearchInput.addEventListener("input", () => {
+      renderJournalActiveFilterChips();
+      renderSessionList();
+    });
+  }
+  if (journalFilterHelpButton && journalFilterHelpPanel) {
+    journalFilterHelpButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      journalFilterHelpPanel.hidden = !journalFilterHelpPanel.hidden;
+    });
+    document.addEventListener("pointerdown", (event) => {
+      if (journalFilterHelpPanel.hidden) return;
+      if (journalFilterHelpPanel.contains(event.target)) return;
+      if (journalFilterHelpButton.contains(event.target)) return;
+      journalFilterHelpPanel.hidden = true;
+    });
+  }
+  renderJournalActiveFilterChips();
 }
 
 function renderSessionList() {

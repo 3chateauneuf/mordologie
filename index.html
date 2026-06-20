@@ -808,21 +808,32 @@
               </label>
             </div>
             <div class="journal-filter-row journal-filter-row-bottom">
-              <label class="field">
-                <span>Catégorie</span>
-                <input id="journal-filter-category" class="select-input" type="text" list="category-suggestions" placeholder="Toutes" />
-              </label>
-              <label class="field">
-                <span>Tags</span>
-                <input id="journal-filter-tags" class="select-input" type="text" list="tag-suggestions" placeholder="#bio, #sav, #slack" />
-              </label>
-              <label class="field">
-                <span>Sujet</span>
-                <input id="journal-filter-subject" class="select-input" type="text" placeholder="Filtrer un sujet" />
+              <label class="field journal-filter-search-field">
+                <span>Recherche</span>
+                <input
+                  id="journal-filter-search"
+                  class="select-input journal-filter-search-input"
+                  type="text"
+                  placeholder='audit  #bio  cat:Marketing  @Yumi  "phrase exacte"'
+                  autocomplete="off"
+                  spellcheck="false"
+                />
               </label>
               <div class="journal-filter-actions">
+                <button id="journal-filter-help" type="button" class="btn btn-secondary" aria-label="Aide syntaxe" title="Aide syntaxe">?</button>
                 <button id="journal-filter-reset" type="button" class="btn btn-secondary" aria-label="Réinitialiser les filtres" title="Réinitialiser les filtres">↺</button>
               </div>
+            </div>
+            <div id="journal-filter-active-chips" class="journal-filter-active-chips" hidden></div>
+            <div id="journal-filter-help-panel" class="journal-filter-help-panel" hidden>
+              <strong>Syntaxe</strong>
+              <ul>
+                <li><code>mot</code> — cherche dans projet, tâche, notes</li>
+                <li><code>#tag</code> — filtre par tag</li>
+                <li><code>cat:nom</code> — filtre par catégorie</li>
+                <li><code>@nom</code> — filtre par collaborateur</li>
+                <li><code>"phrase exacte"</code> — recherche littérale</li>
+              </ul>
             </div>
           </div>
           <div id="session-list" class="session-list"></div>

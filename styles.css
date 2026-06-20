@@ -4773,3 +4773,136 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   padding: 0 6px;
   line-height: 1.45;
 }
+
+
+/* ==========================================================================
+   SECTION: JOURNAL UNIFIED SEARCH
+   Purpose: Layout for the single-input search bar, active filter chips,
+     and the help panel that replaces the legacy three-input filter row.
+   ========================================================================== */
+
+.journal-filter-search-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.journal-filter-search-input {
+  width: 100%;
+}
+
+.journal-filter-search-input::placeholder {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.journal-filter-active-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+.journal-filter-active-chips[hidden] {
+  display: none;
+}
+
+.journal-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--ink-soft);
+  color: var(--text);
+  border: 1px solid var(--line);
+  line-height: 1;
+}
+
+.journal-filter-chip.is-tag {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-color: rgba(13, 148, 136, 0.20);
+}
+
+.journal-filter-chip.is-category {
+  background: rgba(249, 115, 22, 0.10);
+  color: #b45309;
+  border-color: rgba(249, 115, 22, 0.20);
+}
+
+.journal-filter-chip.is-collaborator {
+  background: rgba(99, 102, 241, 0.10);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.20);
+}
+
+.journal-filter-chip.is-phrase {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-weight: 500;
+}
+
+.journal-filter-chip-close {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 6px;
+  border-radius: 99px;
+  opacity: 0.65;
+  transition: opacity 0.12s, background 0.12s;
+}
+
+.journal-filter-chip-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.journal-filter-help-panel {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--panel-strong);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-card);
+  font-size: 13px;
+  line-height: 1.55;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.journal-filter-help-panel[hidden] {
+  display: none;
+}
+
+.journal-filter-help-panel strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.journal-filter-help-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.journal-filter-help-panel code {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--ink-soft);
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", monospace;
+  color: var(--text);
+}
