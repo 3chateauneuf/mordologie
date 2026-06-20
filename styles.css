@@ -5467,3 +5467,171 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   border-color: rgba(249, 115, 22, 0.40);
   background: rgba(249, 115, 22, 0.06);
 }
+
+
+/* ==========================================================================
+   SECTION: GUIDE PHASES (editorial 3-column timeline)
+   Purpose: Avant / Pendant / Après — three temporal phase columns that
+     organize the guide as a linear narrative of a working day. The same
+     skeleton serves guest (value prop), new user (next steps), and
+     existing user (mastery tips). Visual language aligned with the
+     journal: flat list rows, uppercase eyebrows, display titles,
+     muted captions, low-noise typography.
+   ========================================================================== */
+
+.guide-phases {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: 24px;
+}
+
+@media (max-width: 920px) {
+  .guide-phases {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+.guide-phase-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.guide-phase-head {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--ink-soft-strong);
+  margin-bottom: 4px;
+}
+
+.guide-phase-eyebrow {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.guide-phase-title {
+  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+  font-size: 1.42rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.guide-phase-caption {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+  font-style: italic;
+  letter-spacing: 0.005em;
+}
+
+.guide-phase-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.guide-phase-item {
+  display: grid;
+  gap: 4px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ink-soft);
+}
+
+.guide-phase-items > .guide-phase-item:last-child {
+  border-bottom: none;
+}
+
+.guide-phase-item-title {
+  font-family: "Manrope", sans-serif;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+
+.guide-phase-item--done .guide-phase-item-title::before {
+  content: "✓";
+  display: inline-block;
+  width: 1.2em;
+  margin-right: 2px;
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.guide-phase-item--todo .guide-phase-item-title::before {
+  content: "○";
+  display: inline-block;
+  width: 1.2em;
+  margin-right: 2px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.guide-phase-item-desc {
+  font-size: 0.81rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.guide-phase-item-action-btn {
+  align-self: start;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent-strong);
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.guide-phase-item-action-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* New-user status banner — sits above the phases grid */
+
+.guide-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(13, 148, 136, 0.06);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  margin-top: 18px;
+  font-size: 0.86rem;
+  color: var(--text);
+}
+
+.guide-status-banner-check {
+  color: var(--accent-strong);
+  font-weight: 800;
+  font-family: ui-monospace, "SF Mono", monospace;
+}
+
+/* Compact hero variant for new-user / existing-user (less display weight
+   than the guest landing — the value prop has already been heard). */
+
+.guide-hero--compact h1 {
+  font-size: 1.6rem;
+}
+
+.guide-hero--compact .guide-hero-sub {
+  font-size: 0.92rem;
+}

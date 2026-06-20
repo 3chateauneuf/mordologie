@@ -10997,18 +10997,106 @@ function renderGuideView() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Guide pages share a single editorial backbone: three temporal phases —
+// Avant (planifier), Pendant (tracker), Après (analyser) — that map to the
+// cycle of a working day. Guest, new-user, and existing-user views are
+// variants of depth over the same skeleton, so the user always knows where
+// to look regardless of their seniority with the tool.
+// ─────────────────────────────────────────────────────────────────────────
+
+const GUIDE_PHASES = [
+  { id: "avant",   eyebrow: "Avant",   title: "Planifier", caption: "Préparer la journée" },
+  { id: "pendant", eyebrow: "Pendant", title: "Tracker",   caption: "Vivre le travail"     },
+  { id: "apres",   eyebrow: "Après",   title: "Analyser",  caption: "Lire ce qui s'est passé" },
+];
+
+function buildGuidePhaseColumn(phase, items) {
+  const col = document.createElement("section");
+  col.className = "guide-phase-col";
+
+  const head = document.createElement("div");
+  head.className = "guide-phase-head";
+  const eyebrow = document.createElement("span");
+  eyebrow.className = "guide-phase-eyebrow";
+  eyebrow.textContent = phase.eyebrow;
+  const title = document.createElement("h3");
+  title.className = "guide-phase-title";
+  title.textContent = phase.title;
+  const caption = document.createElement("p");
+  caption.className = "guide-phase-caption";
+  caption.textContent = phase.caption;
+  head.append(eyebrow, title, caption);
+  col.append(head);
+
+  const list = document.createElement("div");
+  list.className = "guide-phase-items";
+
+  for (const item of items) {
+    const node = document.createElement("article");
+    node.className = "guide-phase-item";
+    if (item.done) node.classList.add("guide-phase-item--done");
+    if (item.action && !item.done) node.classList.add("guide-phase-item--todo");
+
+    const itemTitle = document.createElement("h4");
+    itemTitle.className = "guide-phase-item-title";
+    itemTitle.textContent = item.title;
+    node.append(itemTitle);
+
+    const desc = document.createElement("p");
+    desc.className = "guide-phase-item-desc";
+    desc.textContent = item.desc;
+    node.append(desc);
+
+    if (item.action && !item.done) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "guide-phase-item-action-btn";
+      btn.textContent = item.action.label;
+      const targetView = item.action.view;
+      btn.addEventListener("click", () => {
+        const tab = document.querySelector(`[data-view-target="${targetView}"]`);
+        tab?.click();
+      });
+      node.append(btn);
+    }
+
+    list.append(node);
+  }
+
+  col.append(list);
+  return col;
+}
+
+function buildGuidePhasesGrid(itemsByPhase) {
+  const grid = document.createElement("div");
+  grid.className = "guide-phases";
+  for (const phase of GUIDE_PHASES) {
+    grid.append(buildGuidePhaseColumn(phase, itemsByPhase[phase.id] || []));
+  }
+  return grid;
+}
+
+function buildGuideHero(titleText, subText, extraClass = "") {
+  const hero = document.createElement("div");
+  hero.className = "guide-hero" + (extraClass ? " " + extraClass : "");
+  const h = document.createElement("h1");
+  h.textContent = titleText;
+  const p = document.createElement("p");
+  p.className = "guide-hero-sub";
+  p.textContent = subText;
+  hero.append(h, p);
+  return hero;
+}
+
 function buildGuideForGuest() {
   const root = document.createElement("div");
   root.className = "guide-guest";
 
-  const hero = document.createElement("div");
-  hero.className = "guide-hero";
-  const title = document.createElement("h1");
-  title.textContent = "Bienvenue sur Mordologie";
-  const sub = document.createElement("p");
-  sub.className = "guide-hero-sub";
-  sub.textContent = "Suivi du temps précis pour les équipes terrain. Chaque session est un contexte — projet, tâche, catégorie — qui alimente les analyses et les objectifs.";
-  hero.append(title, sub);
+  const hero = buildGuideHero(
+    "Bienvenue sur Mordologie",
+    "Le cycle complet d'une journée de travail, situé : ce qu'on planifie, ce qu'on trace, ce qu'on analyse.",
+  );
 
   const cta = document.createElement("div");
   cta.className = "guide-cta";
@@ -11020,47 +11108,40 @@ function buildGuideForGuest() {
   ctaText.textContent = "Sélectionnez votre nom dans la liste en haut à gauche pour commencer.";
   cta.append(ctaIcon, ctaText);
 
-  const features = document.createElement("div");
-  features.className = "guide-features";
+  root.append(hero, cta);
+  root.append(buildGuidePhasesGrid({
+    avant: [
+      {
+        title: "Agenda Google superposé",
+        desc: "Les réunions iCal de la semaine apparaissent en transparent dans la vue Semaine. Convertis-les en sessions qualifiées d'un clic.",
+      },
+      {
+        title: "Contextes mémorisés",
+        desc: "Tes projets récurrents reviennent avec leurs catégories, tags et liens — recharge un contexte pour pré-remplir la saisie en un clic.",
+      },
+    ],
+    pendant: [
+      {
+        title: "Chrono modulable",
+        desc: "Démarrer, pause, reprendre, arrêter. Sujet, catégorie et tags éditables avant, pendant ou après la session.",
+      },
+      {
+        title: "Pocket mobile",
+        desc: "Voir et arrêter une session depuis ton téléphone. Pratique pour clôturer en mobilité, sans rouvrir l'ordinateur.",
+      },
+    ],
+    apres: [
+      {
+        title: "Journal recherchable",
+        desc: "Filtrer en syntaxe légère (#tag, cat:, @nom, \"phrase\"). Les suggestions sortent par fréquence d'usage récente.",
+      },
+      {
+        title: "KPIs synchronisés",
+        desc: "Ma semaine, Vue semaine et le rapport Manager partagent la même temporalité. La navigation prev/next bouge l'ensemble.",
+      },
+    ],
+  }));
 
-  const featureData = [
-    {
-      icon: "⏱",
-      title: "Chrono précis",
-      desc: "Démarre, mets en pause, reprends, arrête. Sujet, catégorie, tags et notes restent éditables après coup via la saisie manuelle.",
-    },
-    {
-      icon: "📅",
-      title: "Agenda hebdo",
-      desc: "Vue semaine avec tes sessions et tes réunions Google Calendar superposées. Glisse, redimensionne ou clone un bloc — la persistance est automatique.",
-    },
-    {
-      icon: "📱",
-      title: "Pocket mobile",
-      desc: "Compagnon léger sur ton téléphone pour voir la session en cours et l'arrêter depuis le terrain. Accessible sur /mobile, lien magique par email.",
-    },
-    {
-      icon: "🔎",
-      title: "Recherche & analyses",
-      desc: "Journal filtrable par syntaxe (#tag, cat:, @collab, \"phrase\"). Rapports hebdo / mensuel / annuel par collaborateur, catégorie et projet.",
-    },
-  ];
-
-  for (const f of featureData) {
-    const card = document.createElement("div");
-    card.className = "guide-feature-card";
-    const icon = document.createElement("span");
-    icon.className = "guide-feature-icon";
-    icon.textContent = f.icon;
-    const h = document.createElement("h3");
-    h.textContent = f.title;
-    const p = document.createElement("p");
-    p.textContent = f.desc;
-    card.append(icon, h, p);
-    features.append(card);
-  }
-
-  root.append(hero, cta, features);
   return root;
 }
 
@@ -11068,86 +11149,53 @@ function buildGuideForNewUser(sessionCount, hasCalendar) {
   const root = document.createElement("div");
   root.className = "guide-onboarding";
 
-  const head = document.createElement("div");
-  head.className = "guide-onboarding-head";
-  const title = document.createElement("h2");
-  title.textContent = "Premiers pas";
-  const sub = document.createElement("p");
-  sub.className = "guide-onboarding-sub";
-  sub.textContent = "Suis ces étapes pour tirer le meilleur de l'outil dès le premier jour.";
-  head.append(title, sub);
+  root.append(buildGuideHero(
+    "Premiers pas",
+    "Trois moments du cycle, un geste concret pour chacun. Tu peux y revenir à tout moment.",
+    "guide-hero--compact",
+  ));
 
-  const steps = [
-    {
-      done: true,
-      label: "Profil sélectionné",
-      detail: "Tu es connecté. Tes sessions sont enregistrées à ton nom et synchronisées avec le serveur.",
-    },
-    {
-      done: sessionCount > 0,
-      label: "Lancer ton premier chrono",
-      detail: "Remplis Sujet + Catégorie (l'autocomplétion suggère d'abord ce que tu utilises le plus), clique ▶ Démarrer. Arrête quand tu finis — un toast confirme l'enregistrement en bas à droite.",
-      action: { label: "Aller saisir", view: "cadre" },
-    },
-    {
-      done: false,
-      label: "Installer Pocket sur ton téléphone",
-      detail: "Ouvre mordologie.eduardodo.com/mobile depuis ton mobile, demande un lien magique avec ton email, puis ajoute la page à l'écran d'accueil. Pratique pour stopper une session sans rouvrir l'ordi.",
-    },
-    {
-      done: hasCalendar,
-      label: "Connecter Google Calendar",
-      detail: "Dans ton profil (avatar en haut à gauche), colle l'URL iCal privée de ton Google Calendar (Paramètres → Agendas → Adresse secrète au format iCal). Puis clique « Sync calendrier » dans la vue Agenda.",
-    },
-    {
-      done: sessionCount >= 3,
-      label: "Explorer les analyses",
-      detail: "Ma semaine affiche tes KPIs en cours ; bascule en Mois ou Année pour la lecture longue. La vue Manager montre la répartition par collaborateur et catégorie.",
-      action: { label: "Voir les analyses", view: "manager" },
-    },
-  ];
+  const banner = document.createElement("div");
+  banner.className = "guide-status-banner";
+  const bannerCheck = document.createElement("span");
+  bannerCheck.className = "guide-status-banner-check";
+  bannerCheck.textContent = "✓";
+  const bannerText = document.createElement("span");
+  const collaborator = getCurrentCollaborator() || accessProfile.appUser?.user_name || "toi";
+  bannerText.textContent = `Connecté en tant que ${collaborator} — tes sessions sont synchronisées avec le serveur.`;
+  banner.append(bannerCheck, bannerText);
+  root.append(banner);
 
-  const list = document.createElement("ol");
-  list.className = "guide-steps";
+  root.append(buildGuidePhasesGrid({
+    avant: [
+      {
+        title: "Connecter Google Calendar",
+        desc: "Dans ton profil (avatar en haut à gauche), colle l'URL iCal privée de ton agenda. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
+        done: hasCalendar,
+      },
+    ],
+    pendant: [
+      {
+        title: "Lancer ton premier chrono",
+        desc: "Page d'accueil. Remplis Sujet + Catégorie (l'autocomplétion suggère d'abord ce que tu utilises le plus), clique ▶ Démarrer, arrête en fin de session.",
+        done: sessionCount > 0,
+        action: { label: "Aller saisir", view: "cadre" },
+      },
+      {
+        title: "Installer Pocket sur ton mobile",
+        desc: "Ouvre mordologie.eduardodo.com/mobile depuis ton téléphone, demande un lien magique avec ton email, puis ajoute la page à l'écran d'accueil. Pratique pour stopper sans rouvrir l'ordi.",
+      },
+    ],
+    apres: [
+      {
+        title: "Explorer Ma semaine",
+        desc: "Ton tableau de bord personnel — heure totale, top catégories, répartition. La vue Manager passe à la lecture équipe.",
+        done: sessionCount >= 3,
+        action: { label: "Voir les analyses", view: "manager" },
+      },
+    ],
+  }));
 
-  for (const step of steps) {
-    const li = document.createElement("li");
-    li.className = "guide-step" + (step.done ? " guide-step--done" : "");
-
-    const check = document.createElement("span");
-    check.className = "guide-step-check";
-    check.setAttribute("aria-hidden", "true");
-    check.textContent = step.done ? "✓" : "";
-
-    const body = document.createElement("div");
-    body.className = "guide-step-body";
-
-    const label = document.createElement("strong");
-    label.textContent = step.label;
-
-    const detail = document.createElement("p");
-    detail.textContent = step.detail;
-
-    body.append(label, detail);
-
-    if (step.action && !step.done) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "btn btn-secondary guide-step-btn";
-      btn.textContent = step.action.label;
-      const targetView = step.action.view;
-      btn.addEventListener("click", () => {
-        const tab = document.querySelector(`[data-view-target="${targetView}"]`);
-        tab?.click();
-      });
-      body.append(btn);
-    }
-
-    li.append(check, body);
-    list.append(li);
-  }
-
-  root.append(head, list);
   return root;
 }
 
@@ -11155,123 +11203,54 @@ function buildGuideForExistingUser(hasCalendar) {
   const root = document.createElement("div");
   root.className = "guide-tips";
 
-  const head = document.createElement("div");
-  head.className = "guide-tips-head";
-  const title = document.createElement("h2");
-  title.textContent = "Astuces & raccourcis";
-  const sub = document.createElement("p");
-  sub.className = "guide-tips-sub";
-  sub.textContent = "Ce que la plupart des utilisateurs découvrent trop tard.";
-  head.append(title, sub);
+  root.append(buildGuideHero(
+    "Aller plus loin",
+    "Ce que la plupart des utilisateurs découvrent trop tard — situé par phase du cycle.",
+    "guide-hero--compact",
+  ));
 
-  root.append(head);
-
-  // Tips grouped by usage area — easier to scan than a flat 9-card grid.
-  const groups = [
-    {
-      heading: "Journal & recherche",
-      tips: [
-        {
-          icon: "✎",
-          title: "Modifier un tag ou une catégorie sur place",
-          desc: "Dans le Journal, clique sur n'importe quel chip d'une entrée — un popover offre Renommer, Couleur (catégorie) ou Supprimer. La modification se propage sur tout l'historique en un clic.",
-        },
-        {
-          icon: "🔎",
-          title: "Recherche avec syntaxe",
-          desc: "La barre Recherche du Journal accepte une syntaxe légère : mot pour chercher dans projet/tâche/notes, #tag pour filtrer par tag, cat:nom pour la catégorie, @nom pour le collaborateur, \"phrase exacte\" pour un littéral. Les filtres actifs s'affichent en chips dessous.",
-        },
-        {
-          icon: "↑",
-          title: "Suggestions par fréquence",
-          desc: "L'autocomplétion (catégories, tags, projets) ouvre par défaut sur ce que tu utilises le plus dans les 60 derniers jours. L'alphabétique sert de départage. Pour le manager Tags / Catégories, un sélecteur permet de basculer entre Plus utilisés et A → Z.",
-        },
-      ],
-    },
-    {
-      heading: "Agenda & planification",
-      tips: [
-        {
-          icon: "↕",
-          title: "Déplacer, redimensionner, cloner",
-          desc: "Glisse un bloc pour le déplacer sur la semaine. Étire les poignées haut/bas pour ajuster début ou fin. Alt+glisser clone le bloc — pratique pour répliquer un shift récurrent.",
-        },
-        {
-          icon: "⚡",
-          title: "Clic sur un créneau vide",
-          desc: "Clique n'importe quelle heure vide dans l'Agenda pour ouvrir la saisie avec début et fin déjà positionnés.",
-        },
-        {
-          icon: "📅",
-          title: hasCalendar ? "Google Calendar synchronisé" : "Connecter Google Calendar",
-          desc: hasCalendar
-            ? "Clique « Sync calendrier » dans l'Agenda pour importer les événements de la semaine. Clique un événement fantôme pour le convertir en vraie session qualifiée."
-            : "Colle l'URL iCal privée de ton Google Calendar dans ton profil. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
-        },
-      ],
-    },
-    {
-      heading: "Pocket & temps réel",
-      tips: [
-        {
-          icon: "📱",
-          title: "Pocket mobile",
-          desc: "Sur ton téléphone, mordologie.eduardodo.com/mobile montre la session en cours avec le chrono vivant et te laisse l'arrêter avec ou sans correction d'heure. Idéal quand tu finis loin de l'ordi. Connecte-toi avec un lien magique par email.",
-        },
-        {
-          icon: "🧭",
-          title: "Navigation semaine unifiée",
-          desc: "Sur la page d'accueil, Vue semaine et Ma semaine partagent la même semaine en cours : un clic prev/next dans l'un déplace les KPIs et l'agenda ensemble.",
-        },
-      ],
-    },
-    {
-      heading: "Maintenance & contexte",
-      tips: [
-        {
-          icon: "🔠",
-          title: "Filtrer la liste des tags & catégories",
-          desc: "Le panneau latéral du Journal a un filtre rapide au-dessus de la liste. Tape quelques lettres pour réduire à ce qui te concerne. La recherche persiste quand tu bascules Tags ↔ Catégories.",
-        },
-        {
-          icon: "🧠",
-          title: "Contextes mémorisés",
-          desc: "L'app retient tes projets récents avec leurs catégories, tags et lien Notion. Le panneau latéral en propose le top — clique Recharger pour pré-remplir la saisie en un clic.",
-        },
-      ],
-    },
-  ];
-
-  for (const group of groups) {
-    const section = document.createElement("section");
-    section.className = "guide-tips-group";
-
-    const groupHead = document.createElement("h3");
-    groupHead.className = "guide-tips-group-heading";
-    groupHead.textContent = group.heading;
-    section.append(groupHead);
-
-    const grid = document.createElement("div");
-    grid.className = "guide-tips-grid";
-
-    for (const tip of group.tips) {
-      const card = document.createElement("div");
-      card.className = "guide-tip-card";
-      const icon = document.createElement("span");
-      icon.className = "guide-tip-icon";
-      icon.setAttribute("aria-hidden", "true");
-      icon.textContent = tip.icon;
-      const h = document.createElement("h4");
-      h.textContent = tip.title;
-      const p = document.createElement("p");
-      p.textContent = tip.desc;
-      card.append(icon, h, p);
-      grid.append(card);
-    }
-
-    section.append(grid);
-    root.append(section);
-  }
+  root.append(buildGuidePhasesGrid({
+    avant: [
+      {
+        title: "Contextes mémorisés",
+        desc: "Le panneau latéral du Journal propose tes projets récents avec leurs catégories, tags et lien Notion. Clique Recharger pour pré-remplir la saisie en un clic.",
+      },
+      {
+        title: hasCalendar ? "Convertir un événement fantôme" : "Connecter Google Calendar",
+        desc: hasCalendar
+          ? "Dans l'Agenda, clique un événement Google Calendar transparent pour le convertir en session qualifiée — début, fin, sujet déjà positionnés."
+          : "Colle l'URL iCal privée de ton Google Calendar dans ton profil. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
+      },
+    ],
+    pendant: [
+      {
+        title: "Manipuler l'Agenda",
+        desc: "Glisse un bloc pour le déplacer, étire les poignées haut/bas pour ajuster début ou fin, Alt+glisser pour cloner un shift récurrent. La persistance est automatique.",
+      },
+      {
+        title: "Clic sur un créneau vide",
+        desc: "N'importe quelle heure libre dans l'Agenda ouvre la saisie avec début et fin déjà positionnés.",
+      },
+      {
+        title: "Pocket pour clôturer en mobilité",
+        desc: "Sur ton mobile, mordologie.eduardodo.com/mobile montre la session en cours et te laisse l'arrêter — avec ou sans correction d'heure. Idéal en fin de journée loin du poste.",
+      },
+    ],
+    apres: [
+      {
+        title: "Modifier un chip sur place",
+        desc: "Dans le Journal, clique un tag ou une catégorie d'une entrée — popover Renommer / Couleur / Supprimer. La modification se propage sur tout l'historique.",
+      },
+      {
+        title: "Recherche syntaxique",
+        desc: "La barre Recherche du Journal accepte mot / #tag / cat:nom / @nom / \"phrase exacte\". Les filtres actifs s'affichent en chips dessous, supprimables une à une.",
+      },
+      {
+        title: "Manager Tags & Catégories",
+        desc: "Filtre rapide et sélecteur Plus utilisés / A → Z dans le panneau latéral. Renommer et fusionner sur tout l'historique apparaissent au survol.",
+      },
+    ],
+  }));
 
   return root;
 }
