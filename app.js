@@ -11005,11 +11005,16 @@ function renderGuideView() {
 // to look regardless of their seniority with the tool.
 // ─────────────────────────────────────────────────────────────────────────
 
-const GUIDE_PHASES = [
-  { id: "avant",   eyebrow: "Avant",   title: "Planifier", caption: "Préparer la journée" },
-  { id: "pendant", eyebrow: "Pendant", title: "Tracker",   caption: "Vivre le travail"     },
-  { id: "apres",   eyebrow: "Après",   title: "Analyser",  caption: "Lire ce qui s'est passé" },
-];
+// Defined as a function so it's available via hoisting when the boot-time
+// render() runs before this line of the file is reached (the file is huge —
+// boot calls render() at L~917 and these definitions live at L~11000).
+function getGuidePhases() {
+  return [
+    { id: "avant",   eyebrow: "Avant",   title: "Planifier", caption: "Préparer la journée" },
+    { id: "pendant", eyebrow: "Pendant", title: "Tracker",   caption: "Vivre le travail"     },
+    { id: "apres",   eyebrow: "Après",   title: "Analyser",  caption: "Lire ce qui s'est passé" },
+  ];
+}
 
 function buildGuidePhaseColumn(phase, items) {
   const col = document.createElement("section");
@@ -11071,7 +11076,7 @@ function buildGuidePhaseColumn(phase, items) {
 function buildGuidePhasesGrid(itemsByPhase) {
   const grid = document.createElement("div");
   grid.className = "guide-phases";
-  for (const phase of GUIDE_PHASES) {
+  for (const phase of getGuidePhases()) {
     grid.append(buildGuidePhaseColumn(phase, itemsByPhase[phase.id] || []));
   }
   return grid;
