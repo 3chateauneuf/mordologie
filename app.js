@@ -2289,8 +2289,83 @@ function openAutocomplete(config) {
   autocompletePopover.hidden = false;
 }
 
+// Recency-windowed usage frequency (last 60 days). Used by
+// buildAutocompleteItems to order an empty-query dropdown by what the user
+// actually picks the most, instead of strict alphabetical. When a query is
+// present, relevance ranking takes over.
+const AUTOCOMPLETE_FREQUENCY_WINDOW_DAYS = 60;
+const AUTOCOMPLETE_FREQUENCY_KIND_BY_INPUT_ID = {
+  "collaborator-input":          "collaborator",
+  "project-input":               "project",
+  "task-input":                  "task",
+  "categories-input":            "category",
+  "tags-input":                  "tag",
+  "notion-input":                "notionRef",
+  "journal-filter-category":     "category",
+  "journal-filter-tags":         "tag",
+  "journal-filter-subject":      "subject",
+  "manual-collaborator-input":   "collaborator",
+  "manual-project-input":        "project",
+  "manual-task-input":           "task",
+  "manual-categories-input":     "category",
+  "manual-tags-input":           "tag",
+  "manual-notion-input":         "notionRef",
+  "planned-category-input":      "category",
+  "planned-tags-input":          "tag",
+  "planned-task-input":          "task",
+  "planned-notion-input":        "notionRef",
+};
+
+function extractAutocompleteFreqValues(session, kind) {
+  switch (kind) {
+    case "category":     return session.categories ?? [];
+    case "tag":          return session.tags ?? [];
+    case "project":      return session.project ? [session.project] : [];
+    case "task":         return session.task ? [session.task] : [];
+    case "collaborator": return session.collaborator ? [session.collaborator] : [];
+    case "notionRef":    return session.notionRef ? [session.notionRef] : [];
+    case "subject":      return [
+      ...(session.project ? [session.project] : []),
+      ...(session.task ? [session.task] : []),
+    ];
+    default: return [];
+  }
+}
+
+function buildAutocompleteFrequencyMap(kind) {
+  const cutoffMs = Date.now() - AUTOCOMPLETE_FREQUENCY_WINDOW_DAYS * 86400000;
+  const counts = new Map();
+  for (const session of getAllSessionsWithActive()) {
+    const t = new Date(session.start).getTime();
+    if (!Number.isFinite(t) || t < cutoffMs) continue;
+    for (const v of extractAutocompleteFreqValues(session, kind)) {
+      if (!v) continue;
+      counts.set(v, (counts.get(v) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+function sortAutocompleteByFrequency(options, kind) {
+  const counts = buildAutocompleteFrequencyMap(kind);
+  // The journal tags filter prefixes options with "#" — strip before lookup.
+  const lookup = kind === "tag"
+    ? (opt) => counts.get(opt.startsWith("#") ? opt.slice(1) : opt) ?? 0
+    : (opt) => counts.get(opt) ?? 0;
+  return [...options].sort((a, b) => {
+    const cb = lookup(b);
+    const ca = lookup(a);
+    if (ca !== cb) return cb - ca;
+    return a.localeCompare(b, "fr");
+  });
+}
+
 function buildAutocompleteItems(config, query) {
-  const options = Array.from(new Set((config.getOptions?.() ?? []).filter(Boolean))).sort((a, b) => a.localeCompare(b, "fr"));
+  const rawOptions = Array.from(new Set((config.getOptions?.() ?? []).filter(Boolean)));
+  const freqKind = AUTOCOMPLETE_FREQUENCY_KIND_BY_INPUT_ID[config.input?.id ?? ""];
+  const options = (!query && freqKind)
+    ? sortAutocompleteByFrequency(rawOptions, freqKind)
+    : rawOptions.sort((a, b) => a.localeCompare(b, "fr"));
   const rankedOptions = rankAutocompleteOptions(options, query);
   const visibleOptions = query ? rankedOptions.slice(0, 9) : rankedOptions;
   const matches = visibleOptions.map((value) => ({
