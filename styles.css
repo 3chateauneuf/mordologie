@@ -861,11 +861,13 @@ button {
 }
 
 .journal-filter-row-bottom {
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .journal-filter-actions {
-  display: grid;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
   align-self: end;
 }
 
@@ -884,7 +886,8 @@ button {
   font-size: 0.84rem;
 }
 
-#journal-filter-reset {
+#journal-filter-reset,
+#journal-filter-help {
   min-width: 34px;
   min-height: 34px;
   width: 34px;
@@ -5176,4 +5179,237 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   background: rgba(220, 38, 38, 0.08);
   color: var(--danger);
   border: none;
+}
+
+
+/* ==========================================================================
+   SECTION: SIDE PANEL EDITORIAL HIERARCHY (Contextes + Tags / Catégories)
+   Purpose: Apply the same project-first, low-noise editorial treatment to
+     the right column. Memory cards (Contextes mémorisés) and manager rows
+     (Tags / Catégories) become flat lists with hover-revealed actions,
+     desaturated outlined pills, and monospace numerics — visually coherent
+     with the journal entries.
+   ========================================================================== */
+
+/* ── Contextes mémorisés (memory cards) ─────────────────────────────────── */
+
+.memory-list {
+  display: grid;
+  gap: 0;
+  margin-top: 4px;
+}
+
+.memory-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 12px 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink-soft);
+  border-radius: 0;
+  box-shadow: none;
+  transition: background 0.15s ease;
+}
+
+.memory-list .memory-card:last-child {
+  border-bottom: none;
+}
+
+.memory-card:hover {
+  background: rgba(13, 148, 136, 0.04);
+}
+
+.memory-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.memory-card h3 {
+  font-family: "Manrope", sans-serif;
+  font-size: 0.94rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memory-card .muted-copy {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.memory-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.memory-card .pill {
+  padding: 2px 9px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  min-height: 0;
+  border-radius: 99px;
+  line-height: 1.6;
+}
+
+.memory-card .pill[data-kind="category"] {
+  border-color: rgba(13, 148, 136, 0.30);
+  color: var(--accent-strong);
+}
+
+.memory-card .pill[data-kind="tag"] {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.memory-card .pill[data-kind="link"] {
+  border-color: rgba(99, 102, 241, 0.30);
+  color: #4338ca;
+}
+
+.memory-card > .btn,
+.memory-card > .btn-secondary {
+  opacity: 0;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: var(--radius-input);
+  transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  box-shadow: none;
+}
+
+.memory-card:hover > .btn,
+.memory-card:focus-within > .btn,
+.memory-card:hover > .btn-secondary,
+.memory-card:focus-within > .btn-secondary {
+  opacity: 1;
+}
+
+.memory-card > .btn:hover,
+.memory-card > .btn-secondary:hover {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+  background: rgba(13, 148, 136, 0.04);
+}
+
+/* ── Tag / Category manager rows ────────────────────────────────────────── */
+
+.tag-manager-list {
+  display: grid;
+  gap: 0;
+  margin-top: 2px;
+}
+
+.tag-manager-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--ink-soft);
+  border-radius: 0;
+  min-height: 0;
+  transition: background 0.15s ease;
+}
+
+.tag-manager-list .tag-manager-item:last-child {
+  border-bottom: none;
+}
+
+.tag-manager-item:hover {
+  background: rgba(13, 148, 136, 0.04);
+}
+
+.tag-manager-item.is-editing {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+}
+
+.tag-hash {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0;
+  width: 12px;
+  text-align: center;
+}
+
+.tag-manager-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+}
+
+.tag-manager-count {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.tag-manager-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.tag-manager-item:hover .tag-manager-actions,
+.tag-manager-item:focus-within .tag-manager-actions {
+  opacity: 1;
+}
+
+.btn-tag-action {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  line-height: 1.4;
+}
+
+.btn-tag-action:hover {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+  background: rgba(13, 148, 136, 0.04);
+}
+
+.btn-tag-action.is-merge:hover {
+  color: var(--warm);
+  border-color: rgba(249, 115, 22, 0.40);
+  background: rgba(249, 115, 22, 0.06);
 }
