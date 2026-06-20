@@ -1511,8 +1511,12 @@ personalPeriodSwitch?.addEventListener("click", (event) => {
 
 personalPeriodPrev?.addEventListener("click", () => {
   if (personalPeriod === "week") {
-    personalAnchorDate = new Date(personalAnchorDate.getTime() - 7 * 86400000);
-  } else if (personalPeriod === "month") {
+    // Delegates to the shared agenda anchor — renderCadreViews (called by
+    // shiftAgendaWeek) re-runs renderPersonalStats / Distribution / Controls.
+    shiftAgendaWeek(-1);
+    return;
+  }
+  if (personalPeriod === "month") {
     personalAnchorDate = new Date(personalAnchorDate.getFullYear(), personalAnchorDate.getMonth() - 1, 1);
   }
   renderPersonalPeriodControls();
@@ -1521,8 +1525,10 @@ personalPeriodPrev?.addEventListener("click", () => {
 
 personalPeriodNext?.addEventListener("click", () => {
   if (personalPeriod === "week") {
-    personalAnchorDate = new Date(personalAnchorDate.getTime() + 7 * 86400000);
-  } else if (personalPeriod === "month") {
+    shiftAgendaWeek(1);
+    return;
+  }
+  if (personalPeriod === "month") {
     personalAnchorDate = new Date(personalAnchorDate.getFullYear(), personalAnchorDate.getMonth() + 1, 1);
   }
   renderPersonalPeriodControls();
@@ -12526,7 +12532,11 @@ function getPersonalPeriodRange() {
     end.setDate(end.getDate() + 1);
     return { start: from, end };
   }
-  return getPeriodRange(personalAnchorDate, personalPeriod);
+  // Week mode shares the agenda anchor (reportAnchorInput) so both navigators
+  // — Vue semaine and Ma semaine — move together. Other periods keep their
+  // own anchor since the time scales aren't reducible to a single date input.
+  const anchor = personalPeriod === "week" ? getReportAnchorDate() : personalAnchorDate;
+  return getPeriodRange(anchor, personalPeriod);
 }
 
 function getIsoWeekNumber(date) {
