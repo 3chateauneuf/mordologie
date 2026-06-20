@@ -9758,30 +9758,10 @@ function renderPlannedSummary(rows, range) {
   const currentWeekStart = getStartOfWeek(new Date());
   const isPastWeek = range.end <= currentWeekStart;
 
+  // Past weeks have no forward-looking reading to surface — hide the whole
+  // planning summary block instead of rendering empty placeholder cards.
   if (isPastWeek) {
-    const cards = [
-      { value: "0 h", label: "Temps planifié" },
-      { value: "—", label: "Temps ouvert estimé" },
-      { value: "—", label: "Catégorie dominante" },
-      { value: "0", label: "Événements à qualifier" },
-    ];
-
-    cards.forEach((card) => {
-      const article = document.createElement("article");
-      article.className = "planned-summary-card planned-summary-card--muted";
-      const strong = document.createElement("strong");
-      strong.textContent = card.value;
-      const span = document.createElement("span");
-      span.textContent = card.label;
-      article.append(strong, span);
-      plannedSummary.append(article);
-    });
-
-    const note = document.createElement("p");
-    note.className = "planned-summary-note";
-    note.textContent = "La lecture prévisionnelle commence cette semaine. Les semaines passées restent en lecture réelle uniquement.";
-    plannedSummary.append(note);
-    plannedSummary.hidden = false;
+    plannedSummary.hidden = true;
     return;
   }
 
