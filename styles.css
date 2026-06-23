@@ -374,6 +374,13 @@ button {
   gap: 8px;
 }
 
+.auth-calendar-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .auth-calendar-status {
   font-size: 0.72rem;
   font-weight: 600;

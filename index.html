@@ -97,10 +97,11 @@
             </div>
             <div class="auth-calendar-section">
               <div class="auth-calendar-labelrow">
-                <label class="auth-section-label" for="auth-calendar-ics-input">Google Calendar (iCal)</label>
+                <label class="auth-section-label" for="auth-calendar-ics-input">Calendriers (iCal)</label>
                 <span id="auth-calendar-status" class="auth-calendar-status" hidden></span>
               </div>
-              <textarea id="auth-calendar-ics-input" class="auth-calendar-input auth-calendar-input--multi" rows="3" placeholder="https://calendar.google.com/calendar/ical/…&#10;https://calendar.google.com/calendar/ical/…"></textarea>
+              <p class="auth-calendar-hint">Connectez un ou plusieurs calendriers : collez l'adresse (URL) de chaque fichier iCal, une par ligne. Peu importe la source (cyke, Google, Outlook…), seul le lien vers le fichier iCal est nécessaire.</p>
+              <textarea id="auth-calendar-ics-input" class="auth-calendar-input auth-calendar-input--multi" rows="3" placeholder="https://www.cyke.io/calendars/…ics&#10;https://…/un-autre-agenda.ics"></textarea>
               <div class="auth-calendar-actions">
                 <button id="auth-calendar-ics-save" type="button" class="btn btn-secondary btn--sm">Enregistrer</button>
                 <button id="auth-calendar-ics-clear" type="button" class="btn btn--sm btn--danger-outline" hidden>Supprimer</button>

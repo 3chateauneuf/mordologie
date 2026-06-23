@@ -10471,7 +10471,7 @@ async function syncGoogleCalendar(collaborator) {
       }
       const { events } = await response.json();
       if (!Array.isArray(events) || events.length === 0) {
-        fetchErrors.push("Calendrier vide ou URL publique (utilisez l'adresse secrète iCal)");
+        fetchErrors.push("Calendrier vide — vérifiez que l'URL pointe bien vers un fichier iCal (.ics)");
         continue;
       }
 
@@ -10555,7 +10555,7 @@ async function syncGoogleCalendar(collaborator) {
   if (totalEvents === 0) {
     const hint = fetchErrors.length
       ? fetchErrors[0]
-      : "Aucun événement trouvé — vérifiez que l'URL est l'adresse secrète (pas /public/).";
+      : "Aucun événement trouvé — vérifiez l'adresse (URL) du fichier iCal.";
     setAuthStatusMessage(hint, "warning", { persistMs: 5000 });
   } else {
     setAuthStatusMessage(
@@ -11222,8 +11222,8 @@ function buildGuideForNewUser(sessionCount, hasCalendar) {
   root.append(buildGuidePhasesGrid({
     avant: [
       {
-        title: "Connecter Google Calendar",
-        desc: "Dans ton profil (avatar en haut à gauche), colle l'URL iCal privée de ton agenda. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
+        title: "Connecter tes calendriers",
+        desc: "Dans ton profil (avatar en haut à gauche), colle l'URL iCal de tes agendas (cyke, Google, Outlook…), une par ligne. Tes événements apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
         done: hasCalendar,
       },
     ],
@@ -11269,10 +11269,10 @@ function buildGuideForExistingUser(hasCalendar) {
         desc: "Le panneau latéral du Journal propose tes projets récents avec leurs catégories, tags et lien Notion. Clique Recharger pour pré-remplir la saisie en un clic.",
       },
       {
-        title: hasCalendar ? "Convertir un événement fantôme" : "Connecter Google Calendar",
+        title: hasCalendar ? "Convertir un événement fantôme" : "Connecter tes calendriers",
         desc: hasCalendar
-          ? "Dans l'Agenda, clique un événement Google Calendar transparent pour le convertir en session qualifiée — début, fin, sujet déjà positionnés."
-          : "Colle l'URL iCal privée de ton Google Calendar dans ton profil. Tes réunions apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
+          ? "Dans l'Agenda, clique un événement de calendrier transparent pour le convertir en session qualifiée — début, fin, sujet déjà positionnés."
+          : "Colle l'URL iCal de tes agendas (cyke, Google, Outlook…) dans ton profil, une par ligne. Tes événements apparaîtront dans l'Agenda comme suggestions à valider en un clic.",
       },
     ],
     pendant: [
