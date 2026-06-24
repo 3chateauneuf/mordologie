@@ -362,7 +362,12 @@ const journalFilterResetButton = document.querySelector("#journal-filter-reset")
 const journalSideSwitch = document.querySelector("#journal-side-switch");
 const tagManagerSearchInput = document.querySelector("#tag-manager-search");
 const tagManagerSortSelect  = document.querySelector("#tag-manager-sort");
+const categoryRequestsBadge = document.querySelector("#category-requests-badge");
 let tagManagerSortMode = "usage"; // "usage" (count desc) | "alpha" (locale asc)
+// Demandes de catégorie en attente (admin/manager) — voir section Phase B.
+let pendingCategoryRequests = [];
+let categoryRequestsLoaded = false;
+let categoryRequestsLoading = false;
 const projectMemoryList = document.querySelector("#project-memory-list");
 const sessionItemTemplate = document.querySelector("#session-item-template");
 const resourceTotal = document.querySelector("#resource-total");
@@ -7498,6 +7503,12 @@ function renderTagManager() {
     }
   }
 
+  // Charge les demandes en attente pour alimenter le badge, même hors panneau Catégories.
+  if (canCreateSharedCategory() && !categoryRequestsLoaded) {
+    void loadPendingCategoryRequests();
+  }
+  updateCategoryRequestsBadge();
+
   if (journalSideMode === "categories") {
     renderCategoryManager(el, cleanupBtn);
     return;
@@ -7765,6 +7776,14 @@ async function cleanupHistoricalTags(btn) {
 function renderCategoryManager(el, cleanupBtn) {
   el.innerHTML = "";
   if (cleanupBtn) cleanupBtn.hidden = true;
+
+  // Demandes en attente (admin/manager uniquement), en tête du panneau.
+  if (canCreateSharedCategory()) {
+    if (!categoryRequestsLoaded) void loadPendingCategoryRequests();
+    if (pendingCategoryRequests.length) {
+      el.append(buildCategoryRequestsSection());
+    }
+  }
 
   const categoryCounts = new Map();
   for (const session of getSessionsWithPendingStopped()) {
@@ -13513,6 +13532,160 @@ categoryRequestCancelBtn?.addEventListener("click", (event) => {
 categoryRequestDialog?.addEventListener("close", () => {
   categoryRequestState = null;
 });
+
+// ─── Admin/manager : traitement des demandes de catégorie (Phase B) ──────────
+// Les cadres demandent une catégorie (openCategoryRequestDialog) ; manager et
+// admin les approuvent (crée la catégorie canonique) ou les refusent ici, dans
+// le panneau « Catégories » du Journal.
+// (l'état pendingCategoryRequests / categoryRequestsBadge est déclaré en tête de
+//  fichier car render() — appelé au boot — peut lire ces bindings.)
+
+function updateCategoryRequestsBadge() {
+  if (!categoryRequestsBadge) return;
+  const count = canCreateSharedCategory() ? pendingCategoryRequests.length : 0;
+  categoryRequestsBadge.hidden = count === 0;
+  categoryRequestsBadge.textContent = count > 0 ? String(count) : "";
+}
+
+async function loadPendingCategoryRequests({ force = false } = {}) {
+  if (!window.supabase || !canCreateSharedCategory()) {
+    // Pas le droit / pas encore connecté : on n'arme PAS le flag « chargé »,
+    // pour relancer la vraie charge dès que le rôle admin/manager est résolu.
+    pendingCategoryRequests = [];
+    updateCategoryRequestsBadge();
+    return;
+  }
+  if (categoryRequestsLoading || (categoryRequestsLoaded && !force)) return;
+  categoryRequestsLoading = true;
+  try {
+    const { data, error } = await window.supabase
+      .from("category_requests")
+      .select("request_id,user_id,user_name,label,justification,source_time_entry_id,status,created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.warn("category_requests select failed:", error);
+      return;
+    }
+    pendingCategoryRequests = Array.isArray(data) ? data : [];
+    categoryRequestsLoaded = true;
+    updateCategoryRequestsBadge();
+    if (journalSideMode === "categories") renderTagManager();
+  } finally {
+    categoryRequestsLoading = false;
+  }
+}
+
+async function approveCategoryRequest(request) {
+  if (!request || !window.supabase) return;
+  setAuthStatusMessage(`Création de « ${request.label} »…`, "neutral");
+  // 1) Crée (ou retrouve) la catégorie canonique — réutilise la pipeline existante.
+  const createdLabel = await createCategoryReference(request.label, { userName: request.user_name });
+  if (!createdLabel) {
+    setAuthStatusMessage("Création de la catégorie impossible (droits insuffisants ?).", "error", { persistMs: 4000 });
+    return;
+  }
+  // 2) Marque la demande comme approuvée.
+  const { error } = await window.supabase
+    .from("category_requests")
+    .update({
+      status: "approved",
+      decided_at: new Date().toISOString(),
+      decided_by: accessProfile.appUser?.user_id ?? null,
+    })
+    .eq("request_id", request.request_id);
+  if (error) {
+    console.warn("category_requests approve update failed:", error);
+    setAuthStatusMessage(`« ${createdLabel} » créée, mais le statut de la demande n'a pas pu être mis à jour.`, "warning", { persistMs: 4500 });
+  } else {
+    setAuthStatusMessage(`« ${createdLabel} » approuvée et ajoutée au catalogue.`, "success", { persistMs: 3000 });
+  }
+  await loadPendingCategoryRequests({ force: true });
+  renderSuggestions();
+}
+
+async function rejectCategoryRequest(request) {
+  if (!request || !window.supabase) return;
+  const confirmed = await requestDecision({
+    eyebrow: "Demande de catégorie",
+    title: `Refuser « ${request.label} » ?`,
+    copy: `Demandée par ${request.user_name || "?"}.`,
+    detail: "La demande sera marquée comme refusée et aucune catégorie ne sera créée.",
+    confirmLabel: "Refuser",
+    tone: "danger",
+  });
+  if (!confirmed) return;
+  const { error } = await window.supabase
+    .from("category_requests")
+    .update({
+      status: "rejected",
+      decided_at: new Date().toISOString(),
+      decided_by: accessProfile.appUser?.user_id ?? null,
+    })
+    .eq("request_id", request.request_id);
+  if (error) {
+    console.warn("category_requests reject update failed:", error);
+    setAuthStatusMessage("Refus impossible pour le moment. Réessaie.", "error", { persistMs: 3500 });
+    return;
+  }
+  setAuthStatusMessage(`Demande « ${request.label} » refusée.`, "success", { persistMs: 2800 });
+  await loadPendingCategoryRequests({ force: true });
+}
+
+function buildCategoryRequestsSection() {
+  const wrap = document.createElement("div");
+  wrap.className = "cat-requests";
+
+  const head = document.createElement("div");
+  head.className = "cat-requests-head";
+  head.textContent = `Demandes en attente · ${pendingCategoryRequests.length}`;
+  wrap.append(head);
+
+  for (const request of pendingCategoryRequests) {
+    const item = document.createElement("div");
+    item.className = "cat-request-item";
+
+    const info = document.createElement("div");
+    info.className = "cat-request-info";
+
+    const label = document.createElement("span");
+    label.className = "cat-request-label";
+    label.textContent = request.label;
+
+    const meta = document.createElement("span");
+    meta.className = "cat-request-meta";
+    meta.textContent = `par ${request.user_name || "?"}`;
+    info.append(label, meta);
+
+    if (request.justification) {
+      const justif = document.createElement("p");
+      justif.className = "cat-request-justif";
+      justif.textContent = request.justification;
+      info.append(justif);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "cat-request-actions";
+
+    const approveBtn = document.createElement("button");
+    approveBtn.type = "button";
+    approveBtn.className = "btn btn-primary btn--sm";
+    approveBtn.textContent = "Approuver";
+    approveBtn.addEventListener("click", () => void approveCategoryRequest(request));
+
+    const rejectBtn = document.createElement("button");
+    rejectBtn.type = "button";
+    rejectBtn.className = "btn btn--sm btn--danger-outline";
+    rejectBtn.textContent = "Refuser";
+    rejectBtn.addEventListener("click", () => void rejectCategoryRequest(request));
+
+    actions.append(approveBtn, rejectBtn);
+    item.append(info, actions);
+    wrap.append(item);
+  }
+
+  return wrap;
+}
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {

@@ -3685,6 +3685,83 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   gap: 1px;
 }
 
+/* Demandes de catégorie en attente (admin/manager) */
+.cat-requests {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--accent-soft);
+}
+
+.cat-requests-head {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-strong);
+}
+
+.cat-request-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius-input);
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+}
+
+.cat-request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cat-request-label {
+  font-weight: 600;
+  font-size: 0.86rem;
+}
+
+.cat-request-meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.cat-request-justif {
+  margin: 2px 0 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cat-request-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cat-requests-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  margin-left: 5px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .tag-manager-item {
   display: flex;
   align-items: center;
