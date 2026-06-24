@@ -9738,10 +9738,39 @@ function renderAgendaEventContents(element, session, visualSize) {
     }
   }
 
+  const marker = buildAgendaContentMarker(session);
+  if (marker) {
+    element.append(marker);
+  }
+
   const bottomHandle = document.createElement("span");
   bottomHandle.className = "agenda-resize-handle agenda-resize-handle--end";
   bottomHandle.setAttribute("aria-hidden", "true");
   element.append(bottomHandle);
+}
+
+// Indicateur discret (coin haut-droit) signalant qu'un créneau contient un lien
+// et/ou une note : on sait qu'un clic révélera quelque chose. pointer-events:none
+// pour ne pas gêner le drag/redimensionnement.
+function buildAgendaContentMarker(session) {
+  const hasLink = Boolean((session.notionRef || "").trim());
+  const hasNote = Boolean((session.notes || "").trim());
+  if (!hasLink && !hasNote) {
+    return null;
+  }
+
+  const linkSvg = `<svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M5.6 8.4l2.8-2.8M6.1 4.6l.8-.8a1.95 1.95 0 0 1 2.76 2.76l-.8.8M7.9 9.4l-.8.8a1.95 1.95 0 0 1-2.76-2.76l.8-.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+  const noteSvg = `<svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2.8 3.4h6.4M2.8 6h6.4M2.8 8.6h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+
+  const marker = document.createElement("span");
+  marker.className = "agenda-event-marker";
+  marker.setAttribute("aria-hidden", "true");
+  marker.innerHTML = `${hasLink ? linkSvg : ""}${hasNote ? noteSvg : ""}`;
+  const bits = [];
+  if (hasLink) bits.push("lien");
+  if (hasNote) bits.push("note");
+  marker.title = `Contient : ${bits.join(" + ")}`;
+  return marker;
 }
 
 function renderAgendaLivePreview() {

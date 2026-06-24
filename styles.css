@@ -2365,6 +2365,25 @@ select.select-input {
   padding-left: 10px;
 }
 
+/* Indicateur discret : ce créneau contient un lien et/ou une note. */
+.agenda-event-marker {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: currentColor;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.agenda-event-marker svg {
+  display: block;
+  width: 11px;
+  height: 11px;
+}
+
 .agenda-event:not(.agenda-event--planned)::before {
   content: "";
   position: absolute;
