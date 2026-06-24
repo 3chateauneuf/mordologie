@@ -2155,7 +2155,6 @@ function initializeAutocomplete() {
     },
     {
       input: plannedCategoryInput,
-      anchor: plannedCategoryInput.closest(".dialog-card"),
       getOptions: () => getCategorySuggestionLabels(),
       allowCreate: () => canCreateSharedCategory(),
       createLabel: (value) => `Ajouter "${value}" comme nouvelle catégorie`,
@@ -2205,20 +2204,9 @@ function initializeAutocomplete() {
         plannedTaskInput.value = value;
       },
     },
-    {
-      input: plannedNotionInput,
-      getOptions: () => uniqueValues("notionRef"),
-      applyValue: (value) => {
-        plannedNotionInput.value = value;
-      },
-    },
-    {
-      input: manualNotionInput,
-      getOptions: () => uniqueValues("notionRef"),
-      applyValue: (value) => {
-        manualNotionInput.value = value;
-      },
-    },
+    // Lien d'intérêt : pas d'autocomplétion. Un lien est propre à chaque cas,
+    // proposer d'anciennes URLs n'a pas de sens (le contexte d'une reprise
+    // probable pré-remplit toujours le lien du même sujet, lui, à l'ouverture).
   ];
 
   for (const config of configs) {
