@@ -93,6 +93,9 @@ const LEGACY_STORAGE_KEYS = {
 const REMOTE_SYNC_INTERVAL_MS = 15000;
 const QUICK_REPRISES_LIMIT = 6;
 const MEMORY_CONTEXT_LIMIT = 8;
+// Bucket KPI par défaut pour une catégorie créée depuis l'app (colonne
+// kpi_category_label NOT NULL). Reclassable ensuite côté Supabase.
+const DEFAULT_KPI_CATEGORY_LABEL = "Internal / Admin";
 const DEMO_MODE_ENABLED = false;
 const DEBUG_STOP_SYNC = false;   // set true to trace stop/sync lifecycle
 const DEBUG_STATE_LOSS = false;  // set true to trace session state mutations
@@ -5852,6 +5855,9 @@ async function createCategoryReference(rawLabel, options = {}) {
   const payload = {
     activity_category_id: nextId,
     activity_category_label: categoryLabel,
+    // kpi_category_label est NOT NULL : on regroupe par défaut dans le bucket le
+    // plus courant. L'admin peut reclasser la catégorie ensuite (Supabase).
+    kpi_category_label: DEFAULT_KPI_CATEGORY_LABEL,
     color_hex: getCategoryColor(categoryLabel),
     team_name: linkedUser?.team_name ?? getKnownUsers()[0]?.team_name ?? null,
     active: true,
@@ -13663,7 +13669,7 @@ async function approveCategoryRequest(request) {
   // 1) Crée (ou retrouve) la catégorie canonique — réutilise la pipeline existante.
   const createdLabel = await createCategoryReference(request.label, { userName: request.user_name });
   if (!createdLabel) {
-    setAuthStatusMessage("Création de la catégorie impossible (droits insuffisants ?).", "error", { persistMs: 4000 });
+    setAuthStatusMessage("Impossible de créer la catégorie. Réessaie dans un instant.", "error", { persistMs: 4000 });
     return;
   }
   // 2) Marque la demande comme approuvée.
