@@ -96,6 +96,8 @@ const MEMORY_CONTEXT_LIMIT = 8;
 // Bucket KPI par défaut pour une catégorie créée depuis l'app (colonne
 // kpi_category_label NOT NULL). Reclassable ensuite côté Supabase.
 const DEFAULT_KPI_CATEGORY_LABEL = "Internal / Admin";
+// Dernière erreur Supabase à la création d'une catégorie (pour diagnostic UI).
+let lastCategoryInsertError = null;
 const DEMO_MODE_ENABLED = false;
 const DEBUG_STOP_SYNC = false;   // set true to trace stop/sync lifecycle
 const DEBUG_STATE_LOSS = false;  // set true to trace session state mutations
@@ -5866,8 +5868,10 @@ async function createCategoryReference(rawLabel, options = {}) {
   const { data, error } = await window.supabase.from("categories").insert([payload]).select();
   if (error) {
     console.error("Supabase category insert error:", error);
+    lastCategoryInsertError = error;
     return null;
   }
+  lastCategoryInsertError = null;
 
   const insertedCategory = data?.[0] ?? payload;
   referenceCatalog.categories = [...referenceCatalog.categories, insertedCategory].sort((left, right) =>
@@ -13671,7 +13675,8 @@ async function approveCategoryRequest(request) {
   // 1) Crée (ou retrouve) la catégorie canonique — réutilise la pipeline existante.
   const createdLabel = await createCategoryReference(request.label, { userName: request.user_name });
   if (!createdLabel) {
-    setAuthStatusMessage("Impossible de créer la catégorie. Réessaie dans un instant.", "error", { persistMs: 4000 });
+    const detail = lastCategoryInsertError?.message || lastCategoryInsertError?.code || "raison inconnue";
+    setAuthStatusMessage(`Création impossible : ${detail}`, "error", { persistMs: 7000 });
     return;
   }
   // 2) Marque la demande comme approuvée.
