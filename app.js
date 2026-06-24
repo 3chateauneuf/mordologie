@@ -13383,11 +13383,18 @@ function normalizeCategoryAndTags(categories = [], tags = []) {
 }
 
 function getCategorySuggestionLabels() {
-  const sourceLabels = referenceCatalog.loaded
+  const catalogLabels = referenceCatalog.loaded
     ? referenceCatalog.categories.map((item) => item.activity_category_label)
-    : uniqueTokenValues("categories");
+    : [];
+  // On fusionne le catalogue canonique avec les catégories réellement utilisées
+  // dans les sessions : une étiquette en usage mais pas (encore) canonique
+  // (ex. « Logiciel », saisie avant la canonicalisation) doit rester proposable,
+  // sinon elle disparaît des suggestions alors qu'elle existe dans les données.
+  const usedLabels = uniqueTokenValues("categories");
 
-  const normalizedLabels = sourceLabels.map((label) => normalizeCategorySelection(label).category).filter(Boolean);
+  const normalizedLabels = [...catalogLabels, ...usedLabels]
+    .map((label) => normalizeCategorySelection(label).category)
+    .filter(Boolean);
   return dedupePreservingOrder(normalizedLabels).sort((left, right) => left.localeCompare(right, "fr"));
 }
 
