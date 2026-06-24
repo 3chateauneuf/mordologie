@@ -291,12 +291,11 @@
                     id="project-input"
                     type="text"
                     placeholder="Ex. Reunion Boussole, audit ADEME, synthese compta"
-                    list="project-suggestions"
+                    autocomplete="off"
                   />
                   <small id="project-memory-hint" class="hint">
                     Un sujet déjà connu recharge automatiquement son contexte utile.
                   </small>
-                  <datalist id="project-suggestions"></datalist>
                 </label>
 
                 <label class="field">
@@ -319,10 +318,9 @@
                       id="categories-input"
                       type="text"
                       placeholder="Choisir une catégorie"
-                      list="category-suggestions"
+                      autocomplete="off"
                     />
                   </div>
-                  <datalist id="category-suggestions"></datalist>
                 </label>
 
                 <label class="field">
@@ -335,10 +333,9 @@
                       id="tags-input"
                       type="text"
                       placeholder="Atelier, revue, suivi client..."
-                      list="tag-suggestions"
+                      autocomplete="off"
                     />
                   </div>
-                  <datalist id="tag-suggestions"></datalist>
                 </label>
 
                 <label class="field">
@@ -917,7 +914,7 @@
             <div class="dialog-grid">
               <label class="field field-full">
                 <span>Sujet</span>
-                <input id="manual-project-input" type="text" list="project-suggestions" placeholder="Ex. Reunion Boussole, audit ADEME, synthese compta" />
+                <input id="manual-project-input" type="text" autocomplete="off" placeholder="Ex. Reunion Boussole, audit ADEME, synthese compta" />
               </label>
 
               <label class="field field-full">
@@ -927,7 +924,7 @@
 
               <label class="field">
                 <span>Catégorie</span>
-                <input id="manual-categories-input" type="text" list="category-suggestions" placeholder="Choisir une catégorie" />
+                <input id="manual-categories-input" type="text" autocomplete="off" placeholder="Choisir une catégorie" />
               </label>
 
               <label class="field">

@@ -265,16 +265,13 @@ const authStatus = document.querySelector("#auth-status");
 const collaboratorInput = document.querySelector("#collaborator-input");
 const collaboratorSuggestions = document.querySelector("#collaborator-suggestions");
 const projectInput = document.querySelector("#project-input");
-const projectSuggestions = document.querySelector("#project-suggestions");
 const projectMemoryHint = document.querySelector("#project-memory-hint");
 const taskInput = document.querySelector("#task-input");
 const taskTokenList = document.querySelector("#task-token-list");
 const categoriesInput = document.querySelector("#categories-input");
 const categoriesList = document.querySelector("#categories-list");
-const categorySuggestions = document.querySelector("#category-suggestions");
 const tagsInput = document.querySelector("#tags-input");
 const tagsList = document.querySelector("#tags-list");
-const tagSuggestions = document.querySelector("#tag-suggestions");
 const notionInput = document.querySelector("#notion-input");
 const manageLinkButton = document.querySelector("#manage-link-button");
 const notesInput = document.querySelector("#notes-input");
@@ -2082,13 +2079,8 @@ function initializeAutocomplete() {
         tagsInput.value = "";
       },
     },
-    {
-      input: notionInput,
-      getOptions: () => uniqueValues("notionRef"),
-      applyValue: (value) => {
-        notionInput.value = value;
-      },
-    },
+    // Lien d'intérêt (formulaire principal) : pas d'autocomplétion non plus —
+    // même règle que dans les dialogues, un lien est propre à chaque cas.
     {
       input: manualCollaboratorInput,
       getOptions: () =>
@@ -2108,6 +2100,7 @@ function initializeAutocomplete() {
         referenceCatalog.loaded ? referenceCatalog.projects.map((item) => item.project_name) : uniqueValues("project"),
       applyValue: (value) => {
         manualProjectInput.value = value;
+        applyManualProjectMemoryFromInput();
       },
       allowCreate: () => canCreateSharedReferenceCatalog(),
       createLabel: (value) => `Ajouter "${value}" comme nouveau projet`,
@@ -7435,23 +7428,15 @@ function showActiveStartEditor() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function renderSuggestions() {
-  fillDatalist(
-    projectSuggestions,
-    referenceCatalog.loaded
-      ? referenceCatalog.projects.map((item) => item.project_name).sort((a, b) => a.localeCompare(b, "fr"))
-      : uniqueValues("project"),
-  );
+  // Sujet / Catégorie / Tags n'utilisent plus de <datalist> natif (cassé sur
+  // iPhone) : l'autocomplétion custom est l'unique source de suggestions.
+  // Seul le collaborateur (input caché) conserve sa datalist.
   fillDatalist(
     collaboratorSuggestions,
     getVisibleReferenceUsers().length
       ? getVisibleReferenceUsers().map((item) => item.user_name).sort((a, b) => a.localeCompare(b, "fr"))
       : uniqueValues("collaborator"),
   );
-  fillDatalist(
-    categorySuggestions,
-    getCategorySuggestionLabels(),
-  );
-  fillDatalist(tagSuggestions, uniqueTokenValues("tags"));
 
   const currentValue = managerCollaboratorFilter.value || "all";
   const collaborators = getVisibleReferenceUsers().length
@@ -12374,6 +12359,38 @@ function applyProjectMemoryFromInput() {
   updateFieldManageButtons();
 
   projectInput.dataset.lastHydratedKey = memory.key;
+}
+
+// Même logique de « reprise probable » que le formulaire principal, mais pour le
+// dialogue de contexte (manuel). On ne remplit que les champs vides : éditer une
+// session existante n'écrase jamais son contexte enregistré.
+function applyManualProjectMemoryFromInput() {
+  const subject = manualProjectInput.value.trim();
+  if (!subject) {
+    return false;
+  }
+  const memory = resolveProjectMemory(subject, manualCollaboratorInput.value.trim());
+  if (!memory) {
+    return false;
+  }
+
+  if (!manualCollaboratorInput.value.trim() && memory.collaborator) {
+    manualCollaboratorInput.value = memory.collaborator;
+  }
+  if (!manualTaskInput.value.trim() && memory.task) {
+    manualTaskInput.value = memory.task;
+  }
+  if (!manualCategoriesInput.value.trim() && memory.categories.length) {
+    manualCategoriesInput.value = memory.categories.slice(0, 1).join(", ");
+  }
+  if (!manualCurrentTags.length && memory.tags.length) {
+    manualCurrentTags = dedupePreservingOrder([...memory.tags]);
+    renderManualTagTokens();
+  }
+  if (!manualNotionInput.value.trim() && memory.notionRef) {
+    manualNotionInput.value = memory.notionRef;
+  }
+  return true;
 }
 
 function resolveProjectMemory(projectName, collaboratorName) {
