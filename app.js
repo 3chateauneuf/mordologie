@@ -5815,7 +5815,11 @@ async function createCategoryReference(rawLabel, options = {}) {
   if (!categoryLabel) {
     return null;
   }
-  if (!canCreateSharedReferenceCatalog()) {
+  // Permission spécifique aux catégories (manager/admin), cohérente avec
+  // l'option « Ajouter une catégorie » de l'autocomplétion et le panneau
+  // d'approbation. (canCreateSharedReferenceCatalog reste false : verrou du
+  // catalogue projets, sans rapport ici.)
+  if (!canCreateSharedCategory()) {
     return null;
   }
   if (!window.supabase) {
