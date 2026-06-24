@@ -2187,6 +2187,18 @@ function initializeAutocomplete() {
       },
     },
     {
+      input: plannedSubjectInput,
+      getOptions: () =>
+        referenceCatalog.loaded ? referenceCatalog.projects.map((item) => item.project_name) : uniqueValues("project"),
+      allowCreate: () => canCreateSharedReferenceCatalog(),
+      createLabel: (value) => `Ajouter "${value}" comme nouveau projet`,
+      createValue: (value) => createProjectReference(value, plannedCurrentCategories[0] ?? ""),
+      applyValue: (value) => {
+        plannedSubjectInput.value = value;
+        applyPlannedProjectMemoryFromInput();
+      },
+    },
+    {
       input: plannedTaskInput,
       getOptions: () => uniqueValues("task"),
       applyValue: (value) => {
@@ -10201,6 +10213,42 @@ function getPlannedEventsForCollaborator(collaborator, range) {
     .filter((row) => row.status !== "ignored");
 }
 
+// Reprend une « reprise probable » (mémoire projet) correspondant au sujet de
+// l'événement planifié : pré-remplit Client / Catégorie / Tags / Lien à partir
+// de la dernière session réelle du même sujet. Par défaut on ne remplit que les
+// champs vides ; `preferMemoryOverSuggestion` autorise la mémoire (historique
+// réel) à remplacer une simple suggestion heuristique.
+function applyPlannedProjectMemoryFromInput(options = {}) {
+  const subject = plannedSubjectInput.value.trim();
+  if (!subject) {
+    return false;
+  }
+  const collaborator =
+    plannedEditingEvent?.collaborator || getCurrentCollaborator() || accessProfile.appUser?.user_name || "";
+  const memory = resolveProjectMemory(subject, collaborator);
+  if (!memory) {
+    return false;
+  }
+
+  if (!plannedTaskInput.value.trim() && memory.task) {
+    plannedTaskInput.value = memory.task;
+  }
+  if ((options.preferMemoryOverSuggestion || !plannedCurrentCategories.length) && memory.categories.length) {
+    plannedCurrentCategories = [...memory.categories].slice(0, 1);
+    plannedCategoryInput.value = "";
+    renderPlannedCategoryTokens();
+  }
+  if ((options.preferMemoryOverSuggestion || !plannedCurrentTags.length) && memory.tags.length) {
+    plannedCurrentTags = dedupePreservingOrder([...memory.tags]);
+    plannedTagsInput.value = "";
+    renderPlannedTagTokens();
+  }
+  if (!plannedNotionInput.value.trim() && memory.notionRef) {
+    plannedNotionInput.value = memory.notionRef;
+  }
+  return true;
+}
+
 function openPlannedDialog(plannedEvent) {
   if (!plannedDialog) {
     return;
@@ -10217,6 +10265,10 @@ function openPlannedDialog(plannedEvent) {
   plannedNotionInput.value = plannedEvent.notionRef || extractFirstUrl(plannedEvent.description || "") || "";
   plannedNotesInput.value = plannedEvent.notes || plannedEvent.description || "";
   renderPlannedTagTokens();
+  // Si le sujet correspond à une reprise probable connue, on retombe sur son
+  // contexte. L'historique réel prime sur la suggestion heuristique tant que
+  // l'événement n'a pas déjà été validé à la main.
+  applyPlannedProjectMemoryFromInput({ preferMemoryOverSuggestion: !plannedEvent.validated_category });
   plannedDialogSubtitle.textContent = `${formatPlannedEventWeekday(plannedEvent.start_at)} · ${formatPlannedEventTime(plannedEvent)}`;
   syncPlannedDialogSuggestion(plannedEvent);
   plannedDialog.showModal();
