@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="popup.css" />
+    <!-- supabase-js (vendorizado, clásico) antes del módulo del popup -->
+    <script src="vendor/supabase.js"></script>
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup-head">
+        <span class="popup-brand">Mordologie</span>
+        <span id="user-pill" class="user-pill" hidden></span>
+      </header>
+
+      <!-- Vista login (OTP) -->
+      <section id="auth-view" class="view">
+        <p class="auth-copy">Connecte-toi avec ton email pour démarrer un chrono.</p>
+
+        <div id="email-step">
+          <label class="field">
+            <span>Email</span>
+            <input id="email-input" type="email" autocomplete="email" placeholder="prenom@cargonautes.fr" />
+          </label>
+          <button id="send-code-btn" type="button" class="btn btn-primary">Recevoir un code</button>
+        </div>
+
+        <div id="code-step" hidden>
+          <p class="auth-copy">Entre le code à 6 chiffres reçu par email.</p>
+          <label class="field">
+            <span>Code</span>
+            <input id="code-input" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" maxlength="8" />
+          </label>
+          <div class="row">
+            <button id="verify-code-btn" type="button" class="btn btn-primary">Se connecter</button>
+            <button id="back-btn" type="button" class="btn btn-ghost">Changer d'email</button>
+          </div>
+        </div>
+
+        <p id="auth-status" class="status" hidden></p>
+      </section>
+
+      <!-- Vista app (placeholder; el minuteur llega en la próxima fase) -->
+      <section id="app-view" class="view" hidden>
+        <p class="app-copy">Connecté ✓ — le minuteur et le contexte arrivent dans la prochaine étape.</p>
+        <button id="signout-btn" type="button" class="btn btn-ghost">Se déconnecter</button>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Mordologie — Minuteur",
+  "version": "0.1.0",
+  "description": "Contexte + minuteur rapide de Mordologie, à côté de la barre d'adresses.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Mordologie — Minuteur",
+    "default_icon": { "128": "icons/icon-128.png" }
+  },
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["https://mubyqnuajybakibzkxau.supabase.co/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "icons": { "128": "icons/icon-128.png", "512": "icons/icon-512.png" }
+}
