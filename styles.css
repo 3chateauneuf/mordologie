@@ -3012,6 +3012,7 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   align-self: start;
 }
 
+.session-resume-button,
 .session-edit-button,
 .session-delete-button {
   width: 26px;
@@ -3033,6 +3034,13 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   border-color: rgba(0, 0, 0, 0.10);
   background: rgba(0, 0, 0, 0.04);
   color: var(--text);
+}
+
+.session-resume-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .session-delete-button:hover {
@@ -5289,6 +5297,7 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   opacity: 1;
 }
 
+.session-resume-button,
 .session-edit-button,
 .session-delete-button {
   width: 24px;
@@ -5304,6 +5313,13 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   transform: none;
   background: rgba(0, 0, 0, 0.06);
   color: var(--text);
+}
+
+.session-resume-button:hover {
+  transform: none;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border: none;
 }
 
 .session-delete-button:hover {

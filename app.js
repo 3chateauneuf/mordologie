@@ -1073,6 +1073,73 @@ async function handlePrimaryTimerAction() {
   void upsertActiveSessionToSupabase(activeSession);
 }
 
+// Reprend un sujet déjà journalisé dans le chrono courant : recharge son
+// contexte (sujet, client, catégorie, tags, lien) puis démarre le chrono. Si un
+// chrono tourne déjà, on demande d'abord la permission de le couper.
+async function resumeTopicInTimer(session) {
+  if (!session) {
+    return;
+  }
+
+  if (activeSession) {
+    const confirmed = await requestDecision({
+      eyebrow: "Chrono en cours",
+      title: "Un chrono tourne déjà",
+      copy: `Reprendre « ${session.project || session.task || "ce sujet"} » nécessite d'arrêter le chrono actuel.`,
+      detail: "Le temps écoulé sera enregistré dans le journal, puis un nouveau chrono démarrera.",
+      confirmLabel: "Couper et démarrer",
+      tone: "primary",
+    });
+    if (!confirmed) {
+      return;
+    }
+    stopActiveSession();
+    const cleared = await waitForActiveSessionCleared();
+    if (!cleared) {
+      setAuthStatusMessage("Le chrono en cours n'a pas pu être arrêté. Réessaie.", "warning", { persistMs: 3500 });
+      return;
+    }
+  }
+
+  fillFormFromSession(session);
+  await handlePrimaryTimerAction();
+}
+
+// L'arrêt du chrono remet activeSession à null de façon asynchrone (après un
+// await dans completeStoppedSessionLocally, suivi de resetFormAfterStop). On
+// attend ce nettoyage — borné — avant de démarrer le nouveau chrono, sinon la
+// remise à zéro du formulaire écraserait le sujet repris.
+function waitForActiveSessionCleared(timeoutMs = 4000) {
+  if (!activeSession) {
+    return Promise.resolve(true);
+  }
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    const tick = () => {
+      if (!activeSession) {
+        resolve(true);
+      } else if (Date.now() - startedAt > timeoutMs) {
+        resolve(false);
+      } else {
+        setTimeout(tick, 50);
+      }
+    };
+    setTimeout(tick, 50);
+  });
+}
+
+function fillFormFromSession(session) {
+  fillFormFromMemory({
+    collaborator: session.collaborator ?? getCurrentCollaborator() ?? "",
+    project: session.project ?? "",
+    task: session.task ?? "",
+    categories: session.categories ?? [],
+    tags: session.tags ?? [],
+    notionRef: session.notionRef ?? "",
+    key: `journal-${session.id}`,
+  });
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   await handlePrimaryTimerAction();
@@ -1611,6 +1678,15 @@ journalFilterResetButton?.addEventListener("click", () => {
 });
 
 sessionList.addEventListener("click", (event) => {
+  const resumeButton = event.target.closest(".session-resume-button");
+  if (resumeButton) {
+    event.stopPropagation();
+    const sid = resumeButton.closest(".session-item")?.dataset.sessionId;
+    const sess = findSessionById(sid);
+    if (sess) void resumeTopicInTimer(sess);
+    return;
+  }
+
   const deleteButton = event.target.closest(".session-delete-button");
   if (deleteButton) {
     const sessionId = deleteButton.closest(".session-item")?.dataset.sessionId;
@@ -1661,6 +1737,11 @@ sessionList.addEventListener("click", (event) => {
 sessionList.addEventListener("keydown", (event) => {
   const sessionItem = event.target.closest(".session-item");
   if (!sessionItem) {
+    return;
+  }
+  // Les boutons d'action (reprendre / modifier / supprimer) gèrent eux-mêmes
+  // Entrée/Espace : ne pas ouvrir le dialogue d'édition par-dessus.
+  if (event.target.closest(".session-actions")) {
     return;
   }
   if (event.key !== "Enter" && event.key !== " ") {
