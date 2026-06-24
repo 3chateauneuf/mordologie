@@ -13490,7 +13490,9 @@ function normalizeCategoryAndTags(categories = [], tags = []) {
 
 function getCategorySuggestionLabels() {
   const catalogLabels = referenceCatalog.loaded
-    ? referenceCatalog.categories.map((item) => item.activity_category_label)
+    ? referenceCatalog.categories
+        .filter((item) => item.active !== false)
+        .map((item) => item.activity_category_label)
     : [];
   // On fusionne le catalogue canonique avec les catégories réellement utilisées
   // dans les sessions : une étiquette en usage mais pas (encore) canonique
