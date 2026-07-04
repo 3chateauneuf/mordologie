@@ -107,6 +107,11 @@
                 <button id="auth-calendar-ics-clear" type="button" class="btn btn--sm btn--danger-outline" hidden>Supprimer</button>
               </div>
             </div>
+            <div class="auth-calendar-section">
+              <label class="auth-section-label" for="auth-max-hours-input">Durée max par session (h)</label>
+              <p class="auth-calendar-hint">Garde-fou anti-erreur : une entrée manuelle plus longue est refusée. Par défaut 24 h.</p>
+              <input id="auth-max-hours-input" class="auth-calendar-input" type="number" min="1" max="24" step="1" inputmode="numeric" placeholder="24" />
+            </div>
             <div class="auth-dropdown-actions">
               <button id="auth-change-avatar-button" type="button" class="btn btn-secondary">Changer la photo</button>
               <button id="auth-signout-button" type="button" class="btn btn-ghost-danger">Se déconnecter</button>

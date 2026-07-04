@@ -76,6 +76,8 @@ const PROFILE_AVATAR_PREFERENCE_KEY = "profile_avatar";
 const CALENDAR_ICS_PREFERENCE_KEY = "calendar_ics_url";
 const CALENDAR_SNAPSHOTS_PREFERENCE_KEY = "calendar_snapshots_v1";
 const CALENDAR_ICS_URLS_KEY = "mordologie-calendar-ics-urls-v1";
+const MAX_SESSION_HOURS_PREFERENCE_KEY = "max_session_hours";
+const MAX_SESSION_HOURS_KEY = "mordologie-max-session-hours-v1";
 const LOCAL_RESCUE_ACCESS_KEY = "mordologie-local-rescue-access-v1";
 const PENDING_STOP_STATE_KEY = "mordologie-pending-stop-v1";
 const RECENTLY_STOPPED_SESSIONS_KEY = "mordologie-recently-stopped-sessions-v1";
@@ -96,6 +98,9 @@ const MEMORY_CONTEXT_LIMIT = 8;
 // Bucket KPI par défaut pour une catégorie créée depuis l'app (colonne
 // kpi_category_label NOT NULL). Reclassable ensuite côté Supabase.
 const DEFAULT_KPI_CATEGORY_LABEL = "Internal / Admin";
+// Garde-fou anti-erreur : durée max d'une entrée manuelle (heures). Configurable
+// par personne dans le profil ; ce défaut sert de plafond de bon sens.
+const DEFAULT_MAX_SESSION_HOURS = 24;
 // Dernière erreur Supabase à la création d'une catégorie (pour diagnostic UI).
 let lastCategoryInsertError = null;
 const DEMO_MODE_ENABLED = false;
@@ -262,6 +267,7 @@ const authSignoutButton = document.querySelector("#auth-signout-button");
 const authUserDropdown = document.querySelector("#auth-user-dropdown");
 const authChangeAvatarButton = document.querySelector("#auth-change-avatar-button");
 const authCalendarIcsInput = document.querySelector("#auth-calendar-ics-input");
+const authMaxHoursInput = document.querySelector("#auth-max-hours-input");
 const authCalendarIcsSave = document.querySelector("#auth-calendar-ics-save");
 const authCalendarIcsClear = document.querySelector("#auth-calendar-ics-clear");
 const authCalendarStatus = document.querySelector("#auth-calendar-status");
@@ -849,6 +855,7 @@ if (
 let plannedEventOverrides = loadStoredPlannedEventOverrides();
 let plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
 let calendarIcsUrlsByCollaborator = loadCalendarIcsUrls();
+let maxSessionHoursByCollaborator = loadMaxSessionHours();
 let plannedEditingEventId = null;
 let plannedEditingEvent = null;
 let plannedCurrentCategories = [];
@@ -939,7 +946,15 @@ authUserAvatar?.addEventListener("click", () => {
     const urls = getCalendarIcsUrls(getCurrentCollaborator() || "");
     if (authCalendarIcsInput) authCalendarIcsInput.value = urls.join("\n");
     updateCalendarDropdownState(urls.length > 0);
+    if (authMaxHoursInput) authMaxHoursInput.value = String(getMaxSessionHours(getCurrentCollaborator() || ""));
   }
+});
+
+authMaxHoursInput?.addEventListener("change", () => {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator) return;
+  void saveMaxSessionHours(collaborator, authMaxHoursInput.value);
+  authMaxHoursInput.value = String(getMaxSessionHours(collaborator));
 });
 
 authChangeAvatarButton?.addEventListener("click", () => {
@@ -3289,6 +3304,12 @@ function hydrateSharedUiPreferences(rows = []) {
       const collaborator = row.collaborator_name || row.owner_user_name || "";
       if (collaborator) {
         calendarIcsUrlsByCollaborator[normalizeText(collaborator)] = value;
+      }
+    }
+    if (row?.preference_key === MAX_SESSION_HOURS_PREFERENCE_KEY && Number(value) > 0) {
+      const collaborator = row.collaborator_name || row.owner_user_name || "";
+      if (collaborator) {
+        maxSessionHoursByCollaborator[normalizeText(collaborator)] = Number(value);
       }
     }
     if (row?.preference_key === CALENDAR_SNAPSHOTS_PREFERENCE_KEY && Array.isArray(value)) {
@@ -6779,6 +6800,16 @@ function saveManualEntry() {
     const realDuration = Number(editingSession.durationMs) || durationMs;
     finalDurationMs = Math.max(0, Math.min(realDuration, durationMs));
     finalPausedMs = Math.max(0, durationMs - finalDurationMs);
+  }
+
+  // Garde-fou anti-erreur : durée max configurable par personne (profil).
+  const maxHours = getMaxSessionHours(collaborator);
+  if (finalDurationMs > maxHours * 3600000) {
+    setManualDialogStatus(
+      `Durée trop longue (max ${maxHours} h). Corrige les horaires ou augmente la limite dans ton profil.`,
+      "error",
+    );
+    return;
   }
 
   const manualSession = {
@@ -10655,6 +10686,43 @@ function storeCalendarIcsUrls(urls) {
   } catch {
     // ignore
   }
+}
+
+// ─── Durée max par session (garde-fou configurable par personne) ──────────────
+function loadMaxSessionHours() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(MAX_SESSION_HOURS_KEY) ?? "{}");
+    return typeof stored === "object" && stored !== null && !Array.isArray(stored) ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function storeMaxSessionHours(map) {
+  try {
+    window.localStorage.setItem(MAX_SESSION_HOURS_KEY, JSON.stringify(map));
+  } catch {
+    // ignore
+  }
+}
+
+function getMaxSessionHours(collaborator) {
+  const raw = maxSessionHoursByCollaborator[normalizeText(collaborator || "")];
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_SESSION_HOURS;
+}
+
+async function saveMaxSessionHours(collaborator, hours) {
+  const key = normalizeText(collaborator || "");
+  if (!key) return;
+  const n = Number(hours);
+  if (Number.isFinite(n) && n > 0) {
+    maxSessionHoursByCollaborator[key] = n;
+  } else {
+    delete maxSessionHoursByCollaborator[key];
+  }
+  storeMaxSessionHours(maxSessionHoursByCollaborator);
+  await syncSharedUiPreference(MAX_SESSION_HOURS_PREFERENCE_KEY, collaborator, maxSessionHoursByCollaborator[key] ?? null);
 }
 
 function updateCalendarDropdownState(hasUrl) {
