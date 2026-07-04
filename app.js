@@ -78,6 +78,7 @@ const CALENDAR_SNAPSHOTS_PREFERENCE_KEY = "calendar_snapshots_v1";
 const CALENDAR_ICS_URLS_KEY = "mordologie-calendar-ics-urls-v1";
 const MAX_SESSION_HOURS_PREFERENCE_KEY = "max_session_hours";
 const MAX_SESSION_HOURS_KEY = "mordologie-max-session-hours-v1";
+const REPRENDRE_TODOS_KEY = "mordologie-reprendre-todos-v1";
 const LOCAL_RESCUE_ACCESS_KEY = "mordologie-local-rescue-access-v1";
 const PENDING_STOP_STATE_KEY = "mordologie-pending-stop-v1";
 const RECENTLY_STOPPED_SESSIONS_KEY = "mordologie-recently-stopped-sessions-v1";
@@ -856,6 +857,9 @@ let plannedEventOverrides = loadStoredPlannedEventOverrides();
 let plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
 let calendarIcsUrlsByCollaborator = loadCalendarIcsUrls();
 let maxSessionHoursByCollaborator = loadMaxSessionHours();
+let reprendreTags = [];
+let reprendreDragId = null;
+let reprendreTodos = loadReprendreTodos();
 let plannedEditingEventId = null;
 let plannedEditingEvent = null;
 let plannedCurrentCategories = [];
@@ -920,6 +924,7 @@ if ("scrollRestoration" in history) {
 window.scrollTo(0, 0);
 
 initializeAutocomplete();
+initReprendreView();
 applyBookFavicon();
 initializeViewNavigation();
 setupChipActionDelegation();
@@ -2329,6 +2334,48 @@ function initializeAutocomplete() {
     // Lien d'intérêt : pas d'autocomplétion. Un lien est propre à chaque cas,
     // proposer d'anciennes URLs n'a pas de sens (le contexte d'une reprise
     // probable pré-remplit toujours le lien du même sujet, lui, à l'ouverture).
+
+    // ── Vue « Reprendre » (refonte 2a) : réutilise les mêmes sources ──
+    {
+      input: document.querySelector("#rpr-subject"),
+      getOptions: () =>
+        referenceCatalog.loaded ? referenceCatalog.projects.map((item) => item.project_name) : uniqueValues("project"),
+      applyValue: (value) => {
+        const el = document.querySelector("#rpr-subject");
+        if (el) el.value = value;
+        refreshReprendreStart();
+      },
+    },
+    {
+      input: document.querySelector("#rpr-client"),
+      getOptions: () => uniqueValues("task"),
+      applyValue: (value) => {
+        const el = document.querySelector("#rpr-client");
+        if (el) el.value = value;
+        refreshReprendreStart();
+      },
+    },
+    {
+      input: document.querySelector("#rpr-category"),
+      getOptions: () => getCategorySuggestionLabels(),
+      allowCreate: () => canCreateSharedCategory(),
+      createLabel: (value) => `Ajouter "${value}" comme nouvelle catégorie`,
+      createValue: (value) =>
+        createCategoryReference(value, { userName: getCurrentCollaborator() || "", projectName: "" }),
+      allowRequest: () => canRequestSharedCategory(),
+      requestLabel: (value) => `Demander « ${value} » à l'admin`,
+      requestValue: (value) => openCategoryRequestDialog(value, null),
+      applyValue: (value) => {
+        const el = document.querySelector("#rpr-category");
+        if (el) el.value = normalizeCategorySelection(value).category || value;
+        refreshReprendreStart();
+      },
+    },
+    {
+      input: document.querySelector("#rpr-tags-input"),
+      getOptions: () => uniqueTokenValues("tags"),
+      applyValue: (value) => addReprendreTag(value),
+    },
   ];
 
   for (const config of configs) {
@@ -3070,7 +3117,7 @@ function scheduleAutocompleteHide() {
 
 function getInitialView() {
   const hash = window.location.hash.replace("#", "");
-  return ["cadre", "manager", "resources", "users", "journal", "guide"].includes(hash) ? hash : "guide";
+  return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide"].includes(hash) ? hash : "guide";
 }
 
 function setupSingleSelectionDisplay({ input, container }) {
@@ -5575,15 +5622,15 @@ function getAllowedViewsForRole(role = getAccessRole()) {
     return ["guide"];
   }
   if (role === "cadre") {
-    return ["cadre", "journal", "guide"];
+    return ["reprendre", "cadre", "journal", "guide"];
   }
   if (role === "admin") {
-    return ["cadre", "manager", "resources", "users", "journal", "guide"];
+    return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide"];
   }
   if (role === "manager") {
-    return ["cadre", "manager", "resources", "journal", "guide"];
+    return ["reprendre", "cadre", "manager", "resources", "journal", "guide"];
   }
-  return ["cadre", "journal", "guide"];
+  return ["reprendre", "cadre", "journal", "guide"];
 }
 
 function getManagedTeamNames() {
@@ -7298,6 +7345,10 @@ function stopTimerLoop() {
 
 function updateLiveTimer() {
   timerDisplay.textContent = activeSession ? formatClock(getActiveSessionDurationMs(activeSession)) : "00:00:00";
+  const rprTime = document.getElementById("rpr-run-time");
+  if (rprTime && activeSession) {
+    rprTime.textContent = formatClock(getActiveSessionDurationMs(activeSession));
+  }
 }
 
 function renderVisibleLiveViews() {
@@ -7328,6 +7379,7 @@ function render() {
   renderSessionList();
   renderSyncButton();
   renderPendingSyncIndicator();
+  renderReprendreView();
   renderCadreViews();
   renderManagerControls();
   renderManagerViews();
@@ -7679,6 +7731,326 @@ function renderSuggestions() {
   }
 
   managerCollaboratorFilter.value = collaborators.includes(currentValue) ? currentValue : "all";
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION: VUE « REPRENDRE » (refonte 2a)
+// Purpose: écran quotidien — capture rapide (réutilise le vrai flux de
+//   démarrage + l'autocomplétion), colonnes Récentes/Fréquentes issues de
+//   getProjectMemories, et une to-do « À faire » persistée par collaborateur.
+//   Tout est additif et gardé : un échec de rendu n'affecte pas le reste.
+// ═══════════════════════════════════════════════════════════════════════════
+
+function loadReprendreTodos() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(REPRENDRE_TODOS_KEY) ?? "{}");
+    return typeof stored === "object" && stored !== null && !Array.isArray(stored) ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function storeReprendreTodos() {
+  try {
+    window.localStorage.setItem(REPRENDRE_TODOS_KEY, JSON.stringify(reprendreTodos));
+  } catch {
+    // ignore
+  }
+}
+
+function getReprendreTodoList() {
+  const key = normalizeText(getCurrentCollaborator() || "");
+  return Array.isArray(reprendreTodos[key]) ? reprendreTodos[key] : [];
+}
+
+function setReprendreTodoList(list) {
+  const key = normalizeText(getCurrentCollaborator() || "");
+  if (!key) return;
+  reprendreTodos[key] = list;
+  storeReprendreTodos();
+}
+
+function refreshReprendreStart() {
+  const subject = document.querySelector("#rpr-subject");
+  const client = document.querySelector("#rpr-client");
+  const category = document.querySelector("#rpr-category");
+  const btn = document.querySelector("#rpr-start");
+  const hint = document.querySelector("#rpr-hint");
+  if (!subject || !client || !category || !btn) return;
+  const ok = subject.value.trim() && client.value.trim() && category.value.trim();
+  btn.disabled = !ok;
+  if (hint) hint.textContent = ok ? "Prêt — Entrée pour démarrer." : "Renseignez sujet, client et catégorie pour démarrer.";
+}
+
+function renderReprendreTags() {
+  const list = document.querySelector("#rpr-tags-list");
+  if (!list) return;
+  list.innerHTML = "";
+  reprendreTags.forEach((tag) => {
+    const chip = document.createElement("span");
+    chip.className = "rpr-token";
+    chip.append(document.createTextNode(tag));
+    const x = document.createElement("button");
+    x.type = "button";
+    x.setAttribute("aria-label", "Retirer");
+    x.textContent = "×";
+    x.addEventListener("click", () => { reprendreTags = reprendreTags.filter((t) => t !== tag); renderReprendreTags(); });
+    chip.appendChild(x);
+    list.appendChild(chip);
+  });
+}
+
+function addReprendreTag(value) {
+  const v = String(value || "").trim();
+  if (v && !reprendreTags.some((t) => t.toLowerCase() === v.toLowerCase())) {
+    reprendreTags.push(v);
+  }
+  const input = document.querySelector("#rpr-tags-input");
+  if (input) input.value = "";
+  renderReprendreTags();
+}
+
+function applyReprendrePastille(el, label) {
+  if (!el) return;
+  if (!label) { el.hidden = true; el.textContent = ""; return; }
+  el.hidden = false;
+  el.textContent = label;
+  const col = getCategoryColor(label);
+  el.style.background = `color-mix(in srgb, ${col} 16%, #fff)`;
+  el.style.color = `color-mix(in srgb, ${col} 78%, #111827)`;
+  el.style.border = `1px solid color-mix(in srgb, ${col} 28%, transparent)`;
+}
+
+function formatReprendreAgo(dateStr) {
+  const then = new Date(dateStr).getTime();
+  if (Number.isNaN(then)) return "";
+  const min = Math.floor((Date.now() - then) / 60000);
+  if (min < 1) return "à l'instant";
+  if (min < 60) return `il y a ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `il y a ${h} h`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "hier";
+  if (d < 7) return `il y a ${d} j`;
+  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" }).format(then);
+}
+
+function buildReprendreCard(memory, aside) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "rpr-qcard";
+  btn.innerHTML = `
+    <span class="rpr-qplay"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg></span>
+    <span class="rpr-qbody">
+      <span class="rpr-qtitle"></span>
+      <span class="rpr-qsub"><span class="rpr-pastille"></span><span class="rpr-qclient"></span></span>
+      <span class="rpr-qaside"></span>
+    </span>`;
+  btn.querySelector(".rpr-qtitle").textContent = memory.project || "Sans sujet";
+  btn.querySelector(".rpr-qclient").textContent = memory.task || "";
+  btn.querySelector(".rpr-qaside").textContent = aside || "";
+  applyReprendrePastille(btn.querySelector(".rpr-pastille"), (memory.categories || [])[0] || "");
+  btn.addEventListener("click", () => void reprendreStartFromMemory(memory));
+  return btn;
+}
+
+function renderReprendreColumns() {
+  const recentEl = document.querySelector("#rpr-col-recent");
+  const freqEl = document.querySelector("#rpr-col-freq");
+  if (!recentEl || !freqEl) return;
+  const collaborator = getCurrentCollaborator();
+  const memories = collaborator ? getProjectMemories(collaborator) : [];
+  const recent = [...memories].sort((a, b) => new Date(b.start) - new Date(a.start)).slice(0, 5);
+  const freq = [...memories]
+    .sort((a, b) => (b.usesCount || 0) - (a.usesCount || 0) || new Date(b.start) - new Date(a.start))
+    .slice(0, 5);
+  recentEl.innerHTML = "";
+  freqEl.innerHTML = "";
+  const recentCnt = document.querySelector("#rpr-recent-cnt");
+  const freqCnt = document.querySelector("#rpr-freq-cnt");
+  if (recentCnt) recentCnt.textContent = String(recent.length);
+  if (freqCnt) freqCnt.textContent = String(freq.length);
+  if (!recent.length) recentEl.innerHTML = '<p class="rpr-empty">Aucune session récente.</p>';
+  if (!freq.length) freqEl.innerHTML = '<p class="rpr-empty">Aucune session fréquente.</p>';
+  recent.forEach((m) => recentEl.appendChild(buildReprendreCard(m, formatReprendreAgo(m.start))));
+  freq.forEach((m) => freqEl.appendChild(buildReprendreCard(m, `${m.usesCount || 1} session${(m.usesCount || 1) > 1 ? "s" : ""}`)));
+}
+
+function renderReprendreTodos() {
+  const listEl = document.querySelector("#rpr-todo-list");
+  const cntEl = document.querySelector("#rpr-todo-cnt");
+  if (!listEl) return;
+  const todos = getReprendreTodoList();
+  const ordered = [...todos.filter((t) => !t.done), ...todos.filter((t) => t.done)];
+  if (cntEl) cntEl.textContent = String(todos.filter((t) => !t.done).length);
+  listEl.innerHTML = "";
+  ordered.forEach((t) => {
+    const row = document.createElement("div");
+    row.className = "rpr-todo-row" + (t.done ? " done" : "");
+    row.draggable = true;
+    row.innerHTML = `
+      <span class="rpr-todo-grip" aria-hidden="true"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="5" cy="12" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="11" cy="8" r="1.3"/><circle cx="11" cy="12" r="1.3"/></svg></span>
+      <button class="rpr-todo-box" type="button" aria-label="Marquer terminé">✓</button>
+      <span class="rpr-todo-text"></span>
+      <button class="rpr-todo-play" type="button" title="Démarrer comme tâche"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg></button>
+      <button class="rpr-todo-arch" type="button" title="Archiver"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4" rx="1"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 12.5h5"/></svg></button>`;
+    row.querySelector(".rpr-todo-text").textContent = t.text;
+    row.querySelector(".rpr-todo-box").addEventListener("click", () => {
+      setReprendreTodoList(getReprendreTodoList().map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)));
+      renderReprendreTodos();
+    });
+    row.querySelector(".rpr-todo-play").addEventListener("click", () => {
+      const s = document.querySelector("#rpr-subject");
+      if (s) { s.value = t.text; s.focus(); refreshReprendreStart(); }
+    });
+    row.querySelector(".rpr-todo-arch").addEventListener("click", () => {
+      setReprendreTodoList(getReprendreTodoList().filter((x) => x.id !== t.id));
+      renderReprendreTodos();
+    });
+    row.addEventListener("dragstart", () => { reprendreDragId = t.id; });
+    row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("dragover"); });
+    row.addEventListener("dragleave", () => row.classList.remove("dragover"));
+    row.addEventListener("drop", (e) => {
+      e.preventDefault();
+      row.classList.remove("dragover");
+      const list = getReprendreTodoList();
+      const from = list.findIndex((x) => x.id === reprendreDragId);
+      const to = list.findIndex((x) => x.id === t.id);
+      if (from > -1 && to > -1 && from !== to) {
+        const [moved] = list.splice(from, 1);
+        list.splice(to, 0, moved);
+        setReprendreTodoList(list);
+        renderReprendreTodos();
+      }
+    });
+    listEl.appendChild(row);
+  });
+}
+
+function reprendreAddTodo() {
+  const input = document.querySelector("#rpr-todo-input");
+  if (!input) return;
+  const v = input.value.trim();
+  if (!v) return;
+  const list = getReprendreTodoList();
+  const id = globalThis.crypto?.randomUUID?.() ?? `t-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+  list.push({ id, text: v, done: false });
+  setReprendreTodoList(list);
+  input.value = "";
+  renderReprendreTodos();
+}
+
+function renderReprendreRunning() {
+  const idle = document.querySelector("#rpr-idle");
+  const running = document.querySelector("#rpr-running");
+  if (!idle || !running) return;
+  if (activeSession) {
+    idle.style.display = "none";
+    running.style.display = "flex";
+    running.removeAttribute("hidden");
+    const title = document.querySelector("#rpr-run-title");
+    const client = document.querySelector("#rpr-run-client");
+    const time = document.querySelector("#rpr-run-time");
+    const pause = document.querySelector("#rpr-pause");
+    if (title) title.textContent = activeSession.project || "Session en cours";
+    if (client) client.textContent = activeSession.task || "";
+    applyReprendrePastille(document.querySelector("#rpr-run-cat"), (activeSession.categories || [])[0] || "");
+    if (time) time.textContent = formatClock(getActiveSessionDurationMs(activeSession));
+    if (pause) pause.textContent = activeSession.pausedAt ? "Reprendre" : "Pause";
+  } else {
+    idle.style.display = "";
+    running.style.display = "none";
+    refreshReprendreStart();
+  }
+}
+
+function renderReprendreView() {
+  try {
+    if (!document.querySelector("#reprendre")) return;
+    renderReprendreRunning();
+    renderReprendreColumns();
+    renderReprendreTodos();
+  } catch (error) {
+    console.error("renderReprendreView failed:", error);
+  }
+}
+
+async function reprendreStart() {
+  const subjectEl = document.querySelector("#rpr-subject");
+  const clientEl = document.querySelector("#rpr-client");
+  const categoryEl = document.querySelector("#rpr-category");
+  if (!subjectEl || !clientEl || !categoryEl || activeSession) return;
+  const subject = subjectEl.value.trim();
+  const client = clientEl.value.trim();
+  const category = categoryEl.value.trim();
+  if (!subject || !client || !category) return;
+
+  // Réutilise le vrai pipeline : on remplit le formulaire principal puis on
+  // démarre (validation + canonicalisation partagées).
+  projectInput.value = subject;
+  taskInput.value = client;
+  const normalized = normalizeCategoryAndTags([category], reprendreTags);
+  currentCategories = normalized.categories;
+  currentTags = normalized.tags;
+  renderCategoryTokens();
+  renderTagTokens();
+  notionInput.value = "";
+  notesInput.value = "";
+  await handlePrimaryTimerAction();
+
+  subjectEl.value = "";
+  clientEl.value = "";
+  categoryEl.value = "";
+  reprendreTags = [];
+  renderReprendreTags();
+}
+
+async function reprendreStartFromMemory(memory) {
+  if (!memory) return;
+  if (activeSession) {
+    const confirmed = await requestDecision({
+      eyebrow: "Chrono en cours",
+      title: "Un chrono tourne déjà",
+      copy: `Reprendre « ${memory.project || "ce sujet"} » nécessite d'arrêter le chrono actuel.`,
+      detail: "Le temps écoulé sera enregistré, puis un nouveau chrono démarrera.",
+      confirmLabel: "Couper et démarrer",
+      tone: "primary",
+    });
+    if (!confirmed) return;
+    stopActiveSession();
+    const cleared = await waitForActiveSessionCleared();
+    if (!cleared) {
+      setAuthStatusMessage("Le chrono en cours n'a pas pu être arrêté. Réessaie.", "warning", { persistMs: 3500 });
+      return;
+    }
+  }
+  fillFormFromMemory(memory);
+  await handlePrimaryTimerAction();
+}
+
+function initReprendreView() {
+  const startBtn = document.querySelector("#rpr-start");
+  startBtn?.addEventListener("click", () => { if (!startBtn.disabled) void reprendreStart(); });
+  const subjectEl = document.querySelector("#rpr-subject");
+  subjectEl?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !startBtn?.disabled) { e.preventDefault(); void reprendreStart(); }
+  });
+  ["#rpr-subject", "#rpr-client", "#rpr-category"].forEach((sel) => {
+    document.querySelector(sel)?.addEventListener("input", refreshReprendreStart);
+  });
+  document.querySelector("#rpr-tags-input")?.addEventListener("keydown", (e) => {
+    if (e.key === ",") {
+      const v = e.target.value.replace(/,/g, "").trim();
+      if (v) { e.preventDefault(); addReprendreTag(v); }
+    }
+  });
+  document.querySelector("#rpr-pause")?.addEventListener("click", () => { togglePauseSession(); renderReprendreView(); });
+  document.querySelector("#rpr-stop")?.addEventListener("click", () => { stopActiveSession(); });
+  document.querySelector("#rpr-adjust")?.addEventListener("click", () => {
+    document.querySelector('[data-view-target="cadre"]')?.click();
+  });
+  document.querySelector("#rpr-todo-add")?.addEventListener("click", reprendreAddTodo);
+  document.querySelector("#rpr-todo-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") reprendreAddTodo(); });
 }
 
 function renderQuickProjects() {

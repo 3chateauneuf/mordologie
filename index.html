@@ -138,6 +138,16 @@
         </div>
 
         <nav class="topbar-nav" aria-label="Navigation principale">
+          <button type="button" data-view-target="reprendre" aria-label="Reprendre">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M10.5 9l5 3-5 3V9z" fill="currentColor" stroke="none" />
+              </svg>
+            </span>
+            <span class="nav-tooltip" aria-hidden="true">Reprendre</span>
+            <span class="visually-hidden">Reprendre</span>
+          </button>
           <button type="button" data-view-target="cadre" class="active" aria-label="Hobbit">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
@@ -211,6 +221,87 @@
       <div id="auth-status-shell" class="status-toast" hidden aria-live="polite">
         <p id="auth-status"></p>
       </div>
+
+      <section class="app-view" id="reprendre" data-view-panel="reprendre">
+        <div class="rpr-wrap">
+
+          <!-- Capture rapide -->
+          <section class="rpr-card rpr-capture">
+            <!-- idle -->
+            <div id="rpr-idle">
+              <div class="rpr-cap-row">
+                <label class="rpr-search">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>
+                  <input id="rpr-subject" type="text" placeholder="Sur quoi travaillez-vous ?" autocomplete="off" />
+                </label>
+                <button class="rpr-btn-start" id="rpr-start" type="button" disabled><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 4.5l13 7.5-13 7.5V4.5z"/></svg>Démarrer</button>
+              </div>
+              <span class="rpr-hint" id="rpr-hint">Renseignez sujet, client et catégorie pour démarrer.</span>
+              <div class="rpr-context open" id="rpr-context">
+                <div class="rpr-grid2">
+                  <label class="rpr-field">
+                    <span>Client <span class="rpr-req">· requis</span></span>
+                    <input class="rpr-input" id="rpr-client" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
+                  </label>
+                  <label class="rpr-field">
+                    <span>Catégorie <span class="rpr-req">· requis</span></span>
+                    <input class="rpr-input" id="rpr-category" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
+                  </label>
+                </div>
+                <label class="rpr-field">
+                  <span>Tags <span class="rpr-opt">· optionnel</span></span>
+                  <div class="rpr-tokenfield" id="rpr-tags-field">
+                    <div class="rpr-tags-list" id="rpr-tags-list"></div>
+                    <input id="rpr-tags-input" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
+                  </div>
+                </label>
+              </div>
+            </div>
+            <!-- running -->
+            <div class="rpr-running" id="rpr-running" hidden>
+              <span class="rpr-run-dot"></span>
+              <div class="rpr-run-meta">
+                <span class="rpr-run-title" id="rpr-run-title">—</span>
+                <div class="rpr-run-sub">
+                  <span class="rpr-pastille" id="rpr-run-cat" hidden></span>
+                  <span class="rpr-run-client" id="rpr-run-client"></span>
+                </div>
+              </div>
+              <p class="rpr-run-time" id="rpr-run-time">00:00:00</p>
+              <button class="rpr-btn-ghost" id="rpr-adjust" type="button"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 9.5-9.5a1.8 1.8 0 0 0 0-2.5l-.5-.5a1.8 1.8 0 0 0-2.5 0L5 16z"/></svg>Ajuster</button>
+              <button class="rpr-btn-ghost" id="rpr-pause" type="button">Pause</button>
+              <button class="rpr-btn-stop" id="rpr-stop" type="button"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>Arrêter</button>
+            </div>
+          </section>
+
+          <!-- Reprendre -->
+          <section class="rpr-card">
+            <div class="rpr-reprendre-head">
+              <h2>Reprendre</h2>
+              <p>Un clic relance la tâche avec tout son contexte.</p>
+            </div>
+            <div class="rpr-grid3">
+              <div class="rpr-col">
+                <div class="rpr-col-head"><span class="rpr-col-lbl">Récentes</span><span class="rpr-col-cnt" id="rpr-recent-cnt">0</span></div>
+                <div id="rpr-col-recent"></div>
+              </div>
+              <div class="rpr-col">
+                <div class="rpr-col-head"><span class="rpr-col-lbl">Fréquentes</span><span class="rpr-col-cnt" id="rpr-freq-cnt">0</span></div>
+                <div id="rpr-col-freq"></div>
+              </div>
+              <div class="rpr-col">
+                <div class="rpr-col-head"><span class="rpr-col-lbl">À faire</span><span class="rpr-col-cnt" id="rpr-todo-cnt">0</span></div>
+                <div class="rpr-todo-add">
+                  <input id="rpr-todo-input" type="text" placeholder="Ajouter une tâche…" autocomplete="off" />
+                  <button id="rpr-todo-add" type="button" aria-label="Ajouter">＋</button>
+                </div>
+                <div class="rpr-todo-list" id="rpr-todo-list"></div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </section>
 
       <section class="app-view is-active" id="cadre" data-view-panel="cadre">
         <section class="cadre-layout">
