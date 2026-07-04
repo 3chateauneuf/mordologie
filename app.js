@@ -6629,11 +6629,20 @@ function updateManualPauseHint(session) {
   if (!manualPauseHint) {
     return;
   }
-  const pauseMs = session ? getSessionPauseMs(session) : 0;
+  let pauseMs = 0;
+  let realMs = 0;
+  if (session && isCurrentActiveSession(session) && activeSession) {
+    // Sesión en vivo: no tiene end/durationMs almacenados → se calculan.
+    pauseMs = Number(activeSession.pausedDurationMs) || 0;
+    realMs = getActiveSessionDurationMs(activeSession);
+  } else if (session) {
+    pauseMs = getSessionPauseMs(session);
+    realMs = Number(session.durationMs) || 0;
+  }
   if (pauseMs >= 60000 && session) {
     manualPauseHint.hidden = false;
     manualPauseHint.textContent =
-      `⏸ Pause enregistrée : ${formatPauseShort(pauseMs)} · temps réel travaillé : ${formatPauseShort(session.durationMs)}`;
+      `⏸ Pause enregistrée : ${formatPauseShort(pauseMs)} · temps réel travaillé : ${formatPauseShort(realMs)}`;
     manualPauseHint.dataset.pauseMs = String(pauseMs);
   } else {
     manualPauseHint.hidden = true;
