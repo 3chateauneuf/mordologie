@@ -7836,22 +7836,33 @@ function formatReprendreAgo(dateStr) {
 }
 
 function buildReprendreCard(memory, aside) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "rpr-qcard";
-  btn.innerHTML = `
-    <span class="rpr-qplay"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg></span>
+  // La carte n'est plus un bouton : clic sur le rond ▶ = démarrer tout de suite ;
+  // clic sur le reste = charger le contexte dans la barre de capture pour l'éditer
+  // avant de démarrer.
+  const card = document.createElement("div");
+  card.className = "rpr-qcard";
+  card.setAttribute("role", "button");
+  card.tabIndex = 0;
+  card.innerHTML = `
+    <button class="rpr-qplay" type="button" title="Démarrer maintenant" aria-label="Démarrer maintenant"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg></button>
     <span class="rpr-qbody">
       <span class="rpr-qtitle"></span>
       <span class="rpr-qsub"><span class="rpr-pastille"></span><span class="rpr-qclient"></span></span>
       <span class="rpr-qaside"></span>
     </span>`;
-  btn.querySelector(".rpr-qtitle").textContent = memory.project || "Sans sujet";
-  btn.querySelector(".rpr-qclient").textContent = memory.task || "";
-  btn.querySelector(".rpr-qaside").textContent = aside || "";
-  applyReprendrePastille(btn.querySelector(".rpr-pastille"), (memory.categories || [])[0] || "");
-  btn.addEventListener("click", () => void reprendreStartFromMemory(memory));
-  return btn;
+  card.querySelector(".rpr-qtitle").textContent = memory.project || "Sans sujet";
+  card.querySelector(".rpr-qclient").textContent = memory.task || "";
+  card.querySelector(".rpr-qaside").textContent = aside || "";
+  applyReprendrePastille(card.querySelector(".rpr-pastille"), (memory.categories || [])[0] || "");
+  card.querySelector(".rpr-qplay").addEventListener("click", (e) => {
+    e.stopPropagation();
+    void reprendreStartFromMemory(memory);
+  });
+  card.addEventListener("click", () => void editMemoryInCapture(memory));
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void editMemoryInCapture(memory); }
+  });
+  return card;
 }
 
 function renderReprendreColumns() {
@@ -8005,27 +8016,60 @@ async function reprendreStart() {
   renderReprendreTags();
 }
 
+// Si un chrono tourne, demande la permission de le couper avant de reprendre.
+async function ensureStoppedForReprendre(copy, confirmLabel) {
+  if (!activeSession) return true;
+  const confirmed = await requestDecision({
+    eyebrow: "Chrono en cours",
+    title: "Un chrono tourne déjà",
+    copy,
+    detail: "Le temps écoulé sera enregistré dans le journal.",
+    confirmLabel,
+    tone: "primary",
+  });
+  if (!confirmed) return false;
+  stopActiveSession();
+  const cleared = await waitForActiveSessionCleared();
+  if (!cleared) {
+    setAuthStatusMessage("Le chrono en cours n'a pas pu être arrêté. Réessaie.", "warning", { persistMs: 3500 });
+  }
+  return cleared;
+}
+
+// ▶ (rond) : démarre immédiatement avec tout le contexte de la reprise.
 async function reprendreStartFromMemory(memory) {
   if (!memory) return;
-  if (activeSession) {
-    const confirmed = await requestDecision({
-      eyebrow: "Chrono en cours",
-      title: "Un chrono tourne déjà",
-      copy: `Reprendre « ${memory.project || "ce sujet"} » nécessite d'arrêter le chrono actuel.`,
-      detail: "Le temps écoulé sera enregistré, puis un nouveau chrono démarrera.",
-      confirmLabel: "Couper et démarrer",
-      tone: "primary",
-    });
-    if (!confirmed) return;
-    stopActiveSession();
-    const cleared = await waitForActiveSessionCleared();
-    if (!cleared) {
-      setAuthStatusMessage("Le chrono en cours n'a pas pu être arrêté. Réessaie.", "warning", { persistMs: 3500 });
-      return;
-    }
-  }
+  const ok = await ensureStoppedForReprendre(
+    `Reprendre « ${memory.project || "ce sujet"} » nécessite d'arrêter le chrono actuel.`,
+    "Couper et démarrer",
+  );
+  if (!ok) return;
   fillFormFromMemory(memory);
   await handlePrimaryTimerAction();
+}
+
+// Clic sur la carte : charge le contexte dans la barre de capture pour l'éditer
+// avant de démarrer (ne démarre pas).
+async function editMemoryInCapture(memory) {
+  if (!memory) return;
+  const ok = await ensureStoppedForReprendre(
+    `Ouvrir « ${memory.project || "ce sujet"} » pour l'éditer nécessite d'arrêter le chrono actuel.`,
+    "Couper le chrono",
+  );
+  if (!ok) return;
+  const subjectEl = document.querySelector("#rpr-subject");
+  const clientEl = document.querySelector("#rpr-client");
+  const categoryEl = document.querySelector("#rpr-category");
+  if (subjectEl) subjectEl.value = memory.project || "";
+  if (clientEl) clientEl.value = memory.task || "";
+  if (categoryEl) categoryEl.value = (memory.categories || [])[0] || "";
+  reprendreTags = [...(memory.tags || [])].filter(Boolean);
+  renderReprendreTags();
+  refreshReprendreStart();
+  if (subjectEl) {
+    subjectEl.focus();
+    subjectEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
 }
 
 function initReprendreView() {
