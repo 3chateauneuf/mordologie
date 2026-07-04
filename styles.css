@@ -2365,6 +2365,30 @@ select.select-input {
   padding-left: 10px;
 }
 
+/* Banda de pausa: la fracción inferior del bloque que fue tiempo en pausa. */
+.agenda-event-pause {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  border-top: 1px dashed rgba(24, 56, 74, 0.25);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(24, 56, 74, 0.11) 0,
+    rgba(24, 56, 74, 0.11) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+  pointer-events: none;
+}
+
+/* El contenido textual se mantiene por encima de la banda de pausa. */
+.agenda-event > p {
+  position: relative;
+  z-index: 1;
+}
+
 /* Indicateur discret : ce créneau contient un lien et/ou une note. */
 .agenda-event-marker {
   position: absolute;
@@ -3223,6 +3247,16 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.manual-pause-hint {
+  margin: 6px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--accent-strong, #0f766e);
+  background: var(--accent-soft, rgba(13, 148, 136, 0.1));
+  border-radius: var(--radius-input, 6px);
+  padding: 6px 9px;
 }
 
 .dialog-time-card {

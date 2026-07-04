@@ -432,6 +432,7 @@ const manualEndTimeInput = document.querySelector("#manual-end-time-input");
 const manualStartCardTitle = document.querySelector("#manual-start-card-title");
 const manualEndCardTitle = document.querySelector("#manual-end-card-title");
 const manualDurationInput = document.querySelector("#manual-duration-input");
+const manualPauseHint = document.querySelector("#manual-pause-hint");
 const manualNotesInput = document.querySelector("#manual-notes-input");
 const cancelManualButton = document.querySelector("#cancel-manual-button");
 const deleteManualButton = document.querySelector("#delete-manual-button");
@@ -1932,6 +1933,17 @@ retryPendingStopButton?.addEventListener("click", () => {
   field?.addEventListener("change", () => {
     setManualDialogStatus("");
   });
+});
+
+// Editar la ventana temporal invalida la pausa registrada → ocultar la pista.
+[
+  manualStartDateInput,
+  manualStartTimeInput,
+  manualEndDateInput,
+  manualEndTimeInput,
+  manualDurationInput,
+].forEach((field) => {
+  field?.addEventListener("input", () => hideManualPauseHint());
 });
 
 cancelManualButton.addEventListener("click", () => {
@@ -6607,7 +6619,36 @@ function openManualDialog(session = null, preset = null) {
   }
   saveManualButton.textContent = session ? "Enregistrer les changements" : "Enregistrer";
   renderManualTagTokens();
+  updateManualPauseHint(session);
   manualDialog.showModal();
+}
+
+// Muestra la pausa registrada de la sesión editada. Se oculta si el usuario
+// cambia los horarios (la pausa ya no aplica a esa nueva ventana).
+function updateManualPauseHint(session) {
+  if (!manualPauseHint) {
+    return;
+  }
+  const pauseMs = session ? getSessionPauseMs(session) : 0;
+  if (pauseMs >= 60000 && session) {
+    manualPauseHint.hidden = false;
+    manualPauseHint.textContent =
+      `⏸ Pause enregistrée : ${formatPauseShort(pauseMs)} · temps réel travaillé : ${formatPauseShort(session.durationMs)}`;
+    manualPauseHint.dataset.pauseMs = String(pauseMs);
+  } else {
+    manualPauseHint.hidden = true;
+    manualPauseHint.textContent = "";
+    delete manualPauseHint.dataset.pauseMs;
+  }
+}
+
+function hideManualPauseHint() {
+  if (!manualPauseHint) {
+    return;
+  }
+  manualPauseHint.hidden = true;
+  manualPauseHint.textContent = "";
+  delete manualPauseHint.dataset.pauseMs;
 }
 
 function formatManualCardDate(dateValue) {
@@ -6691,6 +6732,24 @@ function saveManualEntry() {
     ? findSessionById(manualEditingSessionId) ?? null
     : null;
 
+  // Preservar la pausa: si el usuario no tocó inicio/fin, la sesión conserva su
+  // temps réel travaillé y su pausa (durée réelle < span). Si cambió la ventana,
+  // la pausa se recalcula a 0 (redefine la franja).
+  const timingUnchanged = Boolean(
+    editingSession &&
+      editingSession.start &&
+      editingSession.end &&
+      new Date(editingSession.start).getTime() === start.getTime() &&
+      new Date(editingSession.end).getTime() === end.getTime(),
+  );
+  let finalDurationMs = durationMs;
+  let finalPausedMs = 0;
+  if (timingUnchanged) {
+    const realDuration = Number(editingSession.durationMs) || durationMs;
+    finalDurationMs = Math.max(0, Math.min(realDuration, durationMs));
+    finalPausedMs = Math.max(0, durationMs - finalDurationMs);
+  }
+
   const manualSession = {
     id: manualEditingSessionId ?? createSessionId(),
     dbTimeEntryId: editingSession?.dbTimeEntryId ?? null,
@@ -6705,7 +6764,8 @@ function saveManualEntry() {
     notes: manualNotesInput.value.trim(),
     start: start.toISOString(),
     end: end.toISOString(),
-    durationMs,
+    durationMs: finalDurationMs,
+    pausedDurationMs: finalPausedMs,
   };
 
   const activeSessionBeingEdited =
@@ -9741,6 +9801,20 @@ function renderAgendaEventContents(element, session, visualSize) {
   const marker = buildAgendaContentMarker(session);
   if (marker) {
     element.append(marker);
+  }
+
+  // Banda de pausa: porción del intervalo que no fue tiempo trabajado. Así un
+  // bloque alto pero con mucha pausa deja de parecer más tiempo del real.
+  const pauseMs = getSessionPauseMs(session);
+  const spanMs = new Date(session.end).getTime() - new Date(session.start).getTime();
+  if (pauseMs >= 60000 && spanMs > 0) {
+    const fraction = Math.min(0.92, pauseMs / spanMs);
+    const pauseBand = document.createElement("span");
+    pauseBand.className = "agenda-event-pause";
+    pauseBand.style.height = `${(fraction * 100).toFixed(1)}%`;
+    pauseBand.setAttribute("aria-hidden", "true");
+    pauseBand.title = `⏸ ${formatPauseShort(pauseMs)} en pause`;
+    element.append(pauseBand);
   }
 
   const bottomHandle = document.createElement("span");
@@ -12781,6 +12855,29 @@ function getActiveSessionDurationMs(session) {
   return Math.max(end - start - (Number(session.pausedDurationMs) || 0), 0);
 }
 
+// Pausa de una sesión guardada: la diferencia entre el intervalo de reloj
+// (fin − inicio) y la duración real trabajada. Robusto y retroactivo; coincide
+// con pausedDurationMs para las sesiones del minuteur (span = durée + pause).
+function getSessionPauseMs(session) {
+  if (!session?.start || !session?.end) {
+    return Number(session?.pausedDurationMs) || 0;
+  }
+  const span = new Date(session.end).getTime() - new Date(session.start).getTime();
+  const duration = Number(session.durationMs) || 0;
+  const derived = duration > 0 ? Math.max(0, span - duration) : 0;
+  return derived || (Number(session.pausedDurationMs) || 0);
+}
+
+function formatPauseShort(ms) {
+  const totalMin = Math.round((Number(ms) || 0) / 60000);
+  if (totalMin < 60) {
+    return `${totalMin} min`;
+  }
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m ? `${h} h ${String(m).padStart(2, "0")}` : `${h} h`;
+}
+
 function getReportAnchorDate() {
   return reportAnchorInput.value ? new Date(`${reportAnchorInput.value}T12:00:00`) : new Date();
 }
@@ -13357,10 +13454,12 @@ function formatDurationHours(durationMs) {
 }
 
 function buildAgendaTooltip(session) {
+  const pauseMs = getSessionPauseMs(session);
   const parts = [
     `${session.collaborator} · ${session.project}`,
     `${getSessionClientLabel(session)}`,
     `${formatTimeRange(session)} · ${formatDurationHours(session.durationMs)}`,
+    pauseMs >= 60000 ? `⏸ Pause : ${formatPauseShort(pauseMs)}` : "",
     session.task || "",
     session.categories?.length ? `Catégorie : ${session.categories.join(", ")}` : "",
     session.tags?.length ? `Tags : ${session.tags.join(", ")}` : "",
