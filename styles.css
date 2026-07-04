@@ -5961,3 +5961,36 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-todo-arch:hover { color: #374151; background: #f1f5f9; }
 
 @media (max-width: 900px) { .rpr-grid3 { grid-template-columns: 1fr; } .rpr-grid2 { grid-template-columns: 1fr; } }
+
+/* ── Pulsation partagée (dot de session) ── */
+@keyframes cap-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ── Indicateur de session global (position fixe, tous les écrans) ── */
+.global-session-pill {
+  position: fixed;
+  top: 66px;
+  right: 24px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #0d9488 24%, transparent);
+  background: color-mix(in srgb, #0d9488 8%, #fff);
+  color: #0d9488;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(24, 56, 74, 0.12);
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.global-session-pill:hover { background: color-mix(in srgb, #0d9488 14%, #fff); border-color: #0d9488; }
+.global-session-pill .gsp-dot { width: 9px; height: 9px; border-radius: 50%; background: #ec6913; animation: cap-pulse 1.6s ease-in-out infinite; }
+.global-session-pill.paused .gsp-dot { animation: none; opacity: 0.5; }
+.global-session-pill .gsp-stop { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; color: #9ca3af; opacity: 0; transition: opacity 140ms ease, color 140ms ease; }
+.global-session-pill:hover .gsp-stop { opacity: 1; color: #dc2626; }
+@media (max-width: 640px) { .global-session-pill { top: auto; bottom: 16px; right: 16px; } }

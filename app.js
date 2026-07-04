@@ -925,6 +925,11 @@ window.scrollTo(0, 0);
 
 initializeAutocomplete();
 initReprendreView();
+document.getElementById("global-session-pill")?.addEventListener("click", async () => {
+  stopActiveSession();
+  await waitForActiveSessionCleared(4000);
+  render();
+});
 applyBookFavicon();
 initializeViewNavigation();
 setupChipActionDelegation();
@@ -7350,9 +7355,27 @@ function stopTimerLoop() {
 
 function updateLiveTimer() {
   timerDisplay.textContent = activeSession ? formatClock(getActiveSessionDurationMs(activeSession)) : "00:00:00";
-  const rprTime = document.getElementById("rpr-run-time");
-  if (rprTime && activeSession) {
-    rprTime.textContent = formatClock(getActiveSessionDurationMs(activeSession));
+  if (activeSession) {
+    const elapsed = formatClock(getActiveSessionDurationMs(activeSession));
+    const rprTime = document.getElementById("rpr-run-time");
+    if (rprTime) rprTime.textContent = elapsed;
+    const gspTime = document.querySelector("#global-session-pill .gsp-time");
+    if (gspTime) gspTime.textContent = elapsed;
+  }
+}
+
+// Pastille de session globale : visible sur tous les écrans quand le chrono
+// tourne ; clic = arrêter.
+function renderGlobalSessionPill() {
+  const pill = document.getElementById("global-session-pill");
+  if (!pill) return;
+  if (activeSession) {
+    pill.hidden = false;
+    pill.classList.toggle("paused", Boolean(activeSession.pausedAt));
+    const t = pill.querySelector(".gsp-time");
+    if (t) t.textContent = formatClock(getActiveSessionDurationMs(activeSession));
+  } else {
+    pill.hidden = true;
   }
 }
 
@@ -7384,6 +7407,7 @@ function render() {
   renderSessionList();
   renderSyncButton();
   renderPendingSyncIndicator();
+  renderGlobalSessionPill();
   renderReprendreView();
   renderCadreViews();
   renderManagerControls();
@@ -8019,6 +8043,7 @@ async function reprendreStart() {
   categoryEl.value = "";
   reprendreTags = [];
   renderReprendreTags();
+  document.querySelector("#rpr-context")?.classList.remove("open");
 }
 
 // Si un chrono tourne, demande la permission de le couper avant de reprendre.
@@ -8084,6 +8109,8 @@ function initReprendreView() {
   subjectEl?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !startBtn?.disabled) { e.preventDefault(); void reprendreStart(); }
   });
+  // Le contexte (Client/Catégorie/Tags) s'ouvre au focus du champ Sujet.
+  subjectEl?.addEventListener("focus", () => document.querySelector("#rpr-context")?.classList.add("open"));
   ["#rpr-subject", "#rpr-client", "#rpr-category"].forEach((sel) => {
     document.querySelector(sel)?.addEventListener("input", refreshReprendreStart);
   });

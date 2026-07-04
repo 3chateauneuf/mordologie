@@ -218,6 +218,13 @@
         </nav>
       </header>
 
+      <!-- Indicateur de session global : visible sur tous les écrans quand le chrono tourne. -->
+      <button id="global-session-pill" class="global-session-pill" type="button" title="Arrêter la session" hidden>
+        <span class="gsp-dot" aria-hidden="true"></span>
+        <span class="gsp-time">00:00:00</span>
+        <span class="gsp-stop" aria-hidden="true"><svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></span>
+      </button>
+
       <div id="auth-status-shell" class="status-toast" hidden aria-live="polite">
         <p id="auth-status"></p>
       </div>
@@ -237,7 +244,7 @@
                 <button class="rpr-btn-start" id="rpr-start" type="button" disabled><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 4.5l13 7.5-13 7.5V4.5z"/></svg>Démarrer</button>
               </div>
               <span class="rpr-hint" id="rpr-hint">Renseignez sujet, client et catégorie pour démarrer.</span>
-              <div class="rpr-context open" id="rpr-context">
+              <div class="rpr-context" id="rpr-context">
                 <div class="rpr-grid2">
                   <label class="rpr-field">
                     <span>Client <span class="rpr-req">· requis</span></span>
