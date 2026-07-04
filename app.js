@@ -1796,6 +1796,11 @@ agendaBoard.addEventListener("pointerdown", (event) => {
   beginAgendaDrag(event);
 });
 
+// Le tooltip note/lien est en position fixe : on le masque quand l'agenda défile.
+agendaBoardScroll?.addEventListener("scroll", () => {
+  if (agendaTipEl && !agendaTipEl.hidden) agendaTipEl.hidden = true;
+}, { passive: true });
+
 agendaPrevWeekButton?.addEventListener("click", () => {
   shiftAgendaWeek(-1);
 });
@@ -9974,7 +9979,7 @@ function renderAgenda() {
 
   const startHour = 7;
   const endHour = 24;
-  const hourHeight = 52;
+  const hourHeight = 46;
   agendaBoard.style.setProperty("--agenda-hour-height", `${hourHeight}px`);
 
   const timeRail = document.createElement("div");
@@ -10322,13 +10327,63 @@ function buildAgendaContentMarker(session) {
 
   const marker = document.createElement("span");
   marker.className = "agenda-event-marker";
-  marker.setAttribute("aria-hidden", "true");
   marker.innerHTML = `${hasLink ? linkSvg : ""}${hasNote ? noteSvg : ""}`;
-  const bits = [];
-  if (hasLink) bits.push("lien");
-  if (hasNote) bits.push("note");
-  marker.title = `Contient : ${bits.join(" + ")}`;
+  const notes = (session.notes || "").trim();
+  const link = (session.notionRef || extractFirstUrl(session.description || "") || "").trim();
+  marker.setAttribute("aria-label", `Contient : ${[hasLink ? "lien" : "", hasNote ? "note" : ""].filter(Boolean).join(" + ")}`);
+  marker.addEventListener("pointerdown", (e) => e.stopPropagation());
+  marker.addEventListener("mouseenter", () => showAgendaTip(marker, notes, link));
+  marker.addEventListener("mouseleave", () => scheduleHideAgendaTip());
   return marker;
+}
+
+// Tooltip sombre au survol de l'indicateur note/lien : texte de la note + lien
+// cliquable. Reste ouvert tant qu'on le survole (pour pouvoir cliquer le lien).
+let agendaTipEl = null;
+let agendaTipHideTimer = null;
+function getAgendaTip() {
+  if (agendaTipEl) return agendaTipEl;
+  agendaTipEl = document.createElement("div");
+  agendaTipEl.className = "agenda-tip";
+  agendaTipEl.hidden = true;
+  agendaTipEl.addEventListener("mouseenter", () => clearTimeout(agendaTipHideTimer));
+  agendaTipEl.addEventListener("mouseleave", () => scheduleHideAgendaTip());
+  document.body.appendChild(agendaTipEl);
+  return agendaTipEl;
+}
+function scheduleHideAgendaTip() {
+  clearTimeout(agendaTipHideTimer);
+  agendaTipHideTimer = setTimeout(() => { if (agendaTipEl) agendaTipEl.hidden = true; }, 140);
+}
+function showAgendaTip(marker, notes, link) {
+  const tip = getAgendaTip();
+  clearTimeout(agendaTipHideTimer);
+  tip.innerHTML = "";
+  if (notes) {
+    const p = document.createElement("p");
+    p.className = "agenda-tip-note";
+    p.textContent = notes;
+    tip.appendChild(p);
+  }
+  if (link) {
+    const a = document.createElement("a");
+    a.className = "agenda-tip-link";
+    a.href = link;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M10 14L20 4"/><path d="M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg>Ouvrir le lien`;
+    tip.appendChild(a);
+  }
+  if (!tip.children.length) { tip.hidden = true; return; }
+  tip.hidden = false;
+  const r = marker.getBoundingClientRect();
+  const tw = tip.offsetWidth;
+  const th = tip.offsetHeight;
+  let left = Math.max(8, Math.min(r.right - tw, window.innerWidth - tw - 8));
+  let top = r.bottom + 6;
+  if (top + th > window.innerHeight - 8) top = r.top - th - 6;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
 }
 
 function renderAgendaLivePreview() {
