@@ -177,10 +177,12 @@
             <div class="field">
               <label>Client <span class="req">· requis</span></label>
               <input class="cap-input" id="clientInput" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
+              <div class="combo-pop hidden" id="clientPop"></div>
             </div>
             <div class="field">
               <label>Catégorie <span class="req">· requis</span></label>
               <input class="cap-input" id="catInput" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
+              <div class="combo-pop hidden" id="catPop"></div>
             </div>
           </div>
           <div class="field">
@@ -188,6 +190,7 @@
             <div class="tokenfield" id="tagField">
               <input id="tagInput" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
             </div>
+            <div class="combo-pop hidden" id="tagPop"></div>
           </div>
         </div>
       </div>
@@ -291,6 +294,95 @@
     }
     subject.addEventListener("focus", () => capContext.classList.add("open"));
     [subject, clientInput, catInput].forEach(i => i.addEventListener("input", refreshStart));
+
+    // ── Comboboxes : autocomplétion + « Créer « X » » ──
+    const CLIENTS = ["Yumi", "ADEME", "Cargonautes", "Cyke", "Boussole", "Interne", "Divers"];
+    const CATEGORIES = Object.keys(CAT_COLORS);
+    const TAGS = ["atelier", "suivi client", "bio", "revue", "préparation", "urgent", "devis"];
+    let selectedTags = [];
+
+    const tagField = document.getElementById("tagField");
+    const tagInput = document.getElementById("tagInput");
+
+    // Combobox générique : filtre `includes` insensible à la casse, max 6, option
+    // « Créer « X » » si pas de correspondance exacte. Sélection au mousedown
+    // (preventDefault pour ne pas blur avant le clic).
+    function setupCombo(input, pop, getOptions, onPick, opts = {}) {
+      let active = -1;
+      function close() { pop.classList.add("hidden"); pop.innerHTML = ""; active = -1; }
+      function render() {
+        const q = input.value.trim();
+        const ql = q.toLowerCase();
+        const all = getOptions();
+        const items = all.filter((o) => o.toLowerCase().includes(ql)).slice(0, 6);
+        const exact = all.some((o) => o.toLowerCase() === ql);
+        pop.innerHTML = "";
+        items.forEach((o, i) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "qopt" + (i === active ? " active" : "");
+          b.textContent = o;
+          b.addEventListener("mousedown", (e) => { e.preventDefault(); onPick(o); close(); });
+          pop.appendChild(b);
+        });
+        if (q && !exact && opts.create !== false) {
+          const c = document.createElement("button");
+          c.type = "button";
+          c.className = "qopt create";
+          c.textContent = `＋ Créer « ${q} »`;
+          c.addEventListener("mousedown", (e) => { e.preventDefault(); onPick(q, true); close(); });
+          pop.appendChild(c);
+        }
+        if (!pop.children.length) { close(); return; }
+        pop.classList.remove("hidden");
+      }
+      input.addEventListener("focus", render);
+      input.addEventListener("input", render);
+      input.addEventListener("blur", () => setTimeout(close, 120));
+      input.addEventListener("keydown", (e) => {
+        const btns = [...pop.querySelectorAll(".qopt")];
+        if (e.key === "ArrowDown") { e.preventDefault(); active = Math.min(active + 1, btns.length - 1); render(); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); render(); }
+        else if (e.key === "Enter" && btns.length) { e.preventDefault(); btns[active >= 0 ? active : 0].dispatchEvent(new MouseEvent("mousedown")); }
+        else if (e.key === "Escape") { close(); }
+      });
+    }
+
+    function renderTagChips() {
+      [...tagField.querySelectorAll(".token")].forEach((n) => n.remove());
+      selectedTags.forEach((t) => {
+        const chip = document.createElement("span");
+        chip.className = "token";
+        chip.append(document.createTextNode(t));
+        const x = document.createElement("button");
+        x.type = "button"; x.setAttribute("aria-label", "Retirer"); x.textContent = "×";
+        x.onclick = () => { selectedTags = selectedTags.filter((v) => v !== t); renderTagChips(); };
+        chip.appendChild(x);
+        tagField.insertBefore(chip, tagInput);
+      });
+    }
+    function addTag(v) {
+      v = String(v).trim();
+      if (v && !selectedTags.some((t) => t.toLowerCase() === v.toLowerCase())) {
+        selectedTags.push(v);
+        if (!TAGS.some((t) => t.toLowerCase() === v.toLowerCase())) TAGS.push(v);
+      }
+      tagInput.value = "";
+      renderTagChips();
+    }
+
+    setupCombo(clientInput, document.getElementById("clientPop"), () => CLIENTS, (v) => {
+      clientInput.value = v;
+      if (!CLIENTS.some((c) => c.toLowerCase() === v.toLowerCase())) CLIENTS.push(v);
+      refreshStart();
+    });
+    setupCombo(catInput, document.getElementById("catPop"), () => CATEGORIES, (v) => {
+      catInput.value = v;
+      if (!CATEGORIES.some((c) => c.toLowerCase() === v.toLowerCase())) CATEGORIES.push(v);
+      refreshStart();
+    });
+    setupCombo(tagInput, document.getElementById("tagPop"), () => TAGS.filter((t) => !selectedTags.some((s) => s.toLowerCase() === t.toLowerCase())), (v) => addTag(v));
+    tagInput.addEventListener("keydown", (e) => { if (e.key === ",") { e.preventDefault(); addTag(tagInput.value.replace(/,/g, "")); } });
     subject.addEventListener("keydown", e => { if (e.key === "Enter" && !startBtn.disabled) start(); });
     startBtn.addEventListener("click", () => { if (!startBtn.disabled) start(); });
 
