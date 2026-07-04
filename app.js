@@ -1053,30 +1053,41 @@ decisionDialog?.addEventListener("close", () => {
   }
 });
 
+let timerStartInFlight = false;
 async function handlePrimaryTimerAction() {
   if (activeSession) {
     stopActiveSession();
     return;
   }
 
-  const sessionDraft = await validateAndNormalizeMainForm();
-  if (!sessionDraft) {
+  // Verrou de ré-entrance : un double-clic sur « Démarrer » lançait deux
+  // sessions actives (la 1re déjà poussée dans active_sessions → fantôme).
+  if (timerStartInFlight) {
     return;
   }
+  timerStartInFlight = true;
+  try {
+    const sessionDraft = await validateAndNormalizeMainForm();
+    if (!sessionDraft) {
+      return;
+    }
 
-  activeSession = {
-    id: createSessionId(),
-    ...sessionDraft,
-    start: new Date().toISOString(),
-    pausedAt: null,
-    pausedDurationMs: 0,
-    isServerActive: true,
-  };
+    activeSession = {
+      id: createSessionId(),
+      ...sessionDraft,
+      start: new Date().toISOString(),
+      pausedAt: null,
+      pausedDurationMs: 0,
+      isServerActive: true,
+    };
 
-  persistActiveSession();
-  startTimerLoopIfNeeded();
-  render();
-  void upsertActiveSessionToSupabase(activeSession);
+    persistActiveSession();
+    startTimerLoopIfNeeded();
+    render();
+    void upsertActiveSessionToSupabase(activeSession);
+  } finally {
+    timerStartInFlight = false;
+  }
 }
 
 // Reprend un sujet déjà journalisé dans le chrono courant : recharge son
@@ -4107,6 +4118,12 @@ async function completeStoppedSessionLocally(sessionToSave, source = "timer") {
 }
 
 function normalizeSession(session) {
+  // Robustez de arranque: una entrada corrupta (null / no-objeto) en el array
+  // guardado no debe lanzar y dejar la app en pantalla blanca. Se degrada a un
+  // objeto vacío que isCorruptedPersistedSession descarta luego.
+  if (!session || typeof session !== "object") {
+    session = {};
+  }
   const normalizedMeta = normalizeCategoryAndTags(
     Array.isArray(session.categories) ? session.categories.filter(Boolean) : [],
     Array.isArray(session.tags) ? session.tags.filter(Boolean) : [],
@@ -6620,7 +6637,12 @@ function openManualDialog(session = null, preset = null) {
   saveManualButton.textContent = session ? "Enregistrer les changements" : "Enregistrer";
   renderManualTagTokens();
   updateManualPauseHint(session);
-  manualDialog.showModal();
+  // Éviter InvalidStateError : showModal() sur un dialog déjà ouvert lève une
+  // exception (cas « Ouvrir l'existante » depuis le dialogue de conflit, qui
+  // s'empile au-dessus du dialogue manuel resté ouvert).
+  if (!manualDialog.open) {
+    manualDialog.showModal();
+  }
 }
 
 // Muestra la pausa registrada de la sesión editada. Se oculta si el usuario
@@ -13810,33 +13832,42 @@ async function loadPendingCategoryRequests({ force = false } = {}) {
   }
 }
 
+let approvingCategoryRequest = false;
 async function approveCategoryRequest(request) {
   if (!request || !window.supabase) return;
-  setAuthStatusMessage(`Création de « ${request.label} »…`, "neutral");
-  // 1) Crée (ou retrouve) la catégorie canonique — réutilise la pipeline existante.
-  const createdLabel = await createCategoryReference(request.label, { userName: request.user_name });
-  if (!createdLabel) {
-    const detail = lastCategoryInsertError?.message || lastCategoryInsertError?.code || "raison inconnue";
-    setAuthStatusMessage(`Création impossible : ${detail}`, "error", { persistMs: 7000 });
-    return;
+  // Verrou de ré-entrance : un double-clic sur « Approuver » lançait deux inserts
+  // avec le même prochain CAT-xxx → erreur de clé dupliquée trompeuse.
+  if (approvingCategoryRequest) return;
+  approvingCategoryRequest = true;
+  try {
+    setAuthStatusMessage(`Création de « ${request.label} »…`, "neutral");
+    // 1) Crée (ou retrouve) la catégorie canonique — réutilise la pipeline existante.
+    const createdLabel = await createCategoryReference(request.label, { userName: request.user_name });
+    if (!createdLabel) {
+      const detail = lastCategoryInsertError?.message || lastCategoryInsertError?.code || "raison inconnue";
+      setAuthStatusMessage(`Création impossible : ${detail}`, "error", { persistMs: 7000 });
+      return;
+    }
+    // 2) Marque la demande comme approuvée.
+    const { error } = await window.supabase
+      .from("category_requests")
+      .update({
+        status: "approved",
+        decided_at: new Date().toISOString(),
+        decided_by: accessProfile.appUser?.user_id ?? null,
+      })
+      .eq("request_id", request.request_id);
+    if (error) {
+      console.warn("category_requests approve update failed:", error);
+      setAuthStatusMessage(`« ${createdLabel} » créée, mais le statut de la demande n'a pas pu être mis à jour.`, "warning", { persistMs: 4500 });
+    } else {
+      setAuthStatusMessage(`« ${createdLabel} » approuvée et ajoutée au catalogue.`, "success", { persistMs: 3000 });
+    }
+    await loadPendingCategoryRequests({ force: true });
+    renderSuggestions();
+  } finally {
+    approvingCategoryRequest = false;
   }
-  // 2) Marque la demande comme approuvée.
-  const { error } = await window.supabase
-    .from("category_requests")
-    .update({
-      status: "approved",
-      decided_at: new Date().toISOString(),
-      decided_by: accessProfile.appUser?.user_id ?? null,
-    })
-    .eq("request_id", request.request_id);
-  if (error) {
-    console.warn("category_requests approve update failed:", error);
-    setAuthStatusMessage(`« ${createdLabel} » créée, mais le statut de la demande n'a pas pu être mis à jour.`, "warning", { persistMs: 4500 });
-  } else {
-    setAuthStatusMessage(`« ${createdLabel} » approuvée et ajoutée au catalogue.`, "success", { persistMs: 3000 });
-  }
-  await loadPendingCategoryRequests({ force: true });
-  renderSuggestions();
 }
 
 async function rejectCategoryRequest(request) {
