@@ -8089,7 +8089,13 @@ function initReprendreView() {
     }
   });
   document.querySelector("#rpr-pause")?.addEventListener("click", () => { togglePauseSession(); renderReprendreView(); });
-  document.querySelector("#rpr-stop")?.addEventListener("click", () => { stopActiveSession(); });
+  document.querySelector("#rpr-stop")?.addEventListener("click", async () => {
+    // L'arrêt vide activeSession de façon asynchrone (après getNextTimeEntryId) ;
+    // on attend ce nettoyage puis on rafraîchit la vue de façon déterministe.
+    stopActiveSession();
+    await waitForActiveSessionCleared(4000);
+    renderReprendreView();
+  });
   document.querySelector("#rpr-adjust")?.addEventListener("click", () => {
     document.querySelector('[data-view-target="cadre"]')?.click();
   });
