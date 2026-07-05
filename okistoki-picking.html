@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrepox Picking · Cargonautes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg:#F5F6F8;
+        --surface:#FFF;
+        --border:#E4E7EC;
+        --border-md:#CDD3DE;
+        --text:#1C2330;
+        --text2:#5A6478;
+        --text3:#9BA8BC;
+        --cobalt:#3B4FD8;
+        --cobalt-p:#EEF2FF;
+        --mint:#1A7A66;
+        --mint-p:#D6F5EF;
+        --amber:#9A6010;
+        --amber-p:#FFF0D6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Manrope", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top center, rgba(59, 79, 216, 0.08), transparent 26%),
+          linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(640px, calc(100% - 22px));
+        margin: 0 auto;
+        padding: 16px 0 28px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .topbar,
+      .card,
+      .pick-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(228, 231, 236, 0.92);
+        border-radius: 24px;
+        box-shadow: 0 16px 34px rgba(28, 35, 48, 0.08);
+      }
+
+      .topbar,
+      .card,
+      .pick-card {
+        padding: 18px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 10px;
+        z-index: 12;
+        display: grid;
+        gap: 12px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: "Bricolage Grotesque", sans-serif;
+        letter-spacing: -0.04em;
+      }
+
+      .eyebrow,
+      .mini,
+      p {
+        margin: 0;
+      }
+
+      .eyebrow {
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.76rem;
+        font-weight: 800;
+      }
+
+      .mini,
+      p {
+        color: var(--text2);
+      }
+
+      .row,
+      .badge-row,
+      .actions,
+      .line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .row {
+        justify-content: space-between;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border: 1px solid transparent;
+      }
+
+      .bc {
+        background: var(--cobalt-p);
+        color: var(--cobalt);
+      }
+
+      .bm {
+        background: var(--mint-p);
+        color: var(--mint);
+      }
+
+      .ba {
+        background: var(--amber-p);
+        color: var(--amber);
+      }
+
+      .btn {
+        border: 1px solid var(--border-md);
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: #fff;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, var(--cobalt) 0%, #5167eb 100%);
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .search {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 16px;
+        border: 1px solid var(--border-md);
+        padding: 11px 12px;
+      }
+
+      .pick-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .pick-card.done {
+        opacity: 0.72;
+      }
+
+      .pick-card .mono {
+        font-family: "DM Mono", monospace;
+      }
+
+      .pick-steps {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: #FAFBFD;
+      }
+
+      .step.done {
+        border-color: rgba(26, 122, 102, 0.18);
+        background: #F4FCFA;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div class="row">
+          <div>
+            <p class="eyebrow">Picking mobile</p>
+            <h1>Vue agent entrepôt</h1>
+          </div>
+          <button class="btn" onclick="window.location.href='index.html'">Retour admin</button>
+        </div>
+        <input id="search" class="search" type="text" placeholder="Chercher Expe, destinataire, zone..." oninput="renderList()" />
+        <div class="badge-row">
+          <span class="badge bc">Zone Z-BIO</span>
+          <span class="badge bm">Matin prioritaire</span>
+          <span class="badge ba">BL à signer détecté</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <div>
+            <p class="eyebrow">Synthèse</p>
+            <h2 id="queue-count">0 missions</h2>
+          </div>
+          <div class="actions">
+            <button class="btn primary" onclick="markAllDone()">Tout terminer</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="pick-list" class="pick-list"></section>
+    </main>
+
+    <script>
+      const PICKS = [
+        {
+          id: "pick-01",
+          expe: "Expe0112525",
+          client: "Yumi / Paf",
+          dest: "Biocoop Lancry",
+          zone: "Z-BIO / A-12",
+          lot: "6082078",
+          qte: 12,
+          note: "Faire signer le BL",
+          done: false,
+          steps: ["Sortir le lot 6082078", "Contrôler DLC 26/05/2026", "Mettre BL dans la pochette"],
+        },
+        {
+          id: "pick-02",
+          expe: "RB-250413C",
+          client: "Re-Belle",
+          dest: "La Grande Epicerie",
+          zone: "Z-BIO / B-03",
+          lot: "250413C",
+          qte: 24,
+          note: "Picking unitaire pot à pot",
+          done: false,
+          steps: ["Prélever 24 pots", "Vérifier batch C", "Séparer les 12 chutneys"],
+        },
+        {
+          id: "pick-03",
+          expe: "XO-020418",
+          client: "Xoco",
+          dest: "Maison Plisson",
+          zone: "Z-SEC / C-07",
+          lot: "XO260401",
+          qte: 48,
+          note: "Étiquette lot carton",
+          done: false,
+          steps: ["Prélever 4 PAV", "Contrôler état carton", "Poser l’étiquette lot"],
+        },
+      ];
+
+      function renderList() {
+        const term = document.getElementById("search").value.trim().toLowerCase();
+        const items = PICKS.filter((pick) => [pick.expe, pick.dest, pick.zone, pick.client].join(" ").toLowerCase().includes(term));
+        document.getElementById("queue-count").textContent = items.length + " mission(s)";
+        document.getElementById("pick-list").innerHTML = items
+          .map(
+            (pick) =>
+              '<article class="pick-card' +
+              (pick.done ? " done" : "") +
+              '"><div class="row"><div><p class="eyebrow">' +
+              pick.client +
+              "</p><h3>" +
+              pick.dest +
+              '</h3><p class="mini mono">' +
+              pick.expe +
+              "</p></div><button class='btn " +
+              (pick.done ? "" : "primary") +
+              "' onclick=\"toggleDone('" +
+              pick.id +
+              "')\">" +
+              (pick.done ? "Reprendre" : "Terminer") +
+              "</button></div><div class='badge-row' style='margin-top:12px'><span class='badge bc'>" +
+              pick.zone +
+              "</span><span class='badge bm'>Lot " +
+              pick.lot +
+              "</span><span class='badge ba'>Qté " +
+              pick.qte +
+              "</span></div><p style='margin-top:12px'>" +
+              pick.note +
+              "</p><div class='pick-steps'>" +
+              pick.steps
+                .map((step, index) => '<div class="step' + (pick.done || index === 0 ? " done" : "") + '"><input type="checkbox" ' + (pick.done || index === 0 ? "checked" : "") + ' /><span>' + step + "</span></div>")
+                .join("") +
+              "</div></article>"
+          )
+          .join("");
+      }
+
+      function toggleDone(id) {
+        const pick = PICKS.find((entry) => entry.id === id);
+        pick.done = !pick.done;
+        renderList();
+      }
+
+      function markAllDone() {
+        PICKS.forEach((pick) => {
+          pick.done = true;
+        });
+        renderList();
+      }
+
+      document.addEventListener("DOMContentLoaded", renderList);
+    </script>
+  </body>
+</html>

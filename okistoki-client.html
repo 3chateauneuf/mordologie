@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrepox Client · Cargonautes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg:#F5F6F8;
+        --surface:#FFF;
+        --border:#E4E7EC;
+        --border-md:#CDD3DE;
+        --text:#1C2330;
+        --text2:#5A6478;
+        --text3:#9BA8BC;
+        --cobalt:#3B4FD8;
+        --cobalt-p:#EEF2FF;
+        --cobalt-t:#2B5AB8;
+        --mint:#1A7A66;
+        --mint-p:#D6F5EF;
+        --mint-t:#1A7A66;
+        --coral:#B83838;
+        --coral-p:#FFE0E0;
+        --coral-t:#B83838;
+        --amber:#9A6010;
+        --amber-p:#FFF0D6;
+        --amber-t:#9A6010;
+        --purple:#5040A0;
+        --purple-p:#EDE8FF;
+        --purple-t:#5040A0;
+        --gray-p:#EEF0F4;
+        --gray-t:#4A5568;
+        --jam:#7A3010;
+        --jam-p:#FDEBD0;
+        --jam-t:#A0400A;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top right, rgba(59, 79, 216, 0.08), transparent 24%),
+          linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+        font-family: "Manrope", sans-serif;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      #preview-banner {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9998;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 16px;
+        background: var(--amber-p);
+        color: var(--amber-t);
+        border-bottom: 1px solid rgba(154, 96, 16, 0.18);
+        font-weight: 800;
+      }
+
+      #preview-banner.visible {
+        display: flex;
+      }
+
+      body.preview-mode {
+        padding-top: 56px;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 28px));
+        margin: 0 auto;
+        padding: 26px 0 40px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .hero,
+      .card {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(228, 231, 236, 0.92);
+        border-radius: 26px;
+        box-shadow: 0 20px 50px rgba(28, 35, 48, 0.08);
+      }
+
+      .hero {
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+      }
+
+      .hero h1,
+      .card h2,
+      .card h3 {
+        margin: 0;
+        font-family: "Bricolage Grotesque", sans-serif;
+        letter-spacing: -0.04em;
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+      }
+
+      .eyebrow,
+      .mini,
+      .hero p {
+        margin: 0;
+      }
+
+      .eyebrow {
+        color: var(--text3);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .hero p,
+      .mini {
+        color: var(--text2);
+        line-height: 1.5;
+      }
+
+      .hero-panel {
+        padding: 18px;
+        border-radius: 22px;
+        background:
+          radial-gradient(circle at top right, rgba(59, 79, 216, 0.12), transparent 30%),
+          linear-gradient(180deg, #fff 0%, #f8faff 100%);
+        border: 1px solid var(--border);
+      }
+
+      .badge-row,
+      .chip-row,
+      .actions,
+      .transport-row,
+      .lot-list,
+      .radio-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border: 1px solid transparent;
+      }
+
+      .bc {
+        background: var(--cobalt-p);
+        color: var(--cobalt-t);
+        border-color: rgba(59, 79, 216, 0.22);
+      }
+
+      .bm {
+        background: var(--mint-p);
+        color: var(--mint-t);
+        border-color: rgba(26, 122, 102, 0.18);
+      }
+
+      .ba {
+        background: var(--amber-p);
+        color: var(--amber-t);
+        border-color: rgba(154, 96, 16, 0.18);
+      }
+
+      .bj {
+        background: var(--jam-p);
+        color: var(--jam-t);
+        border-color: rgba(160, 64, 10, 0.18);
+      }
+
+      .bp {
+        background: var(--purple-p);
+        color: var(--purple-t);
+        border-color: rgba(80, 64, 160, 0.18);
+      }
+
+      .bg {
+        background: var(--gray-p);
+        color: var(--gray-t);
+        border-color: rgba(74, 85, 104, 0.16);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 18px;
+      }
+
+      .card {
+        padding: 22px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--text2);
+        font-weight: 700;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 16px;
+        border: 1px solid var(--border-md);
+        padding: 11px 12px;
+        background: #fff;
+      }
+
+      .field textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .radio-card {
+        min-width: 128px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .radio-card.active {
+        border-color: rgba(59, 79, 216, 0.22);
+        background: var(--cobalt-p);
+        color: var(--cobalt-t);
+      }
+
+      .btn {
+        border: 1px solid var(--border-md);
+        background: #fff;
+        color: var(--text);
+        border-radius: 999px;
+        padding: 11px 15px;
+        font-weight: 800;
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, var(--cobalt) 0%, #5167eb 100%);
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .btn.soft {
+        background: var(--gray-p);
+      }
+
+      .btn[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .catalogue-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .catalog-card {
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 18px;
+        background: linear-gradient(180deg, #fff 0%, #fafbfd 100%);
+        display: grid;
+        gap: 12px;
+      }
+
+      .mono {
+        font-family: "DM Mono", monospace;
+      }
+
+      .lot-card {
+        min-width: 132px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: #fff;
+      }
+
+      .lot-card input {
+        margin: 0 8px 0 0;
+      }
+
+      .lot-card.ok {
+        border-color: rgba(26, 122, 102, 0.18);
+      }
+
+      .lot-card.warn {
+        border-color: rgba(154, 96, 16, 0.25);
+        background: #fffaf1;
+      }
+
+      .lot-card.risk {
+        border-color: rgba(184, 56, 56, 0.22);
+        background: #fff7f7;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .summary-tile {
+        padding: 15px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: #fafbfd;
+      }
+
+      .summary-tile strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 1.3rem;
+      }
+
+      @media (max-width: 940px) {
+        .hero,
+        .grid,
+        .field-grid,
+        .catalogue-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <style id="accent-style"></style>
+  </head>
+  <body>
+    <div id="preview-banner">
+      <span id="preview-copy">👁 Mode visualisation</span>
+      <button class="btn soft" type="button" onclick="window.close()">✕ Retour admin</button>
+    </div>
+
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-panel">
+          <p class="eyebrow">Portail client · Cargonautes</p>
+          <h1 id="client-title">🧃 Yumi / Paf</h1>
+          <p id="client-subtitle">Commandes, lots et préparation adaptés à votre configuration client.</p>
+          <div class="badge-row" style="margin-top:16px">
+            <span id="accent-badge" class="badge bc">Cutoff 13h</span>
+            <span id="export-badge" class="badge bg">Export Cyke</span>
+            <span id="mode-badge" class="badge bm">Production</span>
+          </div>
+        </div>
+
+        <div class="hero-panel">
+          <p class="eyebrow">Repères</p>
+          <div class="summary-grid">
+            <div class="summary-tile">
+              <span class="eyebrow">Cutoff</span>
+              <strong id="cutoff-hour-kpi">13h</strong>
+              <p class="mini">Heure standard</p>
+            </div>
+            <div class="summary-tile">
+              <span class="eyebrow">PAV</span>
+              <strong id="pav-kpi">Actif</strong>
+              <p class="mini">Par format</p>
+            </div>
+            <div class="summary-tile">
+              <span class="eyebrow">Canaux</span>
+              <strong id="channel-kpi">Multi</strong>
+              <p class="mini">Selon configuration</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <p class="eyebrow">Nouvelle demande</p>
+          <h2>Préparer une commande</h2>
+
+          <div class="field-grid">
+            <div class="field">
+              <label for="dest-name">Destinataire</label>
+              <input id="dest-name" type="text" placeholder="Biocoop Lancry" />
+            </div>
+            <div class="field">
+              <label for="dest-address">Adresse</label>
+              <input id="dest-address" type="text" placeholder="15 rue de Lancry, 75010 Paris" />
+            </div>
+          </div>
+
+          <div id="channel-section" style="margin-top:16px">
+            <label class="mini" style="font-weight:800;color:var(--text2)">Canal de distribution</label>
+            <div id="channel-cards" class="radio-cards" style="margin-top:10px"></div>
+          </div>
+
+          <div id="channel-simple-section" class="field" style="margin-top:16px;display:none">
+            <label for="channel-simple-select">Canal</label>
+            <select id="channel-simple-select">
+              <option>Standard</option>
+              <option>B2B</option>
+              <option>Retail</option>
+            </select>
+          </div>
+
+          <div class="transport-row" style="margin-top:16px">
+            <div class="field" style="flex:1 1 220px">
+              <label for="transporteur-select">Transporteur</label>
+              <select id="transporteur-select"></select>
+            </div>
+            <div class="field" style="flex:1 1 220px">
+              <label for="commande-note">Note commande</label>
+              <input id="commande-note" type="text" placeholder="Faire signer le BL" />
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:16px">
+            <label for="extra-note">Instructions complémentaires</label>
+            <textarea id="extra-note" placeholder="Commentaires, accès, note de livraison..."></textarea>
+          </div>
+
+          <div class="actions" style="margin-top:18px">
+            <button class="btn primary" data-confirm type="button">Confirmer la demande</button>
+            <button class="btn soft" data-confirm type="button" id="export-button">Exporter</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <p class="eyebrow">Règles client</p>
+          <h2 id="ops-title">Règles opérationnelles</h2>
+          <div id="ops-badges" class="badge-row" style="margin-top:14px"></div>
+          <div class="summary-grid">
+            <div class="summary-tile">
+              <span class="eyebrow">Cutoff jours</span>
+              <strong id="days-summary">Lun → Ven</strong>
+              <p class="mini">Jours actifs</p>
+            </div>
+            <div class="summary-tile">
+              <span class="eyebrow">Transport</span>
+              <strong id="transport-summary">Chronofresh</strong>
+              <p class="mini">Option par défaut</p>
+            </div>
+            <div class="summary-tile">
+              <span class="eyebrow">Intégration</span>
+              <strong id="export-summary">Cyke</strong>
+              <p class="mini">Cible d’export</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="card">
+        <p class="eyebrow">Catalogue & lots</p>
+        <h2 id="catalog-title">Catalogue</h2>
+        <p class="mini">Sélection FIFO des lots avec alerte visuelle sur la fraîcheur restante.</p>
+        <div id="catalogue-grid" class="catalogue-grid"></div>
+      </section>
+    </main>
+
+    <script>
+      const CLIENTS = {
+        yumi: {
+          nom: "Yumi / Paf",
+          emoji: "🧃",
+          accentVar: "cobalt",
+          cutoff: { h: 13, days: [1, 2, 3, 4, 5] },
+          tarifs: { normal: 1.0, t11: 0.95, t15: 1.1, t17: 1.25, urgence: 1.5 },
+          hasPAV: true,
+          hasCanaux: true,
+          hasStockCible: false,
+          dlcMode: "short",
+          transporteurs: ["Chronofresh", "STEF", "Coursier Cargonautes"],
+          exportTarget: "cyke",
+          channels: ["B2C", "CHR & Indep", "GMS", "Bureaux"],
+          catalogue: [
+            {
+              code: "s60",
+              nom: "Shot gingembre 60mL",
+              pavDispo: true,
+              pav: 8,
+              lots: [
+                { num: "6082078", dlc: "26/05/2026", stk: 96 },
+                { num: "6082051", dlc: "05/05/2026", stk: 40 },
+              ],
+            },
+            {
+              code: "j240",
+              nom: "Jus 240mL",
+              pavDispo: true,
+              pav: 6,
+              lots: [
+                { num: "2409901", dlc: "21/05/2026", stk: 124 },
+                { num: "2409822", dlc: "30/04/2026", stk: 30 },
+              ],
+            },
+            {
+              code: "j1l",
+              nom: "Jus pressé 1L",
+              pavDispo: false,
+              pav: 0,
+              lots: [
+                { num: "1000891", dlc: "04/05/2026", stk: 24 },
+              ],
+            },
+          ],
+        },
+        rebelle: {
+          nom: "Re-Belle",
+          emoji: "🍓",
+          accentVar: "jam",
+          cutoff: { h: 17, days: [1, 2, 3, 4, 5] },
+          tarifs: { normal: 1.0, t11: 1.0, t15: 1.0, t17: 1.08, urgence: 1.25 },
+          hasPAV: false,
+          hasCanaux: false,
+          hasStockCible: true,
+          dlcMode: "long",
+          transporteurs: ["DB Schenker", "Coursier Cargonautes"],
+          exportTarget: "zapier",
+          channels: ["Standard"],
+          catalogue: [
+            {
+              code: "rb-mir",
+              nom: "Confiture Mirabelle",
+              pavDispo: false,
+              pav: 0,
+              lots: [
+                { num: "250413C", dlc: "13/10/2026", stk: 120 },
+                { num: "250401A", dlc: "01/10/2026", stk: 64 },
+              ],
+            },
+            {
+              code: "rb-oni",
+              nom: "Chutney Oignon",
+              pavDispo: false,
+              pav: 0,
+              lots: [
+                { num: "250409B", dlc: "09/10/2026", stk: 88 },
+              ],
+            },
+          ],
+        },
+        xoco: {
+          nom: "Xoco",
+          emoji: "🍫",
+          accentVar: "purple",
+          cutoff: { h: 17, days: [1, 2, 3, 4, 5, 6] },
+          tarifs: { normal: 1.0, t11: 1.0, t15: 1.05, t17: 1.12, urgence: 1.4 },
+          hasPAV: true,
+          hasCanaux: false,
+          hasStockCible: false,
+          dlcMode: "long",
+          transporteurs: ["DB Schenker", "Coursier Cargonautes"],
+          exportTarget: "csv",
+          channels: ["Standard"],
+          catalogue: [
+            {
+              code: "xo70",
+              nom: "Tablette noir 70%",
+              pavDispo: true,
+              pav: 12,
+              lots: [
+                { num: "XO260401", dlc: "15/12/2026", stk: 150 },
+              ],
+            },
+          ],
+        },
+      };
+
+      const CLIENT_ID = "yumi";
+      let activeClientId = CLIENT_ID;
+      let CFG = CLIENTS[CLIENT_ID];
+
+      const DAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+      function dlcWeekLabel(days) {
+        if (days < 7) {
+          return "< 1 sem";
+        }
+        if (days < 60) {
+          return Math.round(days / 7) + " sem";
+        }
+        return Math.round(days / 30) + " mois";
+      }
+
+      function daysUntil(dateString) {
+        const [day, month, year] = dateString.split("/");
+        const target = new Date(year + "-" + month + "-" + day + "T12:00:00");
+        const now = new Date();
+        return Math.round((target - now) / 86400000);
+      }
+
+      function applyClientConfig() {
+        const params = new URLSearchParams(window.location.search);
+        const override = params.get("client");
+        if (override && CLIENTS[override]) {
+          activeClientId = override;
+        }
+        CFG = CLIENTS[activeClientId];
+
+        const accentMap = {
+          cobalt: ["#3B4FD8", "#EEF2FF", "#2B5AB8"],
+          jam: ["#7A3010", "#FDEBD0", "#A0400A"],
+          purple: ["#5040A0", "#EDE8FF", "#5040A0"],
+        };
+        if (CFG.accentVar !== "cobalt") {
+          const colors = accentMap[CFG.accentVar] || accentMap.cobalt;
+          document.getElementById("accent-style").textContent =
+            ":root{--cobalt:" + colors[0] + ";--cobalt-p:" + colors[1] + ";--cobalt-t:" + colors[2] + ";}";
+        }
+
+        document.getElementById("client-title").textContent = CFG.emoji + " " + CFG.nom;
+        document.getElementById("client-subtitle").textContent =
+          "Portail configuré pour " + CFG.nom + ", avec cutoff " + CFG.cutoff.h + "h et export " + CFG.exportTarget.toUpperCase() + ".";
+        document.getElementById("accent-badge").textContent = "Cutoff " + CFG.cutoff.h + "h";
+        document.getElementById("export-badge").textContent = "Export " + CFG.exportTarget.toUpperCase();
+        document.getElementById("cutoff-hour-kpi").textContent = CFG.cutoff.h + "h";
+        document.getElementById("pav-kpi").textContent = CFG.hasPAV ? "Actif" : "Non";
+        document.getElementById("channel-kpi").textContent = CFG.hasCanaux ? "Multi" : "Simple";
+        document.getElementById("days-summary").textContent = CFG.cutoff.days.map((day) => DAY_LABELS[day - 1]).join(" · ");
+        document.getElementById("transport-summary").textContent = CFG.transporteurs[0] || "Transporteur";
+        document.getElementById("export-summary").textContent = CFG.exportTarget.toUpperCase();
+        document.getElementById("ops-title").textContent = "Règles " + CFG.nom;
+        document.getElementById("catalog-title").textContent = "Catalogue " + CFG.nom;
+        document.getElementById("export-button").textContent = "Exporter vers " + CFG.exportTarget.toUpperCase();
+
+        const opsBadges = [
+          CFG.hasPAV ? "PAV actif" : "PAV non disponible",
+          CFG.hasStockCible ? "Stock cible activé" : "Flux FIFO",
+          CFG.dlcMode === "short" ? "DLC courte" : "DLC longue",
+        ];
+        document.getElementById("ops-badges").innerHTML = opsBadges
+          .map((label, index) => '<span class="badge ' + (index === 0 ? "bc" : index === 1 ? "bm" : "bg") + '">' + label + "</span>")
+          .join("");
+
+        document.getElementById("channel-section").style.display = CFG.hasCanaux ? "block" : "none";
+        document.getElementById("channel-simple-section").style.display = CFG.hasCanaux ? "none" : "grid";
+        document.getElementById("channel-cards").innerHTML = (CFG.channels || ["Standard"])
+          .map((channel, index) => '<button type="button" class="radio-card' + (index === 0 ? " active" : "") + '">' + channel + "</button>")
+          .join("");
+
+        const transportSelect = document.getElementById("transporteur-select");
+        transportSelect.innerHTML = CFG.transporteurs
+          .map((transporteur) => "<option>" + transporteur + "</option>")
+          .join("");
+
+        if (!CFG.hasPAV) {
+          CFG.catalogue.forEach((item) => {
+            item.pavDispo = false;
+            item.pav = 0;
+          });
+        }
+
+        renderCatalogue();
+
+        const previewMode = params.get("mode") === "preview";
+        if (previewMode) {
+          document.body.classList.add("preview-mode");
+          document.getElementById("preview-banner").classList.add("visible");
+          document.getElementById("preview-copy").textContent =
+            "👁 Mode visualisation — " + CFG.nom + " · Les actions de confirmation sont désactivées";
+          document.getElementById("mode-badge").textContent = "Preview";
+          document.getElementById("mode-badge").className = "badge ba";
+          document.querySelectorAll("[data-confirm]").forEach((button) => {
+            button.disabled = true;
+          });
+        }
+      }
+
+      function renderCatalogue() {
+        document.getElementById("catalogue-grid").innerHTML = CFG.catalogue
+          .map((item) => {
+            const lotHtml = item.lots
+              .map((lot, index) => {
+                const days = daysUntil(lot.dlc);
+                const tone = days < 8 ? "risk" : days < 21 ? "warn" : "ok";
+                return (
+                  '<label class="lot-card ' +
+                  tone +
+                  '"><div><input type="radio" name="lot-' +
+                  item.code +
+                  '" ' +
+                  (index === 0 ? "checked" : "") +
+                  " /><strong class='mono'>" +
+                  lot.num +
+                  "</strong></div><div class='mini'>DLC " +
+                  lot.dlc +
+                  "</div><div class='badge-row' style='margin-top:8px'><span class='badge bg'>" +
+                  dlcWeekLabel(days) +
+                  "</span><span class='badge bc'>" +
+                  lot.stk +
+                  " stk</span></div></label>"
+                );
+              })
+              .join("");
+
+            return (
+              '<article class="catalog-card"><div><p class="eyebrow">' +
+              item.code +
+              "</p><h3>" +
+              item.nom +
+              "</h3></div><div class='badge-row'><span class='badge " +
+              (item.pavDispo ? "bc" : "bg") +
+              "'>" +
+              (item.pavDispo ? "PAV ×" + item.pav : "Pas de PAV") +
+              "</span></div><div class='lot-list'>" +
+              lotHtml +
+              "</div></article>"
+            );
+          })
+          .join("");
+      }
+
+      document.addEventListener("DOMContentLoaded", applyClientConfig);
+    </script>
+  </body>
+</html>

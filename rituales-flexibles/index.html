@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rituales Flexibles</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero panel">
+        <div class="hero-copy">
+          <p class="eyebrow">Proyecto semilla</p>
+          <h1>Ritos vivos para una vida real</h1>
+          <p class="lead">
+            Un ritual no siempre necesita una hora fija. A veces necesita una
+            memoria flexible que entienda tu ritmo, tus categorias demandantes y
+            tus margenes reales.
+          </p>
+        </div>
+
+        <div class="hero-rules">
+          <div class="mini-card">
+            <span class="mini-label">Motor</span>
+            <strong>Historial contextual</strong>
+            <p>Mismo periodo del ano pasado, semanas cercanas y ultimos 3 meses.</p>
+          </div>
+          <div class="mini-card">
+            <span class="mini-label">Salida</span>
+            <strong>Ventana sugerida</strong>
+            <p>Sin rigidez innecesaria: ancla, margen y limite blando.</p>
+          </div>
+          <div class="mini-card">
+            <span class="mini-label">Demanda</span>
+            <strong>Multiples grupos</strong>
+            <p>Salud, deporte, familia, trabajo, curiosidad, hobbies y mas.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="session-strip panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Desarrollo</p>
+            <h2>Sesion de trabajo</h2>
+          </div>
+          <button id="reset-session" class="btn btn-ghost" type="button">Reiniciar sesion</button>
+        </div>
+
+        <div class="session-metrics">
+          <article class="metric">
+            <span class="metric-label">Tiempo total</span>
+            <strong id="session-total">00:00:00</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-label">Tiempo visible</span>
+            <strong id="session-visible">00:00:00</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-label">Actividad tuya estimada</span>
+            <strong id="session-active">00:00:00</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-label">Espera o sistema</span>
+            <strong id="session-wait">00:00:00</strong>
+          </article>
+        </div>
+
+        <div class="session-notes">
+          <p id="session-started" class="session-copy"></p>
+          <p id="session-status" class="session-copy"></p>
+        </div>
+      </section>
+
+      <section class="overview-grid">
+        <aside class="panel sidebar">
+          <div class="section-head">
+            <p class="eyebrow">Mapa</p>
+            <h2>Grupos demandantes</h2>
+          </div>
+          <div id="group-list" class="group-list"></div>
+
+          <div class="section-head section-head-gap">
+            <p class="eyebrow">Nuevo rito</p>
+            <h2>Captura rapida</h2>
+          </div>
+
+          <form id="ritual-form" class="stack-form">
+            <label>
+              <span>Nombre</span>
+              <input id="ritual-name" type="text" placeholder="Ej. Lectura breve" required />
+            </label>
+
+            <label>
+              <span>Grupo</span>
+              <select id="ritual-group"></select>
+            </label>
+
+            <label>
+              <span>Importancia</span>
+              <select id="ritual-importance">
+                <option value="casi vital">Casi vital</option>
+                <option value="alto">Alto</option>
+                <option value="medio" selected>Medio</option>
+                <option value="ligero">Ligero</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Espera posterior (min)</span>
+              <input id="ritual-wait" type="number" min="0" step="5" value="0" />
+            </label>
+
+            <label>
+              <span>Margen blando (min)</span>
+              <input id="ritual-buffer" type="number" min="10" step="5" value="45" />
+            </label>
+
+            <label>
+              <span>Nota</span>
+              <textarea id="ritual-note" rows="3" placeholder="Que condicion practica o simbolica importa aqui"></textarea>
+            </label>
+
+            <button class="btn btn-primary" type="submit">Crear rito</button>
+          </form>
+        </aside>
+
+        <section class="panel main-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Tablero</p>
+              <h2>Ritos activos</h2>
+            </div>
+            <button id="reset-demo" class="btn btn-ghost" type="button">Restaurar demo</button>
+          </div>
+          <div id="ritual-cards" class="ritual-cards"></div>
+        </section>
+      </section>
+
+      <section class="detail-grid">
+        <section class="panel detail-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Detalle</p>
+              <h2 id="detail-title">Selecciona un rito</h2>
+            </div>
+            <div id="detail-badge" class="badge"></div>
+          </div>
+
+          <div id="detail-body" class="detail-body"></div>
+
+          <form id="completion-form" class="completion-form">
+            <div class="completion-head">
+              <div>
+                <p class="eyebrow">Registrar</p>
+                <h3>Marcar realizacion</h3>
+              </div>
+              <button id="complete-now" class="btn btn-secondary" type="button">Registrar ahora</button>
+            </div>
+
+            <div class="completion-grid">
+              <label>
+                <span>Fecha</span>
+                <input id="completion-date" type="date" required />
+              </label>
+              <label>
+                <span>Hora</span>
+                <input id="completion-time" type="time" required />
+              </label>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Guardar evento</button>
+          </form>
+        </section>
+
+        <section class="panel explain-panel">
+          <div class="section-head">
+            <p class="eyebrow">Algoritmo inicial</p>
+            <h2>Como decide</h2>
+          </div>
+
+          <ol class="steps">
+            <li>Busca referencias del mismo periodo del ano pasado.</li>
+            <li>Mira semanas recientes con un patron parecido.</li>
+            <li>Si hay poco historial, se apoya en los ultimos 3 meses.</li>
+            <li>Convierte eso en una ventana sugerida y un limite blando.</li>
+          </ol>
+
+          <div class="callout">
+            <strong>Interpretacion actual de tu idea</strong>
+            <p>
+              Para `Levothyrox`, la recomendacion no fija una hora dura. Usa tu
+              historial para proponer una hora ancla y deja un margen. El
+              limite blando se empuja un poco mas tarde segun tus registros
+              tardios recientes.
+            </p>
+          </div>
+
+          <div class="callout">
+            <strong>Lectura del cronometro de desarrollo</strong>
+            <p>
+              `Tiempo total` cuenta toda la sesion abierta. `Actividad tuya
+              estimada` sube cuando interactuas con la pagina. `Espera o
+              sistema` es la diferencia: sirve como aproximacion del tiempo en
+              que el proyecto sigue abierto pero no estas actuando directamente,
+              incluyendo lectura, reflexion y espera del sistema.
+            </p>
+          </div>
+
+          <div id="history-table-wrap" class="history-table-wrap"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

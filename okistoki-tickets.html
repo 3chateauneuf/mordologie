@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrepox Tickets · Cargonautes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg:#F5F6F8;
+        --surface:#FFF;
+        --border:#E4E7EC;
+        --border-md:#CDD3DE;
+        --text:#1C2330;
+        --text2:#5A6478;
+        --text3:#9BA8BC;
+        --cobalt:#3B4FD8;
+        --cobalt-p:#EEF2FF;
+        --cobalt-t:#2B5AB8;
+        --mint:#1A7A66;
+        --mint-p:#D6F5EF;
+        --amber:#9A6010;
+        --amber-p:#FFF0D6;
+        --coral:#B83838;
+        --coral-p:#FFE0E0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Manrope", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(59, 79, 216, 0.08), transparent 24%),
+          linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 250px 1fr;
+      }
+
+      .sidebar {
+        padding: 20px;
+        border-right: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .back-button,
+      .view-button,
+      .btn {
+        width: 100%;
+        border: 1px solid var(--border-md);
+        border-radius: 16px;
+        padding: 11px 14px;
+        background: #fff;
+        text-align: left;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 8px;
+        cursor: pointer;
+      }
+
+      .back-button {
+        background: var(--amber-p);
+        color: var(--amber);
+      }
+
+      .btn.primary {
+        background: linear-gradient(135deg, var(--cobalt) 0%, #5167eb 100%);
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .main {
+        padding: 20px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .topbar,
+      .panel,
+      .kanban-column,
+      .ticket-card,
+      .overlay-panel {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(228, 231, 236, 0.92);
+        border-radius: 24px;
+        box-shadow: 0 18px 44px rgba(28, 35, 48, 0.08);
+      }
+
+      .topbar,
+      .panel,
+      .overlay-panel {
+        padding: 20px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: "Bricolage Grotesque", sans-serif;
+        letter-spacing: -0.04em;
+      }
+
+      .eyebrow,
+      .mini,
+      p {
+        margin: 0;
+      }
+
+      .eyebrow {
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.76rem;
+        font-weight: 800;
+      }
+
+      .mini,
+      p {
+        color: var(--text2);
+        line-height: 1.5;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+      }
+
+      .ticket-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .ticket-card {
+        padding: 18px;
+        transition: 0.18s ease;
+      }
+
+      .ticket-card.flash-focus {
+        animation: flashBorder 1.8s ease;
+      }
+
+      @keyframes flashBorder {
+        0% { box-shadow: 0 0 0 0 rgba(59, 79, 216, 0.45); border-color: rgba(59, 79, 216, 0.55); }
+        100% { box-shadow: 0 18px 44px rgba(28, 35, 48, 0.08); border-color: rgba(228, 231, 236, 0.92); }
+      }
+
+      .ticket-head,
+      .row,
+      .badge-row,
+      .timeline,
+      .tag-row,
+      .overlay-actions,
+      .mention-popup,
+      .kanban-board,
+      .filter-bar,
+      .stats-grid,
+      .context-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .ticket-head {
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        border: 1px solid transparent;
+      }
+
+      .status-Ouvert,
+      .sla-risk strong {
+        background: var(--coral-p);
+        color: var(--coral);
+      }
+
+      .status-En-cours {
+        background: var(--amber-p);
+        color: var(--amber);
+      }
+
+      .status-En-attente {
+        background: #EEE8FF;
+        color: #5040A0;
+      }
+
+      .status-Résolu {
+        background: var(--mint-p);
+        color: var(--mint);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: #F0F2F7;
+        font-weight: 700;
+      }
+
+      .tag button {
+        border: none;
+        background: transparent;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .sla {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: #EEF0F4;
+        overflow: hidden;
+        margin-top: 12px;
+      }
+
+      .sla span {
+        display: block;
+        height: 100%;
+      }
+
+      .sla-ok span { background: var(--mint); }
+      .sla-warn span { background: var(--amber); }
+      .sla-risk span { background: var(--coral); }
+
+      .ticket-expanded {
+        margin-top: 16px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .kpi {
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: #fff;
+      }
+
+      .kpi strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 1.5rem;
+        font-family: "Bricolage Grotesque", sans-serif;
+      }
+
+      .filter-bar {
+        margin-top: 14px;
+      }
+
+      .filter-bar input,
+      .filter-bar select {
+        min-height: 44px;
+        border-radius: 16px;
+        border: 1px solid var(--border-md);
+        padding: 10px 12px;
+        background: #fff;
+      }
+
+      .filter-bar .field {
+        flex: 1 1 180px;
+        min-width: 160px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .filter-bar label {
+        color: var(--text2);
+        font-weight: 700;
+      }
+
+      .message {
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: #F8FAFD;
+        border: 1px solid var(--border);
+      }
+
+      .message.internal {
+        background: #FFF7D8;
+        border-color: rgba(154, 96, 16, 0.22);
+      }
+
+      .message strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .composer {
+        position: relative;
+        display: grid;
+        gap: 10px;
+      }
+
+      .composer textarea,
+      .composer input,
+      .overlay-panel input,
+      .overlay-panel textarea,
+      .overlay-panel select,
+      .ticket-head select {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--border-md);
+        padding: 10px 12px;
+        background: #fff;
+      }
+
+      .composer textarea,
+      .overlay-panel textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
+      .context-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .context-card {
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: #FAFBFD;
+      }
+
+      .context-card strong {
+        display: block;
+        margin-top: 4px;
+      }
+
+      .event-log {
+        display: grid;
+        gap: 8px;
+      }
+
+      .event-item {
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: #fff;
+      }
+
+      .mention-popup {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 6px);
+        z-index: 40;
+        display: none;
+        flex-direction: column;
+        min-width: 240px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 16px 34px rgba(28, 35, 48, 0.12);
+        padding: 8px;
+      }
+
+      .mention-popup.visible {
+        display: flex;
+      }
+
+      .mention-popup button {
+        width: 100%;
+        border: none;
+        background: transparent;
+        border-radius: 12px;
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .mention-popup button:hover {
+        background: #F3F5FB;
+      }
+
+      .kanban-board {
+        align-items: stretch;
+      }
+
+      .kanban-column {
+        flex: 1 1 220px;
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+
+      .kanban-card {
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .overlay-root {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        display: none;
+        background: rgba(18, 25, 39, 0.42);
+        padding: 20px;
+      }
+
+      .overlay-root.visible {
+        display: grid;
+        place-items: center;
+      }
+
+      .overlay-panel {
+        width: min(620px, 100%);
+      }
+
+      @media (max-width: 980px) {
+        .app,
+        .layout,
+        .stats-grid,
+        .context-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <button class="back-button" onclick="window.location.href='index.html'">← Entrepox Admin</button>
+        <button class="view-button">Liste expandable</button>
+        <button class="view-button">Kanban</button>
+        <button class="view-button" onclick="openNewTicket()">Nouveau ticket</button>
+      </aside>
+
+      <main class="main">
+        <section class="topbar">
+          <div>
+            <p class="eyebrow">SAV · Cargonautes</p>
+            <h1>Tickets & SLA</h1>
+            <p>Suivi des tickets critiques, mentions d’équipe, notes internes et partage Slack.</p>
+          </div>
+          <div class="overlay-actions">
+            <button class="btn primary" onclick="openNewTicket()">Créer un ticket</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div id="stats-grid" class="stats-grid"></div>
+          <div class="filter-bar">
+            <div class="field">
+              <label for="ticket-search">Recherche</label>
+              <input id="ticket-search" type="text" placeholder="Ticket, client, source, tag..." oninput="renderAll()" />
+            </div>
+            <div class="field">
+              <label for="ticket-status-filter">Statut</label>
+              <select id="ticket-status-filter" onchange="renderAll()">
+                <option value="all">Tous</option>
+                <option value="Ouvert">Ouvert</option>
+                <option value="En cours">En cours</option>
+                <option value="En attente">En attente</option>
+                <option value="Résolu">Résolu</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ticket-priority-filter">Priorité</label>
+              <select id="ticket-priority-filter" onchange="renderAll()">
+                <option value="all">Toutes</option>
+                <option value="Normale">Normale</option>
+                <option value="Haute">Haute</option>
+                <option value="Critique">Critique</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ticket-owner-filter">Owner</label>
+              <select id="ticket-owner-filter" onchange="renderAll()">
+                <option value="all">Tous</option>
+                <option value="ADV Cargonautes">ADV Cargonautes</option>
+                <option value="Sophie B.">Sophie B.</option>
+                <option value="Hugo M.">Hugo M.</option>
+                <option value="Nora T.">Nora T.</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="layout">
+          <section class="panel">
+            <div class="ticket-list" id="tickets-list"></div>
+          </section>
+
+          <section class="panel">
+            <p class="eyebrow">Kanban</p>
+            <h2 style="margin-bottom:16px">Vue par statut</h2>
+            <div id="kanban-board" class="kanban-board"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="overlay-root" class="overlay-root"></div>
+
+    <script>
+      const SAV_STORAGE_KEY = "entrepox-sav-tickets-v1";
+      const LEGACY_SAV_STORAGE_KEYS = ["okistoki-sav-tickets-v1", "wmsito-sav-tickets-v1"];
+
+      const DEFAULT_SHARED_TICKETS = [
+        {
+          id: "TKT-089",
+          priority: "Critique",
+          title: "BL absent à la livraison",
+          clientId: "yumi",
+          status: "Ouvert",
+          owner: "ADV Cargonautes",
+          sourceType: "shipment",
+          sourceId: "Expe0112525",
+          sourceLabel: "BL · Expe0112525",
+          slaDueAt: "2026-04-16T10:30:00",
+          summary: "Le coursier est passé sans BL dans la pochette pour Biocoop Lancry.",
+          createdAt: "16/04/2026 08:12",
+          tags: ["BL", "transport", "signature"],
+          events: [
+            { label: "Ticket créé", detail: "Incident BL livraison.", at: "16/04/2026 08:12" },
+          ],
+          messages: [
+            { kind: "public", author: "Client", text: "Le coursier est passé sans BL dans la pochette.", at: "08:12" },
+            { kind: "internal", author: "Sophie B.", text: "🔒 Note interne - vérifier l’impression Cyke et la pochette du quai 2.", at: "08:15" },
+          ],
+        },
+        {
+          id: "TKT-087",
+          priority: "Critique",
+          title: "Étiquettes DLC incohérentes",
+          clientId: "yumi",
+          status: "En cours",
+          owner: "Hugo M.",
+          sourceType: "prep",
+          sourceId: "PREP-2026-143",
+          sourceLabel: "Prépa · PREP-2026-143",
+          slaDueAt: "2026-04-16T12:00:00",
+          summary: "Deux cartons affichent une DLC différente du BL avant départ Chronofresh.",
+          createdAt: "16/04/2026 07:42",
+          tags: ["DLC", "qualité"],
+          events: [
+            { label: "Ticket créé", detail: "Écart DLC avant départ Chronofresh.", at: "16/04/2026 07:42" },
+          ],
+          messages: [
+            { kind: "public", author: "Client", text: "Deux cartons affichent une DLC différente du BL.", at: "07:42" },
+            { kind: "internal", author: "Hugo M.", text: "🔒 Note interne - corriger le lot 6082078 sur les étiquettes de reprise.", at: "07:56" },
+          ],
+        },
+        {
+          id: "TKT-085",
+          priority: "Haute",
+          title: "Lot / DLC non alignés sur BL",
+          clientId: "rebelle",
+          status: "En attente",
+          owner: "Nora T.",
+          sourceType: "lot",
+          sourceId: "250409B",
+          sourceLabel: "Lot · 250409B",
+          slaDueAt: "2026-04-16T15:00:00",
+          summary: "Le lot du chutney ne correspond pas à la photo transmise au client.",
+          createdAt: "15/04/2026 17:14",
+          tags: ["BL", "lot"],
+          events: [
+            { label: "Ticket créé", detail: "Écart lot / photo client.", at: "15/04/2026 17:14" },
+          ],
+          messages: [
+            { kind: "public", author: "Client", text: "Le lot du chutney ne correspond pas à la photo reçue.", at: "Hier" },
+          ],
+        },
+        {
+          id: "TKT-079",
+          priority: "Normale",
+          title: "Demande de formatage export",
+          clientId: "xoco",
+          status: "Résolu",
+          owner: "ADV Cargonautes",
+          sourceType: "client",
+          sourceId: "xoco",
+          sourceLabel: "Client · Xoco",
+          slaDueAt: "2026-04-15T16:00:00",
+          summary: "Le client souhaitait un CSV simplifié pour contrôle interne.",
+          createdAt: "14/04/2026 11:08",
+          tags: ["export", "csv"],
+          events: [
+            { label: "Ticket créé", detail: "Demande export simplifié.", at: "14/04/2026 11:08" },
+            { label: "Ticket résolu", detail: "Export manuel transmis au client.", at: "14/04/2026 15:42" },
+          ],
+          messages: [
+            { kind: "internal", author: "Interne", text: "🔒 Note interne - changement livré via export manuel.", at: "14/04" },
+          ],
+        },
+      ];
+
+      let tickets = [];
+      let openTicketId = "TKT-089";
+      let mentionTargetId = null;
+
+      const mentionChoices = ["Sophie B.", "Hugo M.", "Nora T.", "Cyke", "TeamDesk", "Transport"];
+
+      function cloneData(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function getClientName(clientId) {
+        const map = {
+          yumi: "Yumi / Paf",
+          rebelle: "Re-Belle",
+          xoco: "Xoco",
+          wils: "Wil's Déli",
+        };
+        return map[clientId] || clientId || "Client";
+      }
+
+      function computeSlaPct(ticket) {
+        const dueAt = new Date(ticket.slaDueAt || Date.now() + 6 * 3600000).getTime();
+        const createdAt = Date.parse(ticket.createdAt || "") || Date.now() - 6 * 3600000;
+        const totalWindow = Math.max(1, dueAt - createdAt);
+        const remaining = dueAt - Date.now();
+        const ratio = 100 - Math.max(0, Math.min(100, (remaining / totalWindow) * 100));
+        return Math.round(ratio);
+      }
+
+      function buildTimeline(messages) {
+        return messages.map((entry) => ({
+          author: entry.author,
+          internal: entry.kind === "internal",
+          text: entry.text,
+          when: entry.at || "",
+        }));
+      }
+
+      function normalizeTicket(ticket) {
+        const normalizedId = String(ticket.id || ticket.code || "TKT-000").toUpperCase();
+        const normalizedMessages = Array.isArray(ticket.messages)
+          ? ticket.messages
+          : Array.isArray(ticket.timeline)
+          ? ticket.timeline.map((entry) => ({
+              kind: entry.internal ? "internal" : "public",
+              author: entry.author || "Ops",
+              text: String(entry.text || ""),
+              at: entry.at || entry.when || "",
+            }))
+          : [];
+        const normalizedEvents = Array.isArray(ticket.events)
+          ? ticket.events.map((entry) => ({
+              label: entry.label || "Événement",
+              detail: entry.detail || "",
+              when: entry.when || entry.at || "",
+            }))
+          : [];
+        return {
+          id: normalizedId,
+          code: normalizedId,
+          priority: ticket.priority || "Normale",
+          title: ticket.title || "Ticket SAV",
+          client: ticket.client || getClientName(ticket.clientId),
+          clientId: ticket.clientId || "yumi",
+          status: ticket.status || "Ouvert",
+          slaPct: Number(ticket.slaPct || computeSlaPct(ticket)),
+          slaDueAt: ticket.slaDueAt || new Date(Date.now() + 6 * 3600000).toISOString(),
+          owner: ticket.owner || "ADV Cargonautes",
+          sourceType: ticket.sourceType || "client",
+          sourceId: ticket.sourceId || "",
+          sourceLabel: ticket.sourceLabel || "",
+          createdAt: ticket.createdAt || new Date().toLocaleString("fr-FR"),
+          summary: ticket.summary || "",
+          tags: Array.isArray(ticket.tags) ? ticket.tags : [],
+          events: normalizedEvents,
+          messages: normalizedMessages,
+          timeline: buildTimeline(normalizedMessages),
+        };
+      }
+
+      function persistTickets() {
+        try {
+          window.localStorage.setItem(SAV_STORAGE_KEY, JSON.stringify(tickets));
+        } catch (error) {
+          console.warn("Impossible de persister les tickets avancés.", error);
+        }
+      }
+
+      function loadTickets() {
+        try {
+          const raw =
+            window.localStorage.getItem(SAV_STORAGE_KEY) ||
+            LEGACY_SAV_STORAGE_KEYS.map((key) => window.localStorage.getItem(key)).find(Boolean);
+          if (!raw) {
+            tickets = cloneData(DEFAULT_SHARED_TICKETS).map(normalizeTicket);
+            persistTickets();
+            return;
+          }
+          const parsed = JSON.parse(raw);
+          tickets = Array.isArray(parsed) ? parsed.map(normalizeTicket) : cloneData(DEFAULT_SHARED_TICKETS).map(normalizeTicket);
+          if (!Array.isArray(parsed)) {
+            persistTickets();
+          }
+        } catch (error) {
+          console.warn("Impossible de charger les tickets partagés.", error);
+          tickets = cloneData(DEFAULT_SHARED_TICKETS).map(normalizeTicket);
+          persistTickets();
+        }
+      }
+
+      function getFilteredTickets() {
+        const term = document.getElementById("ticket-search") ? document.getElementById("ticket-search").value.trim().toLowerCase() : "";
+        const status = document.getElementById("ticket-status-filter") ? document.getElementById("ticket-status-filter").value : "all";
+        const priority = document.getElementById("ticket-priority-filter") ? document.getElementById("ticket-priority-filter").value : "all";
+        const owner = document.getElementById("ticket-owner-filter") ? document.getElementById("ticket-owner-filter").value : "all";
+        return tickets.filter((ticket) => {
+          const haystack = [ticket.code, ticket.title, ticket.client, ticket.sourceId, ticket.sourceLabel, ticket.owner, ticket.tags.join(" ")].join(" ").toLowerCase();
+          return haystack.includes(term) && (status === "all" || ticket.status === status) && (priority === "all" || ticket.priority === priority) && (owner === "all" || ticket.owner === owner);
+        });
+      }
+
+      function renderStats() {
+        const openCount = tickets.filter((ticket) => ticket.status !== "Résolu").length;
+        const criticalCount = tickets.filter((ticket) => ticket.priority === "Critique" && ticket.status !== "Résolu").length;
+        const riskCount = tickets.filter((ticket) => ticket.slaPct >= 80 && ticket.status !== "Résolu").length;
+        const linkedOpsCount = tickets.filter((ticket) => ticket.sourceType === "prep" || ticket.sourceType === "shipment" || ticket.sourceType === "lot").length;
+        document.getElementById("stats-grid").innerHTML = `
+          <div class="kpi"><span class="eyebrow">Ouverts</span><strong>${openCount}</strong><p class="mini">Tickets actifs</p></div>
+          <div class="kpi"><span class="eyebrow">Critiques</span><strong>${criticalCount}</strong><p class="mini">Priorité immédiate</p></div>
+          <div class="kpi"><span class="eyebrow">SLA à risque</span><strong>${riskCount}</strong><p class="mini">Réponse à accélérer</p></div>
+          <div class="kpi"><span class="eyebrow">Liés à l'opération</span><strong>${linkedOpsCount}</strong><p class="mini">Prep / BL / lot</p></div>
+        `;
+      }
+
+      function resolvePrepContextId(ticket) {
+        if (ticket.sourceType === "prep") {
+          return ticket.sourceId;
+        }
+        const map = {
+          Expe0112525: "PREP-2026-142",
+          Expe0112526: "PREP-2026-143",
+          Expe0112531: "PREP-2026-144",
+          "250409B": "PREP-2026-145",
+          "250413C": "PREP-2026-145",
+        };
+        return map[ticket.sourceId] || "";
+      }
+
+      function getSourceContext(ticket) {
+        const prepId = resolvePrepContextId(ticket);
+        if (ticket.sourceType === "prep") {
+          return {
+            title: ticket.sourceId,
+            line1: ticket.sourceLabel,
+            line2: "Préparation liée à l'incident",
+            href: "index.html?page=preparation&prep=" + encodeURIComponent(prepId || ticket.sourceId),
+          };
+        }
+        if (ticket.sourceType === "shipment") {
+          return {
+            title: ticket.sourceId,
+            line1: "Expédition / BL",
+            line2: "Incident de livraison ou de documentation",
+            href: "index.html?page=preparation" + (prepId ? "&prep=" + encodeURIComponent(prepId) : ""),
+          };
+        }
+        if (ticket.sourceType === "lot") {
+          return {
+            title: ticket.sourceId,
+            line1: "Lot produit",
+            line2: "À recouper avec BL / photo / DLC",
+            href: "index.html?page=preparation" + (prepId ? "&prep=" + encodeURIComponent(prepId) : ""),
+          };
+        }
+        return {
+          title: ticket.client,
+          line1: ticket.sourceLabel,
+          line2: "Contexte client",
+          href: "index.html?page=clients&client=" + encodeURIComponent(ticket.clientId || "yumi"),
+        };
+      }
+
+      function pushEvent(ticket, label, detail) {
+        if (!ticket.events) {
+          ticket.events = [];
+        }
+        ticket.events.unshift({
+          label: label,
+          detail: detail,
+          when: new Date().toLocaleString("fr-FR"),
+        });
+      }
+
+      function statusClass(status) {
+        return "status-" + status.replaceAll(" ", "-");
+      }
+
+      function slaClass(ticket) {
+        if (ticket.slaPct >= 80) {
+          return "sla-risk";
+        }
+        if (ticket.slaPct >= 45) {
+          return "sla-warn";
+        }
+        return "sla-ok";
+      }
+
+      function renderTickets() {
+        const filteredTickets = getFilteredTickets();
+        if (filteredTickets.length && !filteredTickets.find((ticket) => ticket.id === openTicketId)) {
+          openTicketId = filteredTickets[0].id;
+        }
+        document.getElementById("tickets-list").innerHTML = filteredTickets
+          .map((ticket) => {
+            const expanded = openTicketId === ticket.id;
+            const context = getSourceContext(ticket);
+            return (
+              '<article class="ticket-card" id="' +
+              ticket.id +
+              '">' +
+              '<div class="ticket-head"><div><p class="eyebrow">' +
+              ticket.code +
+              " · " +
+              ticket.client +
+              "</p><h3>" +
+              ticket.title +
+              "</h3><p class='mini'>" +
+              ticket.priority +
+              " · " +
+              ticket.sourceLabel +
+              "</p></div><div style='min-width:180px'><select onchange=\"updateStatus('" +
+              ticket.id +
+              "', this.value)\"><option" +
+              (ticket.status === "Ouvert" ? " selected" : "") +
+              ">Ouvert</option><option" +
+              (ticket.status === "En cours" ? " selected" : "") +
+              ">En cours</option><option" +
+              (ticket.status === "En attente" ? " selected" : "") +
+              ">En attente</option><option" +
+              (ticket.status === "Résolu" ? " selected" : "") +
+              '>Résolu</option></select><div class="badge ' +
+              statusClass(ticket.status) +
+              '" style="margin-top:10px">' +
+              ticket.status +
+              "</div><p class='mini' style='margin-top:8px'>Owner · " +
+              ticket.owner +
+              "</p></div></div>" +
+              '<div class="sla ' +
+              slaClass(ticket) +
+              '"><span style="width:' +
+              ticket.slaPct +
+              '%"></span></div><div class="tag-row" style="margin-top:12px">' +
+              ticket.tags
+                .map((tag) => '<span class="tag">' + tag + '<button type="button" onclick="removeTag(\'' + ticket.id + "','" + tag + '\')">×</button></span>')
+                .join("") +
+              "</div>" +
+              '<div class="overlay-actions" style="margin-top:14px"><button class="btn" onclick="toggleTicket(\'' +
+              ticket.id +
+              "')\">" +
+              (expanded ? "Réduire" : "Ouvrir") +
+              '</button><button class="btn" onclick="openSlackShare(\'' +
+              ticket.id +
+              "')\">Partager Slack</button></div>" +
+              (expanded
+                ? '<div class="ticket-expanded"><div class="timeline">' +
+                  ticket.timeline
+                    .map(
+                      (message) =>
+                        '<article class="message' +
+                        (message.internal ? " internal" : "") +
+                        '"><strong>' +
+                        message.author +
+                        "</strong><p>" +
+                        message.text +
+                        "</p><p class='mini'>" +
+                        message.when +
+                        "</p></article>"
+                    )
+                    .join("") +
+                  "</div><div class='context-grid'><article class='context-card'><span class='eyebrow'>Source</span><strong>" +
+                  context.title +
+                  "</strong><p class='mini'>" +
+                  context.line1 +
+                  "</p><p class='mini'>" +
+                  context.line2 +
+                  "</p><button class='btn' style='margin-top:10px' onclick=\"window.location.href='" +
+                  context.href +
+                  "'\">Ouvrir dans le WMS</button></article><article class='context-card'><span class='eyebrow'>Owner</span><strong>" +
+                  ticket.owner +
+                  "</strong><p class='mini'>Créé le " +
+                  ticket.createdAt +
+                  "</p></article><article class='context-card'><span class='eyebrow'>Événements</span><div class='event-log'>" +
+                  (ticket.events || [])
+                    .map((event) => "<div class='event-item'><strong>" + event.label + "</strong><p class='mini'>" + event.detail + "</p><p class='mini'>" + event.when + "</p></div>")
+                    .join("") +
+                  "</div></article></div><div class='composer'><input type='text' placeholder='Ajouter un tag puis Entrée' onkeydown=\"handleTagInput(event,'" +
+                  ticket.id +
+                  "')\" /><textarea id='composer-" +
+                  ticket.id +
+                  "' placeholder='Réponse ou note interne. Utilise @ pour mentionner.' oninput=\"handleMentionInput(event,'" +
+                  ticket.id +
+                  "')\"></textarea><div class='mention-popup' id='mention-popup-" +
+                  ticket.id +
+                  "'></div><div class='overlay-actions'><button class='btn primary' onclick=\"appendMessage('" +
+                  ticket.id +
+                  "', false)\">Répondre client</button><button class='btn' onclick=\"appendMessage('" +
+                  ticket.id +
+                  "', true)\">Ajouter note interne</button></div></div></div>"
+                : "") +
+              "</article>"
+            );
+          })
+          .join("");
+      }
+
+      function renderKanban() {
+        const statuses = ["Ouvert", "En attente", "En cours", "Résolu"];
+        const filteredTickets = getFilteredTickets();
+        document.getElementById("kanban-board").innerHTML = statuses
+          .map((status) => {
+            const cards = filteredTickets.filter((ticket) => ticket.status === status);
+            return (
+              '<div class="kanban-column"><div class="row"><h3>' +
+              status +
+              "</h3><span class='badge " +
+              statusClass(status) +
+              "'>" +
+              cards.length +
+              "</span></div>" +
+              cards
+                .map(
+                  (ticket) =>
+                    '<article class="kanban-card"><strong>' +
+                    ticket.code +
+                    "</strong><p>" +
+                    ticket.title +
+                    "</p><p class='mini'>" +
+                    ticket.client +
+                    " · " +
+                    ticket.owner +
+                    "</p></article>"
+                )
+                .join("") +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      function toggleTicket(id) {
+        openTicketId = openTicketId === id ? null : id;
+        renderTickets();
+        if (openTicketId) {
+          const node = document.getElementById(id);
+          if (node) {
+            node.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
+      }
+
+      function updateStatus(id, value) {
+        const ticket = tickets.find((entry) => entry.id === id);
+        if (ticket.status !== value) {
+          pushEvent(ticket, "Statut mis à jour", ticket.status + " -> " + value);
+        }
+        ticket.status = value;
+        playStatusSound(value);
+        persistTickets();
+        renderAll();
+      }
+
+      function playStatusSound(status) {
+        const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextCtor) {
+          return;
+        }
+        const ctx = new AudioContextCtor();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const frequency = status === "Résolu" ? 620 : status === "En attente" ? 420 : 520;
+        osc.type = "sine";
+        osc.frequency.value = frequency;
+        gain.gain.value = 0.03;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+      }
+
+      function handleTagInput(event, ticketId) {
+        if (event.key !== "Enter") {
+          return;
+        }
+        event.preventDefault();
+        const value = event.target.value.trim();
+        if (!value) {
+          return;
+        }
+        const ticket = tickets.find((entry) => entry.id === ticketId);
+        ticket.tags.push(value);
+        event.target.value = "";
+        pushEvent(ticket, "Tag ajouté", value);
+        persistTickets();
+        renderAll();
+      }
+
+      function removeTag(ticketId, tag) {
+        const ticket = tickets.find((entry) => entry.id === ticketId);
+        ticket.tags = ticket.tags.filter((entry) => entry !== tag);
+        pushEvent(ticket, "Tag supprimé", tag);
+        persistTickets();
+        renderAll();
+      }
+
+      function handleMentionInput(event, ticketId) {
+        const value = event.target.value;
+        const popup = document.getElementById("mention-popup-" + ticketId);
+        const match = value.match(/@([\w.]*)$/);
+        if (!match) {
+          popup.classList.remove("visible");
+          popup.innerHTML = "";
+          return;
+        }
+        mentionTargetId = ticketId;
+        const term = match[1].toLowerCase();
+        const matches = mentionChoices.filter((entry) => entry.toLowerCase().includes(term));
+        popup.innerHTML = matches
+          .map((entry) => '<button type="button" onclick="insertMention(\'' + entry + "')\">" + entry + "</button>")
+          .join("");
+        popup.classList.toggle("visible", matches.length > 0);
+      }
+
+      function insertMention(entry) {
+        const field = document.getElementById("composer-" + mentionTargetId);
+        field.value = field.value.replace(/@([\w.]*)$/, "@" + entry + " ");
+        document.getElementById("mention-popup-" + mentionTargetId).classList.remove("visible");
+      }
+
+      function appendMessage(ticketId, internal) {
+        const field = document.getElementById("composer-" + ticketId);
+        const value = field.value.trim();
+        if (!value) {
+          return;
+        }
+        const ticket = tickets.find((entry) => entry.id === ticketId);
+        ticket.timeline.push({
+          author: internal ? "Ops interne" : "Réponse Cargonautes",
+          internal: internal,
+          text: internal ? "🔒 Note interne - " + value : value,
+          when: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+        });
+        ticket.messages.push({
+          kind: internal ? "internal" : "public",
+          author: internal ? "Ops interne" : "Réponse Cargonautes",
+          text: internal ? "🔒 Note interne - " + value : value,
+          at: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+        });
+        pushEvent(ticket, internal ? "Note interne ajoutée" : "Réponse client ajoutée", value.slice(0, 96));
+        field.value = "";
+        persistTickets();
+        renderAll();
+      }
+
+      function openNewTicket() {
+        document.getElementById("overlay-root").classList.add("visible");
+        document.getElementById("overlay-root").innerHTML =
+            '<div class="overlay-panel"><p class="eyebrow">Nouveau ticket</p><h2 style="margin-bottom:14px">Créer un ticket SAV</h2><div class="overlay-actions" style="margin-bottom:12px"><button class="btn" onclick="closeOverlay()">Fermer</button></div><div class="row" style="display:grid;gap:12px"><input id="new-ticket-title" type="text" placeholder="Titre du ticket" /><select id="new-ticket-client"><option>Yumi / Paf</option><option>Re-Belle</option><option>Xoco</option></select><select id="new-ticket-priority"><option>Normale</option><option>Haute</option><option>Critique</option></select><textarea id="new-ticket-body" placeholder="Décris le problème client, l’impact et le contexte."></textarea><div class="overlay-actions"><button class="btn primary" onclick="submitNewTicket()">Créer</button><button class="btn" onclick="closeOverlay()">Annuler</button></div></div></div>';
+      }
+
+      function openSlackShare(ticketId) {
+        const ticket = tickets.find((entry) => entry.id === ticketId);
+        document.getElementById("overlay-root").classList.add("visible");
+        document.getElementById("overlay-root").innerHTML =
+          '<div class="overlay-panel"><p class="eyebrow">Slack</p><h2 style="margin-bottom:14px">Partager ' +
+          ticket.code +
+          "</h2><textarea>" +
+          ticket.code +
+          " · " +
+          ticket.title +
+          " · " +
+          ticket.status +
+          " · SLA " +
+          ticket.slaPct +
+          "%</textarea><div class='overlay-actions' style='margin-top:14px'><button class='btn primary' onclick='closeOverlay()'>Copier dans Slack</button><button class='btn' onclick='closeOverlay()'>Fermer</button></div></div>";
+      }
+
+      function closeOverlay() {
+        const overlay = document.getElementById("overlay-root");
+        overlay.classList.remove("visible");
+        overlay.innerHTML = "";
+      }
+
+      function submitNewTicket() {
+        const title = document.getElementById("new-ticket-title").value.trim();
+        const client = document.getElementById("new-ticket-client").value;
+        const priority = document.getElementById("new-ticket-priority").value;
+        const body = document.getElementById("new-ticket-body").value.trim();
+        const code = "TKT-" + String(90 + tickets.length).padStart(3, "0");
+        const id = code;
+        tickets.unshift({
+          id: id,
+          code: code,
+          priority: priority,
+          title: title || "Nouveau ticket",
+          client: client,
+          clientId: client === "Yumi / Paf" ? "yumi" : client === "Re-Belle" ? "rebelle" : "xoco",
+          status: "Ouvert",
+          slaPct: 20,
+          owner: "ADV Cargonautes",
+          sourceType: "client",
+          sourceId: client.toLowerCase().replaceAll(" ", "-"),
+          sourceLabel: "Client · " + client,
+          slaDueAt: new Date(Date.now() + (priority === "Critique" ? 2 : priority === "Haute" ? 6 : 12) * 3600000).toISOString(),
+          createdAt: new Date().toLocaleString("fr-FR"),
+          tags: ["nouveau"],
+          events: [{ label: "Ticket créé", detail: "Créé depuis la vue avancée SAV.", when: new Date().toLocaleString("fr-FR") }],
+          timeline: [{ author: "Client", internal: false, text: body || "Ticket créé depuis le module SAV.", when: "Maintenant" }],
+        });
+        openTicketId = id;
+        persistTickets();
+        closeOverlay();
+        renderAll();
+      }
+
+      function renderAll() {
+        renderStats();
+        renderTickets();
+        renderKanban();
+      }
+
+      function applyUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const requested = params.get("ticket");
+        if (requested) {
+          openTicketId = requested.toUpperCase();
+          renderAll();
+          setTimeout(() => {
+            const node = document.getElementById(openTicketId);
+            if (node) {
+              node.classList.add("flash-focus");
+              node.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 80);
+        }
+        if (params.get("new") === "1") {
+          setTimeout(openNewTicket, 120);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        loadTickets();
+        renderAll();
+        applyUrlParams();
+        window.addEventListener("storage", (event) => {
+          if (event.key === SAV_STORAGE_KEY || LEGACY_SAV_STORAGE_KEYS.includes(event.key)) {
+            loadTickets();
+            renderAll();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

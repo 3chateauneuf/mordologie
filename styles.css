@@ -100,6 +100,9 @@ body {
   color: var(--text);
   font-family: "Manrope", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Filet de sécurité : un élément trop large ne doit pas élargir le viewport
+     mobile (ce qui casse le responsive et déclenche le zoom/gonflage). */
+  overflow-x: hidden;
 }
 
 button,
