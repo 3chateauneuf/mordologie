@@ -2159,6 +2159,24 @@ select.select-input {
   padding-bottom: 0;
 }
 
+/* Agenda sur mobile : colonnes de jour plus étroites + défilement horizontal
+   (on garde les 7 jours et on swipe, plutôt que de les empiler illisiblement). */
+@media (max-width: 780px) {
+  .agenda-board-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .agenda-board {
+    grid-template-columns: 44px repeat(7, minmax(94px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .agenda-board {
+    grid-template-columns: 38px repeat(7, minmax(76px, 1fr));
+  }
+}
+
 .agenda-panel {
   padding: 18px 18px 14px;
 }
