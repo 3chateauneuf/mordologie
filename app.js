@@ -7865,14 +7865,20 @@ function storeReprendreTodos() {
   }
 }
 
+// Clé de stockage des tâches « À faire ». Si aucun collaborateur n'est
+// identifié (profil non sélectionné / non connecté), on retombe sur un bucket
+// local stable au lieu de perdre silencieusement la tâche.
+function getReprendreTodoKey() {
+  return normalizeText(getCurrentCollaborator() || "") || "__local__";
+}
+
 function getReprendreTodoList() {
-  const key = normalizeText(getCurrentCollaborator() || "");
+  const key = getReprendreTodoKey();
   return Array.isArray(reprendreTodos[key]) ? reprendreTodos[key] : [];
 }
 
 function setReprendreTodoList(list) {
-  const key = normalizeText(getCurrentCollaborator() || "");
-  if (!key) return;
+  const key = getReprendreTodoKey();
   reprendreTodos[key] = list;
   storeReprendreTodos();
 }
