@@ -87,37 +87,9 @@
 
         <div id="auth-user-shell" class="auth-shell auth-shell-user" hidden>
           <div class="auth-identity-trigger">
-            <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Menu profil" aria-expanded="false" aria-controls="auth-user-dropdown">U</button>
+            <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Ouvrir le profil">U</button>
             <strong id="auth-user-name" class="topbar-username">Utilisateur</strong>
           </div>
-          <div id="auth-user-dropdown" class="auth-dropdown" hidden>
-            <div class="auth-dropdown-identity">
-              <span id="auth-user-email" class="muted-copy auth-dropdown-email"></span>
-              <span id="auth-role-pill" class="pill auth-role-pill">Cargonaute</span>
-            </div>
-            <div class="auth-calendar-section">
-              <div class="auth-calendar-labelrow">
-                <label class="auth-section-label" for="auth-calendar-ics-input">Calendriers (iCal)</label>
-                <span id="auth-calendar-status" class="auth-calendar-status" hidden></span>
-              </div>
-              <p class="auth-calendar-hint">Connectez un ou plusieurs calendriers : collez l'adresse (URL) de chaque fichier iCal, une par ligne. Peu importe la source (cyke, Google, Outlook…), seul le lien vers le fichier iCal est nécessaire.</p>
-              <textarea id="auth-calendar-ics-input" class="auth-calendar-input auth-calendar-input--multi" rows="3" placeholder="https://www.cyke.io/calendars/…ics&#10;https://…/un-autre-agenda.ics"></textarea>
-              <div class="auth-calendar-actions">
-                <button id="auth-calendar-ics-save" type="button" class="btn btn-secondary btn--sm">Enregistrer</button>
-                <button id="auth-calendar-ics-clear" type="button" class="btn btn--sm btn--danger-outline" hidden>Supprimer</button>
-              </div>
-            </div>
-            <div class="auth-calendar-section">
-              <label class="auth-section-label" for="auth-max-hours-input">Durée max par session (h)</label>
-              <p class="auth-calendar-hint">Garde-fou anti-erreur : une entrée manuelle plus longue est refusée. Par défaut 24 h.</p>
-              <input id="auth-max-hours-input" class="auth-calendar-input" type="number" min="1" max="24" step="1" inputmode="numeric" placeholder="24" />
-            </div>
-            <div class="auth-dropdown-actions">
-              <button id="auth-change-avatar-button" type="button" class="btn btn-secondary">Changer la photo</button>
-              <button id="auth-signout-button" type="button" class="btn btn-ghost-danger">Se déconnecter</button>
-            </div>
-          </div>
-          <input id="auth-avatar-input" type="file" accept="image/*" hidden />
         </div>
 
         <div class="topbar-brand" aria-hidden="true">
@@ -531,7 +503,7 @@
           <div class="panel-head">
             <div>
               <h2>Vue semaine</h2>
-              <p class="panel-copy">Journée 7 h – 24 h (profil) · glissez pour déplacer, étirez les bords pour la durée.</p>
+              <p id="agenda-subtitle" class="panel-copy">Journée 7 h – 24 h (profil) · glissez pour déplacer, étirez les bords pour la durée.</p>
             </div>
           </div>
           <div class="agenda-toolbar">
@@ -991,6 +963,73 @@
         <section class="panel guide-panel">
           <div id="guide-shell"></div>
         </section>
+      </section>
+
+      <section class="app-view" id="profil" data-view-panel="profil">
+        <div class="profil-shell">
+
+          <article class="panel profil-card">
+            <div class="profil-identity">
+              <span id="profil-avatar" class="profil-avatar" aria-hidden="true">U</span>
+              <div class="profil-identity-copy">
+                <strong id="profil-name" class="profil-name">Utilisateur</strong>
+                <span id="auth-user-email" class="muted-copy profil-email"></span>
+                <span id="auth-role-pill" class="pill auth-role-pill">Cargonaute</span>
+              </div>
+              <button id="auth-change-avatar-button" type="button" class="btn btn-secondary profil-photo-btn">Changer la photo</button>
+            </div>
+            <input id="auth-avatar-input" type="file" accept="image/*" hidden />
+          </article>
+
+          <article class="panel profil-card">
+            <div class="section-minihead">
+              <h3>Préférences de suivi</h3>
+              <p>Ces réglages personnalisent l'agenda et les garde-fous de saisie.</p>
+            </div>
+            <div class="profil-pref-grid">
+              <div class="profil-field">
+                <label class="auth-section-label" for="profil-capacity-input">Capacité hebdomadaire (h)</label>
+                <input id="profil-capacity-input" class="auth-calendar-input" type="number" min="0" max="80" step="0.5" inputmode="decimal" placeholder="35" />
+              </div>
+              <div class="profil-field">
+                <label class="auth-section-label" for="auth-max-hours-input">Durée max par session (h)</label>
+                <input id="auth-max-hours-input" class="auth-calendar-input" type="number" min="1" max="24" step="1" inputmode="numeric" placeholder="24" />
+              </div>
+              <div class="profil-field profil-field--full">
+                <label class="auth-section-label" for="profil-day-start">Plage de journée (agenda)</label>
+                <div class="profil-dayrange-inputs">
+                  <input id="profil-day-start" class="auth-calendar-input" type="number" min="0" max="23" step="1" inputmode="numeric" placeholder="7" aria-label="Début de journée (heure)" />
+                  <span class="profil-dayrange-sep" aria-hidden="true">→</span>
+                  <input id="profil-day-end" class="auth-calendar-input" type="number" min="1" max="24" step="1" inputmode="numeric" placeholder="24" aria-label="Fin de journée (heure)" />
+                  <span class="profil-dayrange-unit">h</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel profil-card">
+            <div class="section-minihead">
+              <div class="profil-cal-head">
+                <h3>Calendriers (iCal)</h3>
+                <span id="auth-calendar-status" class="auth-calendar-status" hidden></span>
+              </div>
+              <p>Collez l'adresse (URL) de chaque fichier iCal, une par ligne. Peu importe la source (Cyke, Google, Outlook…), seul le lien vers le fichier iCal est nécessaire.</p>
+            </div>
+            <textarea id="auth-calendar-ics-input" class="auth-calendar-input auth-calendar-input--multi" rows="3" placeholder="https://www.cyke.io/calendars/…ics&#10;https://…/un-autre-agenda.ics"></textarea>
+            <div class="auth-calendar-actions">
+              <button id="auth-calendar-ics-save" type="button" class="btn btn-secondary btn--sm">Enregistrer</button>
+              <button id="auth-calendar-ics-clear" type="button" class="btn btn--sm btn--danger-outline" hidden>Supprimer</button>
+            </div>
+          </article>
+
+          <article class="panel profil-card">
+            <div class="section-minihead">
+              <h3>Compte</h3>
+            </div>
+            <button id="auth-signout-button" type="button" class="btn btn-ghost-danger">Se déconnecter</button>
+          </article>
+
+        </div>
       </section>
     </main>
 

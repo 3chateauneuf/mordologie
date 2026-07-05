@@ -78,6 +78,12 @@ const CALENDAR_SNAPSHOTS_PREFERENCE_KEY = "calendar_snapshots_v1";
 const CALENDAR_ICS_URLS_KEY = "mordologie-calendar-ics-urls-v1";
 const MAX_SESSION_HOURS_PREFERENCE_KEY = "max_session_hours";
 const MAX_SESSION_HOURS_KEY = "mordologie-max-session-hours-v1";
+const DAY_RANGE_PREFERENCE_KEY = "day_range";
+const DAY_RANGE_KEY = "mordologie-day-range-v1";
+const WEEKLY_CAPACITY_PREFERENCE_KEY = "weekly_capacity_hours";
+const WEEKLY_CAPACITY_KEY = "mordologie-weekly-capacity-v1";
+const DEFAULT_DAY_START_HOUR = 7;
+const DEFAULT_DAY_END_HOUR = 24;
 const REPRENDRE_TODOS_KEY = "mordologie-reprendre-todos-v1";
 const LOCAL_RESCUE_ACCESS_KEY = "mordologie-local-rescue-access-v1";
 const PENDING_STOP_STATE_KEY = "mordologie-pending-stop-v1";
@@ -334,7 +340,13 @@ const agendaPrevWeekButton = document.querySelector("#agenda-prev-week");
 const agendaCurrentWeekButton = document.querySelector("#agenda-current-week");
 const agendaNextWeekButton = document.querySelector("#agenda-next-week");
 const agendaWeekLabel = document.querySelector("#agenda-week-label");
+const agendaSubtitle = document.querySelector("#agenda-subtitle");
 const agendaCalendarSyncButton = document.querySelector("#agenda-calendar-sync");
+const profilAvatar = document.querySelector("#profil-avatar");
+const profilName = document.querySelector("#profil-name");
+const profilCapacityInput = document.querySelector("#profil-capacity-input");
+const profilDayStartInput = document.querySelector("#profil-day-start");
+const profilDayEndInput = document.querySelector("#profil-day-end");
 const plannedSummary = document.querySelector("#planned-summary");
 const periodSwitch = document.querySelector("#period-switch");
 const analysisStatsSwitch = document.querySelector("#analysis-stats-switch");
@@ -857,6 +869,8 @@ let plannedEventOverrides = loadStoredPlannedEventOverrides();
 let plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
 let calendarIcsUrlsByCollaborator = loadCalendarIcsUrls();
 let maxSessionHoursByCollaborator = loadMaxSessionHours();
+let dayRangeByCollaborator = loadDayRange();
+let weeklyCapacityByCollaborator = loadWeeklyCapacity();
 let reprendreTags = [];
 let reprendreDragId = null;
 let reprendreTodos = loadReprendreTodos();
@@ -948,16 +962,8 @@ authSignoutButton?.addEventListener("click", async () => {
 });
 
 authUserAvatar?.addEventListener("click", () => {
-  if (!authUserDropdown) return;
-  const opening = authUserDropdown.hidden;
-  authUserDropdown.hidden = !opening;
-  authUserAvatar.setAttribute("aria-expanded", String(opening));
-  if (opening) {
-    const urls = getCalendarIcsUrls(getCurrentCollaborator() || "");
-    if (authCalendarIcsInput) authCalendarIcsInput.value = urls.join("\n");
-    updateCalendarDropdownState(urls.length > 0);
-    if (authMaxHoursInput) authMaxHoursInput.value = String(getMaxSessionHours(getCurrentCollaborator() || ""));
-  }
+  setCurrentView("profil");
+  renderProfilView();
 });
 
 authMaxHoursInput?.addEventListener("change", () => {
@@ -966,6 +972,29 @@ authMaxHoursInput?.addEventListener("change", () => {
   void saveMaxSessionHours(collaborator, authMaxHoursInput.value);
   authMaxHoursInput.value = String(getMaxSessionHours(collaborator));
 });
+
+profilCapacityInput?.addEventListener("change", () => {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator) return;
+  void saveWeeklyCapacityHours(collaborator, profilCapacityInput.value);
+  const cap = getWeeklyCapacityHours(collaborator);
+  profilCapacityInput.value = cap ? String(cap) : "";
+  renderManagerViews();
+});
+
+function commitDayRangeFromInputs() {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator || !profilDayStartInput || !profilDayEndInput) return;
+  void saveDayRange(collaborator, profilDayStartInput.value, profilDayEndInput.value).then(() => {
+    const range = getDayRange(collaborator);
+    profilDayStartInput.value = String(range.start);
+    profilDayEndInput.value = String(range.end);
+    renderAgenda();
+  });
+}
+
+profilDayStartInput?.addEventListener("change", commitDayRangeFromInputs);
+profilDayEndInput?.addEventListener("change", commitDayRangeFromInputs);
 
 authChangeAvatarButton?.addEventListener("click", () => {
   authAvatarInput?.click();
@@ -3127,7 +3156,7 @@ function scheduleAutocompleteHide() {
 
 function getInitialView() {
   const hash = window.location.hash.replace("#", "");
-  return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide"].includes(hash) ? hash : "guide";
+  return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
 }
 
 function setupSingleSelectionDisplay({ input, container }) {
@@ -3367,6 +3396,20 @@ function hydrateSharedUiPreferences(rows = []) {
       const collaborator = row.collaborator_name || row.owner_user_name || "";
       if (collaborator) {
         maxSessionHoursByCollaborator[normalizeText(collaborator)] = Number(value);
+      }
+    }
+    if (row?.preference_key === DAY_RANGE_PREFERENCE_KEY && value && typeof value === "object") {
+      const collaborator = row.collaborator_name || row.owner_user_name || "";
+      const s = Number(value.start);
+      const e = Number(value.end);
+      if (collaborator && Number.isFinite(s) && Number.isFinite(e)) {
+        dayRangeByCollaborator[normalizeText(collaborator)] = { start: s, end: e };
+      }
+    }
+    if (row?.preference_key === WEEKLY_CAPACITY_PREFERENCE_KEY && Number(value) > 0) {
+      const collaborator = row.collaborator_name || row.owner_user_name || "";
+      if (collaborator) {
+        weeklyCapacityByCollaborator[normalizeText(collaborator)] = Number(value);
       }
     }
     if (row?.preference_key === CALENDAR_SNAPSHOTS_PREFERENCE_KEY && Array.isArray(value)) {
@@ -5632,15 +5675,15 @@ function getAllowedViewsForRole(role = getAccessRole()) {
     return ["guide"];
   }
   if (role === "cadre") {
-    return ["reprendre", "cadre", "journal", "guide"];
+    return ["reprendre", "cadre", "journal", "guide", "profil"];
   }
   if (role === "admin") {
-    return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide"];
+    return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide", "profil"];
   }
   if (role === "manager") {
-    return ["reprendre", "cadre", "manager", "resources", "journal", "guide"];
+    return ["reprendre", "cadre", "manager", "resources", "journal", "guide", "profil"];
   }
-  return ["reprendre", "cadre", "journal", "guide"];
+  return ["reprendre", "cadre", "journal", "guide", "profil"];
 }
 
 function getManagedTeamNames() {
@@ -7393,8 +7436,43 @@ function renderVisibleLiveViews() {
   }
 }
 
+function renderProfilView() {
+  const collaborator = getCurrentCollaborator() || accessProfile.appUser?.user_name || "";
+  if (profilName) {
+    profilName.textContent = accessProfile.appUser?.user_name ?? collaborator ?? "Utilisateur";
+  }
+  if (profilAvatar) {
+    const dataUrl = getEffectiveProfileAvatar(collaborator);
+    if (dataUrl) {
+      profilAvatar.classList.add("has-photo");
+      profilAvatar.style.backgroundImage = `url(${dataUrl})`;
+      profilAvatar.textContent = "";
+    } else {
+      profilAvatar.classList.remove("has-photo");
+      profilAvatar.style.backgroundImage = "";
+      profilAvatar.textContent = getUserAvatarMonogram(collaborator || "U");
+    }
+  }
+  if (authMaxHoursInput) {
+    authMaxHoursInput.value = String(getMaxSessionHours(collaborator));
+  }
+  if (authCalendarIcsInput) {
+    const urls = getCalendarIcsUrls(collaborator);
+    authCalendarIcsInput.value = urls.join("\n");
+    updateCalendarDropdownState(urls.length > 0);
+  }
+  if (profilCapacityInput) {
+    const cap = getWeeklyCapacityHours(collaborator);
+    profilCapacityInput.value = cap ? String(cap) : "";
+  }
+  const range = getDayRange(collaborator);
+  if (profilDayStartInput) profilDayStartInput.value = String(range.start);
+  if (profilDayEndInput) profilDayEndInput.value = String(range.end);
+}
+
 function render() {
   renderViewChrome();
+  renderProfilView();
   renderAccessControlledInputs();
   renderCurrentUserContext();
   renderAuthPanel();
@@ -10004,10 +10082,14 @@ function renderAgenda() {
   visiblePlannedEvents = plannedRows;
   renderPlannedSummary(plannedRows, range);
 
-  const startHour = 7;
-  const endHour = 24;
+  const dayRange = getDayRange(collaborator);
+  const startHour = dayRange.start;
+  const endHour = dayRange.end;
   const hourHeight = 46;
   agendaBoard.style.setProperty("--agenda-hour-height", `${hourHeight}px`);
+  if (agendaSubtitle) {
+    agendaSubtitle.textContent = `Journée ${startHour} h – ${endHour} h (profil) · glissez pour déplacer, étirez les bords pour la durée.`;
+  }
 
   const timeRail = document.createElement("div");
   timeRail.className = "agenda-time-rail";
@@ -11208,6 +11290,81 @@ function storeMaxSessionHours(map) {
   } catch {
     // ignore
   }
+}
+
+function loadObjectPreference(storageKey) {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}");
+    return typeof stored === "object" && stored !== null && !Array.isArray(stored) ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+// Plage de journée (agenda) — pref partagée par collaborateur, {start, end} en heures.
+function loadDayRange() {
+  return loadObjectPreference(DAY_RANGE_KEY);
+}
+
+function storeDayRange(map) {
+  try {
+    window.localStorage.setItem(DAY_RANGE_KEY, JSON.stringify(map));
+  } catch {
+    // ignore
+  }
+}
+
+function getDayRange(collaborator) {
+  const raw = dayRangeByCollaborator[normalizeText(collaborator || "")];
+  let start = Number(raw?.start);
+  let end = Number(raw?.end);
+  if (!Number.isFinite(start) || start < 0 || start > 23) start = DEFAULT_DAY_START_HOUR;
+  if (!Number.isFinite(end) || end <= start || end > 24) end = DEFAULT_DAY_END_HOUR;
+  return { start, end };
+}
+
+async function saveDayRange(collaborator, startHour, endHour) {
+  const key = normalizeText(collaborator || "");
+  if (!key) return;
+  const s = Math.min(Math.max(Math.round(Number(startHour)), 0), 23);
+  const e = Math.min(Math.max(Math.round(Number(endHour)), s + 1), 24);
+  const value = { start: s, end: e };
+  dayRangeByCollaborator[key] = value;
+  storeDayRange(dayRangeByCollaborator);
+  await syncSharedUiPreference(DAY_RANGE_PREFERENCE_KEY, collaborator, value);
+}
+
+// Capacité hebdomadaire — override par pref partagée, sinon valeur du profil (table users).
+function loadWeeklyCapacity() {
+  return loadObjectPreference(WEEKLY_CAPACITY_KEY);
+}
+
+function storeWeeklyCapacity(map) {
+  try {
+    window.localStorage.setItem(WEEKLY_CAPACITY_KEY, JSON.stringify(map));
+  } catch {
+    // ignore
+  }
+}
+
+function getWeeklyCapacityHours(collaborator) {
+  const override = Number(weeklyCapacityByCollaborator[normalizeText(collaborator || "")]);
+  if (Number.isFinite(override) && override > 0) return override;
+  const profileCap = Number(getCollaboratorProfile(collaborator)?.weekly_capacity_hours);
+  return Number.isFinite(profileCap) && profileCap > 0 ? profileCap : 0;
+}
+
+async function saveWeeklyCapacityHours(collaborator, hours) {
+  const key = normalizeText(collaborator || "");
+  if (!key) return;
+  const n = Number(hours);
+  if (Number.isFinite(n) && n > 0) {
+    weeklyCapacityByCollaborator[key] = n;
+  } else {
+    delete weeklyCapacityByCollaborator[key];
+  }
+  storeWeeklyCapacity(weeklyCapacityByCollaborator);
+  await syncSharedUiPreference(WEEKLY_CAPACITY_PREFERENCE_KEY, collaborator, weeklyCapacityByCollaborator[key] ?? null);
 }
 
 function getMaxSessionHours(collaborator) {
@@ -12729,7 +12886,7 @@ function getCollaboratorProfile(collaborator) {
 }
 
 function getCapacityHoursForRange(collaborator, range) {
-  const weeklyCapacityHours = Number(getCollaboratorProfile(collaborator)?.weekly_capacity_hours) || 0;
+  const weeklyCapacityHours = getWeeklyCapacityHours(collaborator);
   if (!weeklyCapacityHours || !range?.start || !range?.end) {
     return 0;
   }
