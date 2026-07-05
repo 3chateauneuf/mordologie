@@ -12751,6 +12751,38 @@ function formatCapacityRate(durationMs, capacityHours) {
   }).format((Number(durationMs) || 0) / 3600000 / capacityHours);
 }
 
+// Cellule capacité avec barre + sémaphore (handoff 5a) :
+// ok teal < 95 %, ambre >= 95 %, rouge > 100 %.
+function createCapacityCell(durationMs, capacityHours) {
+  const td = document.createElement("td");
+  if (!capacityHours) {
+    td.textContent = "-";
+    return td;
+  }
+
+  const ratio = (Number(durationMs) || 0) / 3600000 / capacityHours;
+  const pct = Math.round(ratio * 100);
+  const tone = ratio > 1 ? "over" : ratio >= 0.95 ? "warn" : "ok";
+
+  const cell = document.createElement("div");
+  cell.className = "capacity-cell";
+
+  const bar = document.createElement("div");
+  bar.className = "capacity-bar";
+  const fill = document.createElement("div");
+  fill.className = `capacity-fill capacity-fill--${tone}`;
+  fill.style.width = `${Math.min(Math.max(ratio, 0), 1) * 100}%`;
+  bar.append(fill);
+
+  const value = document.createElement("span");
+  value.className = `capacity-value capacity-value--${tone}`;
+  value.textContent = `${pct} %`;
+
+  cell.append(bar, value);
+  td.append(cell);
+  return td;
+}
+
 function renderTeamTable(container, rows, range, emptyMessage) {
   const teamRows = buildReportRows(rows, "collaborator").map((row) => ({
     ...row,
@@ -12774,7 +12806,7 @@ function renderTeamTable(container, rows, range, emptyMessage) {
     tr.append(
       createCell(row.label),
       createCell(formatDuration(row.durationMs)),
-      createCell(formatCapacityRate(row.durationMs, row.capacityHours)),
+      createCapacityCell(row.durationMs, row.capacityHours),
       createCell(row.mainProject || "-"),
       createCell(String(row.count)),
     );

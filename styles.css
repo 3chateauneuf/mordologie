@@ -2990,6 +2990,60 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   border-bottom: none;
 }
 
+/* Cellule capacité — barre + sémaphore (handoff 5a) */
+.capacity-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.capacity-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.capacity-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 160ms ease, background-color 160ms ease;
+}
+
+.capacity-fill--ok {
+  background: var(--accent);
+}
+
+.capacity-fill--warn {
+  background: #d97706;
+}
+
+.capacity-fill--over {
+  background: var(--danger);
+}
+
+.capacity-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.82rem;
+  min-width: 3.4ch;
+  text-align: right;
+}
+
+.capacity-value--ok {
+  color: var(--accent-strong);
+}
+
+.capacity-value--warn {
+  color: #b45309;
+}
+
+.capacity-value--over {
+  color: var(--danger);
+}
+
 .session-item,
 .memory-card {
   padding: 8px 10px;
