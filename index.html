@@ -120,50 +120,15 @@
             <span class="nav-tooltip" aria-hidden="true">Reprendre</span>
             <span class="visually-hidden">Reprendre</span>
           </button>
-          <button type="button" data-view-target="cadre" class="active" aria-label="Hobbit">
+          <button type="button" data-view-target="agenda" aria-label="Agenda">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M6 18V9.5L12 5l6 4.5V18" />
-                <path d="M9.5 18v-4.5h5V18" />
+                <rect x="4" y="5.5" width="16" height="14" rx="2" />
+                <path d="M4 9.5h16M8 3.5v4M16 3.5v4" />
               </svg>
             </span>
-            <span class="nav-tooltip" aria-hidden="true">Hobbit</span>
-            <span class="visually-hidden">Hobbit</span>
-          </button>
-          <button type="button" data-view-target="manager" aria-label="Gandalf">
-            <span class="nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M5 18h14" />
-                <path d="M7 18V8" />
-                <path d="M12 18V5" />
-                <path d="M17 18v-6" />
-              </svg>
-            </span>
-            <span class="nav-tooltip" aria-hidden="true">Gandalf</span>
-            <span class="visually-hidden">Gandalf</span>
-          </button>
-          <button type="button" data-view-target="resources" aria-label="Ressources">
-            <span class="nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M6 7.5h12" />
-                <path d="M6 12h12" />
-                <path d="M6 16.5h8" />
-              </svg>
-            </span>
-            <span class="nav-tooltip" aria-hidden="true">Ressources</span>
-            <span class="visually-hidden">Ressources</span>
-          </button>
-          <button type="button" data-view-target="users" aria-label="Utilisateurs">
-            <span class="nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M8 11a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 8 11Z" />
-                <path d="M16.5 10.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" />
-                <path d="M4.5 18c.5-2.5 2.4-4 5.1-4s4.6 1.5 5.1 4" />
-                <path d="M13.5 18c.35-1.7 1.7-2.9 3.6-2.9 1.2 0 2.18.42 2.9 1.22" />
-              </svg>
-            </span>
-            <span class="nav-tooltip" aria-hidden="true">Utilisateurs</span>
-            <span class="visually-hidden">Utilisateurs</span>
+            <span class="nav-tooltip" aria-hidden="true">Agenda</span>
+            <span class="visually-hidden">Agenda</span>
           </button>
           <button type="button" data-view-target="journal" aria-label="Journal">
             <span class="nav-icon" aria-hidden="true">
@@ -176,16 +141,6 @@
             </span>
             <span class="nav-tooltip" aria-hidden="true">Journal</span>
             <span class="visually-hidden">Journal</span>
-          </button>
-          <button type="button" data-view-target="guide" aria-label="Guide">
-            <span class="nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <circle cx="12" cy="12" r="8" />
-                <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36z" />
-              </svg>
-            </span>
-            <span class="nav-tooltip" aria-hidden="true">Guide</span>
-            <span class="visually-hidden">Guide</span>
           </button>
         </nav>
       </header>
@@ -499,6 +454,10 @@
         </section>
         </section>
 
+        </section>
+      </section>
+
+      <section class="app-view" id="agenda" data-view-panel="agenda">
         <section class="panel agenda-panel">
           <div class="panel-head">
             <div>
@@ -519,7 +478,6 @@
           <div class="agenda-board-scroll">
             <div id="agenda-board" class="agenda-board agenda-board-wide"></div>
           </div>
-        </section>
         </section>
       </section>
 
@@ -1033,6 +991,19 @@
             <div class="auth-calendar-actions">
               <button id="auth-calendar-ics-save" type="button" class="btn btn-secondary btn--sm">Enregistrer</button>
               <button id="auth-calendar-ics-clear" type="button" class="btn btn--sm btn--danger-outline" hidden>Supprimer</button>
+            </div>
+          </article>
+
+          <article class="panel profil-card profil-admin" id="profil-admin-card" hidden>
+            <div class="section-minihead">
+              <h3>Administration</h3>
+              <p>Vues d'équipe et de gestion (accès réservé).</p>
+            </div>
+            <div class="profil-admin-links">
+              <button type="button" class="btn btn-secondary" data-admin-view="manager">Pilotage équipe</button>
+              <button type="button" class="btn btn-secondary" data-admin-view="resources">Ressources</button>
+              <button type="button" class="btn btn-secondary" data-admin-view="users">Utilisateurs</button>
+              <button type="button" class="btn btn-secondary" data-admin-view="guide">Guide</button>
             </div>
           </article>
 

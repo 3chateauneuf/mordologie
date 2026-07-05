@@ -997,6 +997,10 @@ function commitDayRangeFromInputs() {
 profilDayStartInput?.addEventListener("change", commitDayRangeFromInputs);
 profilDayEndInput?.addEventListener("change", commitDayRangeFromInputs);
 
+document.querySelectorAll("[data-admin-view]").forEach((btn) => {
+  btn.addEventListener("click", () => setCurrentView(btn.dataset.adminView));
+});
+
 authChangeAvatarButton?.addEventListener("click", () => {
   authAvatarInput?.click();
   if (authUserDropdown) authUserDropdown.hidden = true;
@@ -3157,7 +3161,7 @@ function scheduleAutocompleteHide() {
 
 function getInitialView() {
   const hash = window.location.hash.replace("#", "");
-  return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
+  return ["reprendre", "agenda", "cadre", "manager", "resources", "users", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
 }
 
 function setupSingleSelectionDisplay({ input, container }) {
@@ -5676,15 +5680,15 @@ function getAllowedViewsForRole(role = getAccessRole()) {
     return ["guide"];
   }
   if (role === "cadre") {
-    return ["reprendre", "cadre", "journal", "guide", "profil"];
+    return ["reprendre", "agenda", "cadre", "journal", "guide", "profil"];
   }
   if (role === "admin") {
-    return ["reprendre", "cadre", "manager", "resources", "users", "journal", "guide", "profil"];
+    return ["reprendre", "agenda", "cadre", "manager", "resources", "users", "journal", "guide", "profil"];
   }
   if (role === "manager") {
-    return ["reprendre", "cadre", "manager", "resources", "journal", "guide", "profil"];
+    return ["reprendre", "agenda", "cadre", "manager", "resources", "journal", "guide", "profil"];
   }
-  return ["reprendre", "cadre", "journal", "guide", "profil"];
+  return ["reprendre", "agenda", "cadre", "journal", "guide", "profil"];
 }
 
 function getManagedTeamNames() {
@@ -7469,6 +7473,20 @@ function renderProfilView() {
   const range = getDayRange(collaborator);
   if (profilDayStartInput) profilDayStartInput.value = String(range.start);
   if (profilDayEndInput) profilDayEndInput.value = String(range.end);
+
+  // Bloc « Administration » : visible pour admin/manager, boutons filtrés par rôle.
+  const adminCard = document.querySelector("#profil-admin-card");
+  if (adminCard) {
+    const role = getAccessRole();
+    const showCard = role === "admin" || role === "manager";
+    adminCard.hidden = !showCard;
+    if (showCard) {
+      const allowed = getAllowedViewsForRole();
+      adminCard.querySelectorAll("[data-admin-view]").forEach((btn) => {
+        btn.hidden = !allowed.includes(btn.dataset.adminView);
+      });
+    }
+  }
 }
 
 function render() {
@@ -8215,7 +8233,8 @@ function initReprendreView() {
     renderReprendreView();
   });
   document.querySelector("#rpr-adjust")?.addEventListener("click", () => {
-    document.querySelector('[data-view-target="cadre"]')?.click();
+    // « cadre » n'est plus un onglet de la barre : on ouvre la vue directement.
+    setCurrentView("cadre");
   });
   document.querySelector("#rpr-todo-add")?.addEventListener("click", reprendreAddTodo);
   document.querySelector("#rpr-todo-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") reprendreAddTodo(); });

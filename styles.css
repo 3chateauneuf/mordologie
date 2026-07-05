@@ -3171,6 +3171,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   gap: 10px;
 }
 
+.profil-admin-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 @media (max-width: 640px) {
   .profil-pref-grid {
     grid-template-columns: minmax(0, 1fr);
