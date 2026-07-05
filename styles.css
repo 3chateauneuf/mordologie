@@ -6206,6 +6206,14 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-todo-play { flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, #0d9488 30%, #e2e8f0); background: color-mix(in srgb, #0d9488 8%, #fff); color: #0d9488; border-radius: 7px; cursor: pointer; }
 .rpr-todo-arch { flex: 0 0 auto; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: #9ca3af; border-radius: 6px; cursor: pointer; }
 .rpr-todo-arch:hover { color: #374151; background: #f1f5f9; }
+.rpr-todo-textwrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rpr-todo-textwrap .rpr-todo-text { flex: none; }
+.rpr-todo-meta { font-size: 0.72rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rpr-todo-row.done .rpr-todo-meta { color: #0d9488; }
+.rpr-todo-row.archived { opacity: 0.55; }
+.rpr-todo-row.archived .rpr-todo-text { text-decoration: line-through; color: #9ca3af; }
+.rpr-todo-box--archived { border-color: transparent; background: none; color: #9ca3af; font-size: 0.9rem; }
+.rpr-todo-del:hover { color: #dc2626; background: color-mix(in srgb, #dc2626 8%, #fff); }
 
 @media (max-width: 900px) { .rpr-grid3 { grid-template-columns: 1fr; } .rpr-grid2 { grid-template-columns: 1fr; } }
 

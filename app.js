@@ -8026,53 +8026,142 @@ function renderReprendreColumns() {
   freq.forEach((m) => freqEl.appendChild(buildReprendreCard(m, `${m.usesCount || 1} session${(m.usesCount || 1) > 1 ? "s" : ""}`)));
 }
 
+function formatTodoStamp(ts) {
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
+
+const RPR_TODO_ICONS = {
+  grip: `<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="5" cy="12" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="11" cy="8" r="1.3"/><circle cx="11" cy="12" r="1.3"/></svg>`,
+  play: `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg>`,
+  arch: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4" rx="1"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 12.5h5"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>`,
+};
+
 function renderReprendreTodos() {
   const listEl = document.querySelector("#rpr-todo-list");
   const cntEl = document.querySelector("#rpr-todo-cnt");
   if (!listEl) return;
   const todos = getReprendreTodoList();
-  const ordered = [...todos.filter((t) => !t.done), ...todos.filter((t) => t.done)];
-  if (cntEl) cntEl.textContent = String(todos.filter((t) => !t.done).length);
+  const active = todos.filter((t) => !t.done && !t.archived);
+  const done = todos.filter((t) => t.done && !t.archived);
+  const archived = todos.filter((t) => t.archived);
+  const ordered = [...active, ...done, ...archived];
+  if (cntEl) cntEl.textContent = String(active.length);
   listEl.innerHTML = "";
+
+  const mutate = (updater) => {
+    setReprendreTodoList(updater(getReprendreTodoList()));
+    renderReprendreTodos();
+  };
+
   ordered.forEach((t) => {
     const row = document.createElement("div");
-    row.className = "rpr-todo-row" + (t.done ? " done" : "");
-    row.draggable = true;
-    row.innerHTML = `
-      <span class="rpr-todo-grip" aria-hidden="true"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><circle cx="5" cy="4" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="5" cy="12" r="1.3"/><circle cx="11" cy="4" r="1.3"/><circle cx="11" cy="8" r="1.3"/><circle cx="11" cy="12" r="1.3"/></svg></span>
-      <button class="rpr-todo-box" type="button" aria-label="Marquer terminé">✓</button>
-      <span class="rpr-todo-text"></span>
-      <button class="rpr-todo-play" type="button" title="Démarrer comme tâche"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg></button>
-      <button class="rpr-todo-arch" type="button" title="Archiver"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4" rx="1"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 12.5h5"/></svg></button>`;
-    row.querySelector(".rpr-todo-text").textContent = t.text;
-    row.querySelector(".rpr-todo-box").addEventListener("click", () => {
-      setReprendreTodoList(getReprendreTodoList().map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)));
-      renderReprendreTodos();
-    });
-    row.querySelector(".rpr-todo-play").addEventListener("click", () => {
+    row.className = "rpr-todo-row" + (t.done ? " done" : "") + (t.archived ? " archived" : "");
+    const draggable = !t.done && !t.archived;
+    row.draggable = draggable;
+
+    const grip = document.createElement("span");
+    grip.className = "rpr-todo-grip";
+    grip.setAttribute("aria-hidden", "true");
+    grip.innerHTML = RPR_TODO_ICONS.grip;
+    row.appendChild(grip);
+
+    // Case à cocher (active/terminée) ou pastille (archivée, terminale).
+    if (t.archived) {
+      const badge = document.createElement("span");
+      badge.className = "rpr-todo-box rpr-todo-box--archived";
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = "▣";
+      row.appendChild(badge);
+    } else {
+      const box = document.createElement("button");
+      box.className = "rpr-todo-box";
+      box.type = "button";
+      box.setAttribute("aria-label", t.done ? "Rouvrir la tâche" : "Marquer terminé");
+      box.textContent = "✓";
+      box.addEventListener("click", () => {
+        mutate((list) => list.map((x) => {
+          if (x.id !== t.id) return x;
+          const nowDone = !x.done;
+          return { ...x, done: nowDone, doneAt: nowDone ? new Date().toISOString() : null };
+        }));
+      });
+      row.appendChild(box);
+    }
+
+    const textWrap = document.createElement("div");
+    textWrap.className = "rpr-todo-textwrap";
+    const text = document.createElement("span");
+    text.className = "rpr-todo-text";
+    text.textContent = t.text;
+    textWrap.appendChild(text);
+    const stamp = t.archived ? t.archivedAt : (t.done ? t.doneAt : null);
+    if (stamp) {
+      const meta = document.createElement("span");
+      meta.className = "rpr-todo-meta";
+      meta.textContent = `${t.archived ? "archivé" : "terminé"} · ${formatTodoStamp(stamp)}`;
+      textWrap.appendChild(meta);
+    }
+    row.appendChild(textWrap);
+
+    const play = document.createElement("button");
+    play.className = "rpr-todo-play";
+    play.type = "button";
+    play.title = "Démarrer comme tâche";
+    play.innerHTML = RPR_TODO_ICONS.play;
+    play.addEventListener("click", () => {
       const s = document.querySelector("#rpr-subject");
       if (s) { s.value = t.text; s.focus(); refreshReprendreStart(); }
     });
-    row.querySelector(".rpr-todo-arch").addEventListener("click", () => {
-      setReprendreTodoList(getReprendreTodoList().filter((x) => x.id !== t.id));
-      renderReprendreTodos();
-    });
-    row.addEventListener("dragstart", () => { reprendreDragId = t.id; });
-    row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("dragover"); });
-    row.addEventListener("dragleave", () => row.classList.remove("dragover"));
-    row.addEventListener("drop", (e) => {
-      e.preventDefault();
-      row.classList.remove("dragover");
-      const list = getReprendreTodoList();
-      const from = list.findIndex((x) => x.id === reprendreDragId);
-      const to = list.findIndex((x) => x.id === t.id);
-      if (from > -1 && to > -1 && from !== to) {
-        const [moved] = list.splice(from, 1);
-        list.splice(to, 0, moved);
-        setReprendreTodoList(list);
-        renderReprendreTodos();
-      }
-    });
+    row.appendChild(play);
+
+    const action = document.createElement("button");
+    action.type = "button";
+    if (t.archived) {
+      action.className = "rpr-todo-arch rpr-todo-del";
+      action.title = "Supprimer définitivement";
+      action.innerHTML = RPR_TODO_ICONS.trash;
+      action.addEventListener("click", () => {
+        mutate((list) => list.filter((x) => x.id !== t.id));
+      });
+    } else {
+      action.className = "rpr-todo-arch";
+      action.title = "Archiver";
+      action.innerHTML = RPR_TODO_ICONS.arch;
+      action.addEventListener("click", () => {
+        mutate((list) => list.map((x) =>
+          x.id === t.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x));
+      });
+    }
+    row.appendChild(action);
+
+    if (draggable) {
+      row.addEventListener("dragstart", () => { reprendreDragId = t.id; });
+      row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("dragover"); });
+      row.addEventListener("dragleave", () => row.classList.remove("dragover"));
+      row.addEventListener("drop", (e) => {
+        e.preventDefault();
+        row.classList.remove("dragover");
+        const list = getReprendreTodoList();
+        const from = list.findIndex((x) => x.id === reprendreDragId);
+        const to = list.findIndex((x) => x.id === t.id);
+        if (from > -1 && to > -1 && from !== to) {
+          const [moved] = list.splice(from, 1);
+          list.splice(to, 0, moved);
+          setReprendreTodoList(list);
+          renderReprendreTodos();
+        }
+      });
+    }
+
     listEl.appendChild(row);
   });
 }
