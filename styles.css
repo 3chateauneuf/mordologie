@@ -6220,7 +6220,24 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-todo-box--archived { border-color: transparent; background: none; color: #9ca3af; font-size: 0.9rem; }
 .rpr-todo-del:hover { color: #dc2626; background: color-mix(in srgb, #dc2626 8%, #fff); }
 
-@media (max-width: 900px) { .rpr-grid3 { grid-template-columns: 1fr; } .rpr-grid2 { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .rpr-grid3 { grid-template-columns: 1fr; }
+  .rpr-grid2 { grid-template-columns: 1fr; }
+  /* En 1 colonne (tablette/mobile), la typographie des cartes Reprendre —
+     calibrée pour 3 colonnes denses — devient minuscule : on la remonte. */
+  .rpr-reprendre-head p { font-size: 0.94rem; }
+  .rpr-col-lbl { font-size: 1.02rem; }
+  .rpr-qtitle { font-size: 1rem; }
+  .rpr-qclient { font-size: 0.86rem; }
+  .rpr-qaside { font-size: 0.82rem; }
+  .rpr-pastille { font-size: 0.8rem; }
+  .rpr-qsub .rpr-pastille { font-size: 0.76rem; }
+  .rpr-empty { font-size: 0.92rem; }
+  .rpr-todo-add input { font-size: 0.95rem; }
+  .rpr-todo-text { font-size: 0.95rem; }
+  .rpr-todo-meta { font-size: 0.8rem; }
+  .rpr-hint { font-size: 0.88rem; }
+}
 
 /* ── Pulsation partagée (dot de session) ── */
 @keyframes cap-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }

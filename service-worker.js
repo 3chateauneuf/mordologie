@@ -1,4 +1,4 @@
-const CACHE_NAME = "mordologie-v5";
+const CACHE_NAME = "mordologie-v6";
 const CORE_ASSETS = [
   "./",
   "./index.html",
