@@ -442,6 +442,7 @@ const manualCollaboratorInput = document.querySelector("#manual-collaborator-inp
 const manualProjectInput = document.querySelector("#manual-project-input");
 const manualTaskInput = document.querySelector("#manual-task-input");
 const manualCategoriesInput = document.querySelector("#manual-categories-input");
+const manualCategoriesList = document.querySelector("#manual-categories-list");
 const manualTagsList = document.querySelector("#manual-tags-list");
 const manualTagsInput = document.querySelector("#manual-tags-input");
 const manualNotionInput = document.querySelector("#manual-notion-input");
@@ -793,6 +794,7 @@ let evolutionFilterLabel = null;
 let manualTimingSyncLocked = false;
 let dayThemes = loadDayThemes();
 let manualCurrentTags = [];
+let manualCurrentCategories = [];
 let manualEditingSessionId = null;
 let pendingConflict = null;
 let currentView = getInitialView();
@@ -2282,7 +2284,7 @@ function initializeAutocomplete() {
       },
       allowCreate: () => canCreateSharedReferenceCatalog(),
       createLabel: (value) => `Ajouter "${value}" comme nouveau projet`,
-      createValue: (value) => createProjectReference(value, parseTokenString(manualCategoriesInput.value)[0] ?? ""),
+      createValue: (value) => createProjectReference(value, manualCurrentCategories[0] ?? ""),
     },
     {
       input: manualTaskInput,
@@ -2309,9 +2311,11 @@ function initializeAutocomplete() {
           [value],
           dedupePreservingOrder([...manualCurrentTags, ...parseTokenString(manualTagsInput.value)]),
         );
-        manualCategoriesInput.value = normalized.categories.join(", ");
+        manualCurrentCategories = normalized.categories;
+        manualCategoriesInput.value = "";
         manualCurrentTags = normalized.tags;
         manualTagsInput.value = "";
+        renderManualCategoryTokens();
         renderManualTagTokens();
       },
     },
@@ -6746,7 +6750,8 @@ function openManualDialog(session = null, preset = null) {
     session?.collaborator ?? preset?.collaborator ?? collaboratorInput.value.trim();
   manualProjectInput.value = session?.project ?? preset?.project ?? (inheritForm ? projectInput.value.trim() : "");
   manualTaskInput.value = session?.task ?? preset?.task ?? (inheritForm ? taskInput.value.trim() : "");
-  manualCategoriesInput.value = (session?.categories ?? preset?.categories ?? (inheritForm ? currentCategories : [])).join(", ");
+  manualCurrentCategories = dedupePreservingOrder(session?.categories ?? preset?.categories ?? (inheritForm ? currentCategories : []));
+  manualCategoriesInput.value = "";
   manualCurrentTags = dedupePreservingOrder(session?.tags ?? preset?.tags ?? (inheritForm ? currentTags : []));
   manualTagsInput.value = "";
   manualNotionInput.value = session?.notionRef ?? preset?.notionRef ?? (inheritForm ? notionInput.value.trim() : "");
@@ -6761,6 +6766,7 @@ function openManualDialog(session = null, preset = null) {
     deleteManualButton.hidden = !session;
   }
   saveManualButton.textContent = session ? "Enregistrer les changements" : "Enregistrer";
+  renderManualCategoryTokens();
   renderManualTagTokens();
   updateManualPauseHint(session);
   // Éviter InvalidStateError : showModal() sur un dialog déjà ouvert lève une
@@ -6924,7 +6930,7 @@ function saveManualEntry() {
     project,
     task: manualTaskInput.value.trim(),
     ...normalizeCategoryAndTags(
-      parseTokenString(manualCategoriesInput.value),
+      dedupePreservingOrder([...manualCurrentCategories, ...parseTokenString(manualCategoriesInput.value)]),
       dedupePreservingOrder([...manualCurrentTags, ...parseTokenString(manualTagsInput.value)]),
     ),
     notionRef: manualNotionInput.value.trim(),
@@ -13460,8 +13466,9 @@ function applyManualProjectMemoryFromInput() {
   if (!manualTaskInput.value.trim() && memory.task) {
     manualTaskInput.value = memory.task;
   }
-  if (!manualCategoriesInput.value.trim() && memory.categories.length) {
-    manualCategoriesInput.value = memory.categories.slice(0, 1).join(", ");
+  if (!manualCurrentCategories.length && memory.categories.length) {
+    manualCurrentCategories = dedupePreservingOrder(memory.categories.slice(0, 1));
+    renderManualCategoryTokens();
   }
   if (!manualCurrentTags.length && memory.tags.length) {
     manualCurrentTags = dedupePreservingOrder([...memory.tags]);
@@ -14004,6 +14011,13 @@ function renderManualTagTokens() {
     manualCurrentTags = manualCurrentTags.filter((_, i) => i !== index);
     renderManualTagTokens();
   });
+}
+
+function renderManualCategoryTokens() {
+  renderTokenList(manualCategoriesList, manualCurrentCategories, (index) => {
+    manualCurrentCategories = manualCurrentCategories.filter((_, i) => i !== index);
+    renderManualCategoryTokens();
+  }, { kind: "category" });
 }
 
 function renderPlannedCategoryTokens() {

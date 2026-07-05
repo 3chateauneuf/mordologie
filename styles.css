@@ -3581,6 +3581,39 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   min-height: 118px;
 }
 
+/* Dialogues sur mobile : grilles en 1 colonne, moins de padding, actions qui
+   passent à la ligne pour rester atteignables au pouce. */
+@media (max-width: 640px) {
+  .dialog-shell {
+    width: calc(100% - 16px);
+  }
+  .dialog-card {
+    max-height: calc(100dvh - 24px);
+  }
+  .dialog-head {
+    padding: 14px 16px;
+  }
+  .dialog-body {
+    padding: 14px 16px 16px;
+  }
+  .dialog-grid,
+  .dialog-time-grid,
+  .dialog-time-inputs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dialog-actions {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+  }
+  .dialog-actions .btn {
+    flex: 1 1 auto;
+  }
+  .dialog-action-danger {
+    flex-basis: 100%;
+    order: 3;
+  }
+}
+
 
 
 .planned-dialog-suggestion {
