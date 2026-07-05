@@ -360,6 +360,7 @@ const reportTopProjectTime = document.querySelector("#report-top-project-time");
 const reportTopCategoryLabel = document.querySelector("#report-top-category-label");
 const reportTopCategory = document.querySelector("#report-top-category");
 const reportTopCategoryTime = document.querySelector("#report-top-category-time");
+const reportCapacity = document.querySelector("#report-capacity");
 const managerDistributionTitle = document.querySelector("#manager-distribution-title");
 const managerDistributionCopy = document.querySelector("#manager-distribution-copy");
 const managerDistributionBar = document.querySelector("#manager-distribution-bar");
@@ -7482,6 +7483,7 @@ function render() {
   renderQuickProjects();
   renderProjectMemoryList();
   renderTagManager();
+  renderJournalWeekDistribution();
   renderSessionList();
   renderSyncButton();
   renderPendingSyncIndicator();
@@ -12814,6 +12816,50 @@ function renderManagerSummary(allRows, scopedRows, range, filterCollaborator) {
   reportTopCategoryLabel.textContent = "Categorie principale";
   reportTopCategory.textContent = topCategory ? topCategory.label : "-";
   reportTopCategoryTime.textContent = topCategory ? formatDuration(topCategory.durationMs) : "0 h 00";
+
+  if (reportCapacity) {
+    let capacityHoursTotal = 0;
+    if (filterCollaborator && filterCollaborator !== "all") {
+      capacityHoursTotal = getCapacityHoursForRange(filterCollaborator, range);
+    } else {
+      for (const user of getVisibleReferenceUsers()) {
+        capacityHoursTotal += getCapacityHoursForRange(user.user_name, range);
+      }
+    }
+    if (capacityHoursTotal > 0) {
+      const ratio = (totalMs / 3600000) / capacityHoursTotal;
+      reportCapacity.textContent = new Intl.NumberFormat("fr-FR", {
+        style: "percent",
+        maximumFractionDigits: 0,
+      }).format(ratio);
+    } else {
+      reportCapacity.textContent = "-";
+    }
+  }
+}
+
+// « Ma semaine » (Journal 4a) — répartition des catégories de la semaine en cours
+// pour le collaborateur courant : barre empilée + légende (temps + %).
+function renderJournalWeekDistribution() {
+  const bar = document.querySelector("#journal-week-bar");
+  const legend = document.querySelector("#journal-week-legend");
+  const totalEl = document.querySelector("#journal-week-total");
+  if (!bar || !legend) return;
+
+  const collaborator = getCurrentCollaborator();
+  const range = getPeriodRange(getReportAnchorDate(), "week");
+  const rows = getAllSessionsWithActive().filter(
+    (session) =>
+      isSessionInRange(session, range) &&
+      (!collaborator || normalizeText(session.collaborator) === normalizeText(collaborator)),
+  );
+  const totalMs = rows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
+  const categoryRows = buildReportRows(rows, "categories");
+
+  if (totalEl) totalEl.textContent = totalMs ? formatDuration(totalMs) : "";
+  renderDistribution(bar, legend, categoryRows, totalMs, "Aucune session cette semaine.", {
+    colorResolver: (row) => getDistributionColor(row.label),
+  });
 }
 
 function renderEvolutionGrid(container, anchor, filterCollaborator, filterLabel) {

@@ -600,6 +600,7 @@
         <div class="panel-head">
           <div>
             <h2>Pilotage équipe</h2>
+            <p class="panel-copy">Charge, capacité et allocation des cargonautes.</p>
           </div>
         </div>
 
@@ -622,10 +623,10 @@
             <span id="report-top-category-time">0 h 00</span>
             <span id="report-top-category-delta" class="kpi-delta" hidden></span>
           </article>
-          <article id="report-top-kr-card" class="summary-card">
-            <p>KR principal</p>
-            <strong id="report-top-kr">-</strong>
-            <span id="report-top-kr-time">0 h 00</span>
+          <article class="summary-card">
+            <p>Capacité moyenne</p>
+            <strong id="report-capacity">-</strong>
+            <span>Charge / capacité de l'équipe</span>
           </article>
         </div>
 
@@ -854,6 +855,18 @@
 
       <section class="app-view" id="journal" data-view-panel="journal">
       <section class="journal-grid">
+        <div class="journal-col-main">
+        <section class="panel journal-week-panel">
+          <div class="panel-head panel-head-compact">
+            <div>
+              <h2>Ma semaine</h2>
+              <p class="panel-copy">Répartition de vos catégories sur la semaine.</p>
+            </div>
+            <span id="journal-week-total" class="journal-week-total"></span>
+          </div>
+          <div id="journal-week-bar" class="distribution-bar"></div>
+          <div id="journal-week-legend" class="distribution-legend"></div>
+        </section>
         <section class="panel journal-panel-main">
           <div class="panel-head panel-head-compact">
             <div>
@@ -912,6 +925,7 @@
           </div>
           <div id="session-list" class="session-list"></div>
         </section>
+        </div>
 
         <section class="panel journal-panel-side">
           <div class="panel-head panel-head-compact">

@@ -629,6 +629,26 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.journal-col-main {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  min-width: 0;
+}
+
+.journal-week-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.journal-week-total {
+  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .panel {
   border-radius: var(--radius-panel);
   padding: 22px;
@@ -4090,7 +4110,7 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .tag-manager-actions {
   display: flex;
   gap: 3px;
-  opacity: 0;
+  opacity: 0.5;
   transition: opacity 100ms;
   flex-shrink: 0;
 }
