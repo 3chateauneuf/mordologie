@@ -86,6 +86,11 @@
 
 html {
   scroll-behavior: smooth;
+  /* iOS Safari gonfle automatiquement la taille du texte (title/paragraphes)
+     en colonne étroite → titres géants et débordants sur iPhone alors qu'ils
+     sont petits sur desktop. On fige la taille sur celle définie en CSS. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
