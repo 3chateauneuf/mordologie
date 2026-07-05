@@ -310,8 +310,7 @@
                   <button id="clear-form-button" type="button" class="col-clear-btn" hidden>Effacer</button>
                 </div>
 
-                <input id="collaborator-input" type="hidden" list="collaborator-suggestions" />
-                <datalist id="collaborator-suggestions"></datalist>
+                <input id="collaborator-input" type="hidden" />
 
                 <label class="field">
                   <div class="field-head">
@@ -911,10 +910,10 @@
               autocomplete="off"
               spellcheck="false"
             />
-            <select id="tag-manager-sort" class="tag-manager-sort" aria-label="Trier">
-              <option value="usage">Plus utilisés</option>
-              <option value="alpha">A → Z</option>
-            </select>
+            <div id="tag-manager-sort" class="view-switch tag-manager-sort-switch" role="group" aria-label="Trier">
+              <button type="button" class="period-btn active" data-sort="usage">Plus utilisés</button>
+              <button type="button" class="period-btn" data-sort="alpha">A → Z</button>
+            </div>
           </div>
           <div id="tag-manager-list" class="tag-manager-list"></div>
         </section>
@@ -1029,7 +1028,7 @@
         </div>
 
         <div class="dialog-body">
-          <input id="manual-collaborator-input" type="hidden" list="collaborator-suggestions" />
+          <input id="manual-collaborator-input" type="hidden" />
 
           <section class="dialog-section">
             <div class="dialog-section-head">

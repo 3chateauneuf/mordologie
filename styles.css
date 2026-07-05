@@ -5376,7 +5376,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
   padding: 8px 0 4px;
+}
+
+.tag-manager-sort-switch {
+  flex: 0 0 auto;
 }
 
 .tag-manager-search-input {

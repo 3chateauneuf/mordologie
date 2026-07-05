@@ -281,7 +281,6 @@ const authCalendarStatus = document.querySelector("#auth-calendar-status");
 const authStatusShell = document.querySelector("#auth-status-shell");
 const authStatus = document.querySelector("#auth-status");
 const collaboratorInput = document.querySelector("#collaborator-input");
-const collaboratorSuggestions = document.querySelector("#collaborator-suggestions");
 const projectInput = document.querySelector("#project-input");
 const projectMemoryHint = document.querySelector("#project-memory-hint");
 const taskInput = document.querySelector("#task-input");
@@ -386,7 +385,7 @@ const journalFilterHelpPanel     = document.querySelector("#journal-filter-help-
 const journalFilterResetButton = document.querySelector("#journal-filter-reset");
 const journalSideSwitch = document.querySelector("#journal-side-switch");
 const tagManagerSearchInput = document.querySelector("#tag-manager-search");
-const tagManagerSortSelect  = document.querySelector("#tag-manager-sort");
+const tagManagerSortSwitch  = document.querySelector("#tag-manager-sort");
 const categoryRequestsBadge = document.querySelector("#category-requests-badge");
 let tagManagerSortMode = "usage"; // "usage" (count desc) | "alpha" (locale asc)
 // Demandes de catégorie en attente (admin/manager) — voir section Phase B.
@@ -1725,8 +1724,11 @@ tagManagerSearchInput?.addEventListener("input", () => {
   renderTagManager();
 });
 
-tagManagerSortSelect?.addEventListener("change", () => {
-  tagManagerSortMode = tagManagerSortSelect.value === "alpha" ? "alpha" : "usage";
+tagManagerSortSwitch?.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-sort]");
+  if (!btn) return;
+  tagManagerSortMode = btn.dataset.sort === "alpha" ? "alpha" : "usage";
+  tagManagerSortSwitch.querySelectorAll("[data-sort]").forEach((b) => b.classList.toggle("active", b === btn));
   renderTagManager();
 });
 
@@ -7835,16 +7837,8 @@ function showActiveStartEditor() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function renderSuggestions() {
-  // Sujet / Catégorie / Tags n'utilisent plus de <datalist> natif (cassé sur
-  // iPhone) : l'autocomplétion custom est l'unique source de suggestions.
-  // Seul le collaborateur (input caché) conserve sa datalist.
-  fillDatalist(
-    collaboratorSuggestions,
-    getVisibleReferenceUsers().length
-      ? getVisibleReferenceUsers().map((item) => item.user_name).sort((a, b) => a.localeCompare(b, "fr"))
-      : uniqueValues("collaborator"),
-  );
-
+  // Aucun <datalist> natif (cassé sur iPhone) : l'autocomplétion custom est
+  // l'unique source de suggestions pour Sujet / Catégorie / Tags.
   const currentValue = managerCollaboratorFilter.value || "all";
   const collaborators = getVisibleReferenceUsers().length
     ? getVisibleReferenceUsers().map((item) => item.user_name).sort((a, b) => a.localeCompare(b, "fr"))
