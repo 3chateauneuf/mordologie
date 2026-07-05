@@ -5538,10 +5538,10 @@ async function applyLocalRescueAccess(rawName, { silent = false } = {}) {
     remoteLoaded ? "success" : "warning",
     { persistMs: remoteLoaded ? 2600 : undefined },
   );
-  // After login, leave the guide and go directly to the main view
+  // After login, leave the guide and go directly to the main view (2a Reprendre)
   if (currentView === "guide") {
-    currentView = "cadre";
-    window.history.replaceState(null, "", "#cadre");
+    currentView = "reprendre";
+    window.history.replaceState(null, "", "#reprendre");
   }
   render();
   return true;
