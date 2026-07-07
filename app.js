@@ -457,6 +457,10 @@ const manualNotesInput = document.querySelector("#manual-notes-input");
 const cancelManualButton = document.querySelector("#cancel-manual-button");
 const deleteManualButton = document.querySelector("#delete-manual-button");
 const saveManualButton = document.querySelector("#save-manual-button");
+const manualPauseButton = document.querySelector("#manual-pause-button");
+const manualStopButton = document.querySelector("#manual-stop-button");
+const manualDialogEyebrow = document.querySelector("#manual-dialog-eyebrow");
+const manualDialogTitle = document.querySelector("#manual-dialog-title");
 
 const conflictDialog = document.querySelector("#conflict-dialog");
 const conflictMessage = document.querySelector("#conflict-message");
@@ -795,6 +799,10 @@ let dayThemes = loadDayThemes();
 let manualCurrentTags = [];
 let manualCurrentCategories = [];
 let manualEditingSessionId = null;
+// Le dialogue « Saisie manuelle » sert aussi de dialogue « Ajuster la session en
+// cours » (même infra de champs/autocomplétion). En mode « en cours » on masque
+// Fin/Durée, on affiche Pause/Arrêter, et Enregistrer ne clôture pas le chrono.
+let manualRunningMode = false;
 let pendingConflict = null;
 let currentView = getInitialView();
 let referenceCatalog = {
@@ -941,10 +949,10 @@ window.scrollTo(0, 0);
 
 initializeAutocomplete();
 initReprendreView();
-document.getElementById("global-session-pill")?.addEventListener("click", async () => {
-  stopActiveSession();
-  await waitForActiveSessionCleared(4000);
-  render();
+// Le reloj de la barre est une référence : le clic ouvre le dialogue d'ajustement
+// (jamais un arrêt — on ne coupe plus le chrono par mégarde).
+document.getElementById("global-session-pill")?.addEventListener("click", () => {
+  openAdjustDialogForActiveSession();
 });
 applyBookFavicon();
 initializeViewNavigation();
@@ -1986,6 +1994,28 @@ plannedDialog?.addEventListener("close", () => {
 manualDialog?.addEventListener("close", () => {
   setManualDialogStatus("");
   manualEditingSessionId = null;
+  // Nettoyage du mode « session en cours » (fermeture par Annuler / Escape / croix).
+  manualRunningMode = false;
+  manualDialog.classList.remove("manual-dialog--running");
+});
+
+// Pause/Reprise depuis le dialogue d'ajustement : le chrono continue de vivre,
+// on met juste à jour le libellé du bouton et l'indice de pause.
+manualPauseButton?.addEventListener("click", () => {
+  if (!activeSession) return;
+  togglePauseSession();
+  manualPauseButton.textContent = activeSession?.pausedAt ? "Reprendre" : "Pause";
+  updateManualPauseHint(activeSession);
+});
+
+// Arrêter depuis le dialogue d'ajustement : on ferme puis on clôture le chrono
+// via le même chemin que le bouton Arrêter de la vue Reprendre.
+manualStopButton?.addEventListener("click", async () => {
+  manualRunningMode = false;
+  manualDialog.close();
+  stopActiveSession();
+  await waitForActiveSessionCleared(4000);
+  render();
 });
 
 retryPendingStopButton?.addEventListener("click", () => {
@@ -6744,9 +6774,24 @@ function togglePauseSession() {
   scheduleActiveSessionServerSync({ immediate: true });
 }
 
+// Ouvre le dialogue « Ajuster la session en cours » : réutilise tout le
+// dialogue manuel (mêmes champs / autocomplétion) mais en mode running (voir
+// applyManualDialogRunningChrome). Aucun changement d'écran.
+function openAdjustDialogForActiveSession() {
+  if (!activeSession) {
+    return;
+  }
+  openManualDialog(activeSession);
+}
+
 function openManualDialog(session = null, preset = null) {
   const end = preset?.end ? new Date(preset.end) : new Date();
   const start = preset?.start ? new Date(preset.start) : new Date(end.getTime() - 30 * 60 * 1000);
+
+  // Mode « en cours » : on édite le chrono qui tourne. Fin/Durée masqués, on
+  // affiche Pause/Arrêter, et Enregistrer met à jour sans clôturer la session.
+  const running = Boolean(session && activeSession && isCurrentActiveSession(session));
+  manualRunningMode = running;
 
   // Only inherit main-form state when opening with no session and no preset at all (keyboard
   // shortcut / "Ajouter" button). When called from a day-track click (preset contains slot but
@@ -6766,15 +6811,14 @@ function openManualDialog(session = null, preset = null) {
   manualNotionInput.value = session?.notionRef ?? preset?.notionRef ?? (inheritForm ? notionInput.value.trim() : "");
   manualNotesInput.value = session?.notes ?? preset?.notes ?? (inheritForm ? notesInput.value.trim() : "");
   const startDateValue = session ? new Date(session.start) : start;
-  const endDateValue = session ? new Date(session.end) : end;
+  // En mode running la session n'a pas de `end` : on borne à « maintenant » pour
+  // que les champs restent cohérents (ils sont de toute façon masqués).
+  const endDateValue = running ? new Date() : (session ? new Date(session.end) : end);
   setDateTimeFieldValue(manualStartDateInput, manualStartTimeInput, startDateValue);
   setDateTimeFieldValue(manualEndDateInput, manualEndTimeInput, endDateValue);
   updateManualTimingCardTitles(startDateValue, endDateValue);
   syncManualDurationFromBounds();
-  if (deleteManualButton) {
-    deleteManualButton.hidden = !session;
-  }
-  saveManualButton.textContent = session ? "Enregistrer les changements" : "Enregistrer";
+  applyManualDialogRunningChrome(running, session);
   renderManualCategoryTokens();
   renderManualTagTokens();
   updateManualPauseHint(session);
@@ -6784,6 +6828,33 @@ function openManualDialog(session = null, preset = null) {
   if (!manualDialog.open) {
     manualDialog.showModal();
   }
+}
+
+// Bascule l'habillage du dialogue manuel entre mode « saisie/correction » et
+// mode « session en cours » (titre, boutons Pause/Arrêter, Supprimer masqué).
+function applyManualDialogRunningChrome(running, session) {
+  manualDialog?.classList.toggle("manual-dialog--running", running);
+  if (deleteManualButton) {
+    deleteManualButton.hidden = !session || running;
+  }
+  if (manualStopButton) {
+    manualStopButton.hidden = !running;
+  }
+  if (manualPauseButton) {
+    manualPauseButton.hidden = !running;
+    if (running) {
+      manualPauseButton.textContent = activeSession?.pausedAt ? "Reprendre" : "Pause";
+    }
+  }
+  if (manualDialogEyebrow) {
+    manualDialogEyebrow.textContent = running ? "Session en cours" : "Saisie manuelle";
+  }
+  if (manualDialogTitle) {
+    manualDialogTitle.textContent = running ? "Ajuster la session en cours" : "Ajouter ou corriger une entrée";
+  }
+  saveManualButton.textContent = running
+    ? "Enregistrer"
+    : (session ? "Enregistrer les changements" : "Enregistrer");
 }
 
 // Muestra la pausa registrada de la sesión editada. Se oculta si el usuario
@@ -6871,7 +6942,74 @@ function shouldFinalizeActiveSessionFromManualEdit(originalSession, editedSessio
   return !(sameMinuteWindow || samePausedState);
 }
 
+// Enregistre les ajustements du chrono en cours sans le clôturer : métadonnées
+// (sujet, client, catégorie, tags, lien, notes) + début (utile si on a oublié
+// de lancer à l'heure). Le chrono continue de tourner.
+function saveAdjustedActiveSession() {
+  setManualDialogStatus("");
+  if (!activeSession) {
+    manualRunningMode = false;
+    manualDialog.close();
+    return;
+  }
+
+  const collaborator = getEffectiveCollaboratorValue(manualCollaboratorInput.value) || activeSession.collaborator;
+  const project = manualProjectInput.value.trim();
+  const start = readDateTimeFieldValue(manualStartDateInput, manualStartTimeInput);
+
+  if (!project) {
+    setManualDialogStatus("Le sujet est requis.", "error");
+    manualProjectInput.focus();
+    return;
+  }
+  if (!start || Number.isNaN(start.getTime())) {
+    setManualDialogStatus("Renseignez une heure de début valide.", "error");
+    manualStartTimeInput.focus();
+    return;
+  }
+  if (start.getTime() > Date.now() + 60000) {
+    setManualDialogStatus("Le début ne peut pas être dans le futur.", "error");
+    manualStartTimeInput.focus();
+    return;
+  }
+
+  const previousSession = { ...activeSession };
+  const meta = normalizeCategoryAndTags(
+    dedupePreservingOrder([...manualCurrentCategories, ...parseTokenString(manualCategoriesInput.value)]),
+    dedupePreservingOrder([...manualCurrentTags, ...parseTokenString(manualTagsInput.value)]),
+  );
+  const nextActiveSession = normalizeSession({
+    ...activeSession,
+    collaborator,
+    project,
+    task: manualTaskInput.value.trim(),
+    categories: meta.categories,
+    tags: meta.tags,
+    notionRef: manualNotionInput.value.trim(),
+    notes: manualNotesInput.value.trim(),
+    start: start.toISOString(),
+    isServerActive: true,
+  });
+
+  activeSession = nextActiveSession;
+  persistActiveSession();
+  hydrateFormFromActiveSession();
+  manualRunningMode = false;
+  manualEditingSessionId = null;
+  manualDialog.close();
+  render();
+  void logSessionChange(previousSession, nextActiveSession, "adjust-active");
+  void upsertActiveSessionToSupabase(nextActiveSession);
+}
+
 function saveManualEntry() {
+  // Mode « session en cours » : on met à jour le chrono qui tourne (métadonnées
+  // + début) sans le clôturer. L'arrêt passe par le bouton Arrêter dédié.
+  if (manualRunningMode) {
+    saveAdjustedActiveSession();
+    return;
+  }
+
   setManualDialogStatus("");
   const collaborator = getEffectiveCollaboratorValue(manualCollaboratorInput.value);
   const project = manualProjectInput.value.trim();
@@ -8329,8 +8467,8 @@ function initReprendreView() {
     renderReprendreView();
   });
   document.querySelector("#rpr-adjust")?.addEventListener("click", () => {
-    // « cadre » n'est plus un onglet de la barre : on ouvre la vue directement.
-    setCurrentView("cadre");
+    // Ajuster sans changer d'écran : petit dialogue avec tous les champs éditables.
+    openAdjustDialogForActiveSession();
   });
   document.querySelector("#rpr-todo-add")?.addEventListener("click", reprendreAddTodo);
   document.querySelector("#rpr-todo-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") reprendreAddTodo(); });

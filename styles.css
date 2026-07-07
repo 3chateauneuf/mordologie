@@ -6250,17 +6250,18 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 /* ── Pulsation partagée (dot de session) ── */
 @keyframes cap-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-/* ── Indicateur de session global (position fixe, tous les écrans) ── */
-.global-session-pill {
-  position: fixed;
-  top: 66px;
-  right: 24px;
-  z-index: 60;
+/* ── Reloj de sesión : inline dans la barre, à côté des onglets. Référence ──
+   visuelle uniquement ; le clic ouvre le dialogue d'ajustement (jamais stop).
+   Scopé sous .topbar-nav pour battre la règle générique `.topbar-nav button`
+   (qui force 40×40 / fond neutre) sans !important. */
+.topbar-nav .global-session-pill {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  height: 36px;
-  padding: 0 14px;
+  gap: 8px;
+  width: auto;
+  height: 34px;
+  padding: 0 13px;
+  margin-right: 2px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, #0d9488 24%, transparent);
   background: color-mix(in srgb, #0d9488 8%, #fff);
@@ -6270,12 +6271,20 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   font-variant-numeric: tabular-nums;
   font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 8px 22px rgba(24, 56, 74, 0.12);
   transition: background 140ms ease, border-color 140ms ease;
 }
-.global-session-pill:hover { background: color-mix(in srgb, #0d9488 14%, #fff); border-color: #0d9488; }
-.global-session-pill .gsp-dot { width: 9px; height: 9px; border-radius: 50%; background: #ec6913; animation: cap-pulse 1.6s ease-in-out infinite; }
-.global-session-pill.paused .gsp-dot { animation: none; opacity: 0.5; }
-.global-session-pill .gsp-stop { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; color: #9ca3af; opacity: 0; transition: opacity 140ms ease, color 140ms ease; }
-.global-session-pill:hover .gsp-stop { opacity: 1; color: #dc2626; }
-@media (max-width: 640px) { .global-session-pill { top: auto; bottom: 16px; right: 16px; } }
+.topbar-nav .global-session-pill:hover { background: color-mix(in srgb, #0d9488 14%, #fff); border-color: #0d9488; }
+.topbar-nav .global-session-pill .gsp-dot { width: 9px; height: 9px; border-radius: 50%; background: #ec6913; animation: cap-pulse 1.6s ease-in-out infinite; flex: 0 0 auto; }
+.topbar-nav .global-session-pill.paused .gsp-dot { animation: none; opacity: 0.5; }
+@media (max-width: 640px) {
+  .topbar-nav .global-session-pill { height: 30px; padding: 0 10px; font-size: 0.85rem; gap: 6px; }
+}
+
+/* ── Dialogue « Ajuster la session en cours » (mode running du dialogue manuel).
+   On masque Fin/Durée (le chrono tourne), on affiche Pause/Arrêter, et on étale
+   la carte Début sur toute la largeur. ── */
+/* Visibilité des boutons Pause/Arrêter pilotée en JS (.hidden). Ici : layout. */
+.manual-dialog--running #manual-end-card,
+.manual-dialog--running #manual-duration-field { display: none; }
+.manual-dialog--running .dialog-time-grid { grid-template-columns: 1fr; }
+.manual-dialog--running #manual-stop-button { margin-right: auto; }

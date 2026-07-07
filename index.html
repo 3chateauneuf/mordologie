@@ -110,6 +110,11 @@
         </div>
 
         <nav class="topbar-nav" aria-label="Navigation principale">
+          <!-- Reloj de sesión: referencia visible en la barra ; clic = ajustar (jamais stop). -->
+          <button id="global-session-pill" class="global-session-pill" type="button" title="Ajuster la session en cours" hidden>
+            <span class="gsp-dot" aria-hidden="true"></span>
+            <span class="gsp-time">00:00:00</span>
+          </button>
           <button type="button" data-view-target="reprendre" aria-label="Reprendre">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
@@ -144,13 +149,6 @@
           </button>
         </nav>
       </header>
-
-      <!-- Indicateur de session global : visible sur tous les écrans quand le chrono tourne. -->
-      <button id="global-session-pill" class="global-session-pill" type="button" title="Arrêter la session" hidden>
-        <span class="gsp-dot" aria-hidden="true"></span>
-        <span class="gsp-time">00:00:00</span>
-        <span class="gsp-stop" aria-hidden="true"><svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></span>
-      </button>
 
       <div id="auth-status-shell" class="status-toast" hidden aria-live="polite">
         <p id="auth-status"></p>
@@ -1021,8 +1019,8 @@
       <form method="dialog" class="dialog-card">
         <div class="dialog-head">
           <div>
-            <p class="eyebrow">Saisie manuelle</p>
-            <h2>Ajouter ou corriger une entrée</h2>
+            <p class="eyebrow" id="manual-dialog-eyebrow">Saisie manuelle</p>
+            <h2 id="manual-dialog-title">Ajouter ou corriger une entrée</h2>
           </div>
           <button type="submit" class="dialog-close" aria-label="Fermer"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
         </div>
@@ -1101,7 +1099,7 @@
                 </div>
               </section>
 
-              <section class="dialog-time-card">
+              <section class="dialog-time-card" id="manual-end-card">
                 <p id="manual-end-card-title" class="dialog-time-card-title">Fin</p>
                 <div class="dialog-time-inputs">
                   <label class="field">
@@ -1116,7 +1114,7 @@
               </section>
             </div>
 
-            <label class="field field-full">
+            <label class="field field-full" id="manual-duration-field">
               <span>Durée (h)</span>
               <input
                 id="manual-duration-input"
@@ -1134,6 +1132,8 @@
 
         <div class="dialog-actions">
           <button id="delete-manual-button" type="button" class="btn btn-ghost-danger dialog-action-danger" hidden>Supprimer</button>
+          <button id="manual-pause-button" type="button" class="btn btn-secondary manual-running-action" hidden>Pause</button>
+          <button id="manual-stop-button" type="button" class="btn btn-ghost-danger manual-running-action" hidden>Arrêter</button>
           <button id="cancel-manual-button" type="button" class="btn btn-secondary">Annuler</button>
           <button id="save-manual-button" type="button" class="btn btn-primary">Enregistrer</button>
         </div>
