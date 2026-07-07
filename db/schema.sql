@@ -144,7 +144,7 @@ create table user_ui_preferences (
   owner_user_name text not null,
   collaborator_name text not null,
   preference_key text not null
-    check (preference_key in ('day_themes', 'reprises_order', 'profile_avatar')),
+    check (preference_key in ('day_themes', 'reprises_order', 'profile_avatar', 'calendar_ics_url', 'calendar_snapshots_v1', 'max_session_hours', 'day_range', 'weekly_capacity_hours', 'reprise_todos')),
   scope_key text not null,
   value_json jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),

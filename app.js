@@ -82,6 +82,9 @@ const DAY_RANGE_PREFERENCE_KEY = "day_range";
 const DAY_RANGE_KEY = "mordologie-day-range-v1";
 const WEEKLY_CAPACITY_PREFERENCE_KEY = "weekly_capacity_hours";
 const WEEKLY_CAPACITY_KEY = "mordologie-weekly-capacity-v1";
+// Liste « À Faire » persistée côté Supabase (préférence par utilisateur), avec
+// localStorage en cache offline. Voir db/reprise_todos_preference.sql.
+const REPRISE_TODOS_PREFERENCE_KEY = "reprise_todos";
 const DEFAULT_DAY_START_HOUR = 7;
 const DEFAULT_DAY_END_HOUR = 24;
 const REPRENDRE_TODOS_KEY = "mordologie-reprendre-todos-v1";
@@ -840,6 +843,9 @@ let remoteStateAvailable = false;
 let sharedDayThemesByScope = {};
 let sharedReprisesOrderByScope = {};
 let sharedProfileAvatarsByOwner = {};
+// Todos « À Faire » venus de Supabase, par scope (clé collaborateur). Sert de
+// témoin « le serveur a déjà cette liste » pour le backfill local → distant.
+let sharedTodosByScope = {};
 let remoteSyncHealth = {
   history: "unknown",
   active: "unknown",
@@ -3392,7 +3398,9 @@ function hydrateSharedUiPreferences(rows = []) {
   const nextDayThemesByScope = {};
   const nextReprisesOrderByScope = {};
   const nextProfileAvatarsByOwner = {};
+  const nextTodosByScope = {};
   const nextLocalReprisesOrder = loadStoredReprisesOrder();
+  let todosChanged = false;
 
   for (const row of rows) {
     const scopeKey = String(row?.scope_key || "global");
@@ -3417,6 +3425,24 @@ function hydrateSharedUiPreferences(rows = []) {
       const order = value.map((item) => String(item || "").trim()).filter(Boolean);
       nextReprisesOrderByScope[scopeKey] = order;
       nextLocalReprisesOrder[scopeKey] = order;
+    }
+    if (row?.preference_key === REPRISE_TODOS_PREFERENCE_KEY && Array.isArray(value)) {
+      const collaborator = row.collaborator_name || getCurrentCollaborator() || "";
+      const todoKey = normalizeText(collaborator || "") || "__local__";
+      const normalizedTodos = value
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({
+          id: String(item.id || createSessionId()),
+          text: String(item.text || "").trim(),
+          done: Boolean(item.done),
+          doneAt: item.doneAt ?? null,
+          archived: Boolean(item.archived),
+          archivedAt: item.archivedAt ?? null,
+        }))
+        .filter((item) => item.text);
+      nextTodosByScope[scopeKey] = normalizedTodos;
+      reprendreTodos[todoKey] = normalizedTodos;
+      todosChanged = true;
     }
     if (row?.preference_key === PROFILE_AVATAR_PREFERENCE_KEY && value && typeof value === "object") {
       const ownerName = row.owner_user_name || row.collaborator_name || "";
@@ -3470,7 +3496,15 @@ function hydrateSharedUiPreferences(rows = []) {
   sharedDayThemesByScope = nextDayThemesByScope;
   sharedReprisesOrderByScope = nextReprisesOrderByScope;
   sharedProfileAvatarsByOwner = nextProfileAvatarsByOwner;
+  sharedTodosByScope = nextTodosByScope;
   plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
+  // Une liste À Faire arrivée du serveur (ou modifiée sur un autre appareil)
+  // doit se refléter à l'écran même lors d'un refresh silencieux (le rendu
+  // global n'est pas déclenché dans ce cas).
+  if (todosChanged) {
+    storeReprendreTodos();
+    renderReprendreTodos();
+  }
 }
 
 function isMissingSharedPreferencesTableError(error) {
@@ -3646,6 +3680,22 @@ async function ensureSharedUiPreferencesBackfilled() {
     const localOrder = loadStoredReprisesOrder()[getReprisesOrderKey(collaborator)] ?? [];
     if (localOrder.length) {
       await syncReprisesOrderPreferenceForCollaborator(collaborator, localOrder);
+    }
+  }
+
+  // Migration unique de la liste À Faire : si le serveur n'a pas encore de todos
+  // pour ce scope, on pousse ce qui existait en local (bucket du collaborateur,
+  // ou le bucket anonyme « __local__ » d'avant connexion) pour ne rien perdre.
+  if (!Array.isArray(sharedTodosByScope[scopeKey])) {
+    const normKey = normalizeText(collaborator || "");
+    const localTodos = (Array.isArray(reprendreTodos[normKey]) && reprendreTodos[normKey].length)
+      ? reprendreTodos[normKey]
+      : (Array.isArray(reprendreTodos.__local__) ? reprendreTodos.__local__ : []);
+    if (localTodos.length) {
+      sharedTodosByScope[scopeKey] = localTodos;
+      reprendreTodos[normKey] = localTodos;
+      storeReprendreTodos();
+      await syncSharedUiPreference(REPRISE_TODOS_PREFERENCE_KEY, collaborator, localTodos);
     }
   }
 
@@ -8045,7 +8095,14 @@ function getReprendreTodoList() {
 function setReprendreTodoList(list) {
   const key = getReprendreTodoKey();
   reprendreTodos[key] = list;
-  storeReprendreTodos();
+  storeReprendreTodos(); // cache offline
+  // Source de vérité = Supabase (préférence par utilisateur). Nécessite un
+  // collaborateur identifié ; sinon on reste sur le cache local (__local__).
+  const collaborator = getCurrentCollaborator();
+  if (collaborator) {
+    sharedTodosByScope[getSharedPreferenceScopeKey(collaborator)] = list;
+    void syncSharedUiPreference(REPRISE_TODOS_PREFERENCE_KEY, collaborator, list);
+  }
 }
 
 function refreshReprendreStart() {
