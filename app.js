@@ -4529,7 +4529,14 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     activeSession = remoteActiveSession;
   } else if (
     previousActiveSession &&
-    !previousActiveSession.isServerBacked &&
+    // On conserve le chrono en cours de l'utilisateur courant même s'il est
+    // server-backed. `active_sessions` est en cohérence éventuelle : une lecture
+    // peut momentanément ne pas renvoyer la ligne qu'on vient d'upserter (lag de
+    // réplication, fenêtre delete→upsert). Exiger `!isServerBacked` faisait
+    // tomber dans le `else` → activeSession=null → le chrono repris s'arrêtait
+    // tout seul après un tick de sync. Les deux gardes ci-dessous (id clôturé /
+    // entrée terminée plus récente) suffisent à couper un chrono réellement
+    // arrêté ailleurs, sans faux positif sur un simple trou de lecture.
     normalizeText(previousActiveSession.collaborator) === normalizeText(currentUserName) &&
     !isGhostActiveSessionCandidate(previousActiveSession, Array.from(mergedSessions.values())) &&
     // Stop if this session was explicitly closed on another device (ID appears in completed time_entries)
