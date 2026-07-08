@@ -6530,6 +6530,22 @@ async function upsertActiveSessionToSupabase(session) {
   // Falls back to active_session_id if user_id is absent (pre-migration safety).
   const activeSessionConflictKey = payload.user_id ? "user_id" : "active_session_id";
 
+  // Race guard (delete→upsert). buildActiveSessionPayload et le purge delete
+  // ci-dessus sont asynchrones. Si l'utilisateur a arrêté ce chrono pendant ces
+  // await, la session n'est plus la session courante (completeStoppedSessionLocally
+  // met activeSession=null de façon synchrone) ou une garde « recently stopped »
+  // la matche désormais. Écrire ici réinsérerait la ligne qu'on vient de supprimer
+  // → orphelin → chrono fantôme au prochain chargement. On revérifie juste avant
+  // l'écriture : il n'y a aucun await entre ce contrôle et l'envoi réseau, donc un
+  // arrêt ne peut pas s'intercaler.
+  if (!isCurrentActiveSession(session) || shouldBlockActiveSessionSync(session)) {
+    logStateLoss("upsertActiveSessionToSupabase:aborted-stale", {
+      writer: "upsertActiveSessionToSupabase",
+      sessionId: session?.id ?? null,
+    });
+    return false;
+  }
+
   return executeSupabaseMutation({
     queryFactory: (supabase) =>
       supabase.from("active_sessions").upsert([payload], { onConflict: activeSessionConflictKey }),
