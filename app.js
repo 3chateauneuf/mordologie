@@ -111,6 +111,25 @@ const DEFAULT_KPI_CATEGORY_LABEL = "Internal / Admin";
 // Garde-fou anti-erreur : durée max d'une entrée manuelle (heures). Configurable
 // par personne dans le profil ; ce défaut sert de plafond de bon sens.
 const DEFAULT_MAX_SESSION_HOURS = 24;
+// Chrono fantôme — battement de cœur + détection d'abandon.
+// Le chrono ré-upserte active_sessions toutes les HEARTBEAT_INTERVAL_MS tant
+// qu'il tourne (updated_at devient un signal de vie fiable). À la réhydratation,
+// un chrono « en cours » sans battement depuis ABANDONED_HEARTBEAT_MS = l'onglet
+// est mort → on ne le réinstalle pas (sinon il repart à compter depuis started_at).
+const HEARTBEAT_INTERVAL_MS = 60 * 1000;
+const ABANDONED_HEARTBEAT_MS = 5 * 60 * 1000;
+// En dessous de cette durée récupérée, l'orphelin ne vaut pas une entrée (0 travail).
+const ABANDONED_MIN_KEEP_MS = 60 * 1000;
+// Alerte « chrono long » (nudge configurable par personne dans le profil).
+const DEFAULT_LONG_TIMER_ALERT_HOURS = 4;
+const LONG_TIMER_ALERT_PREFERENCE_KEY = "long_timer_alert_hours";
+const LONG_TIMER_ALERT_KEY = "mordologie-long-timer-alert-v1";
+let longTimerAlertDialogOpen = false;
+const handledAbandonedSessionIds = new Set();
+// Report de l'alerte « chrono long », par id de session. Hors de l'objet session
+// car la réhydratation (toutes les 15 s) remplace activeSession par la ligne
+// remote mappée et effacerait un champ porté par la session.
+const longTimerSnoozeUntilById = new Map();
 // Dernière erreur Supabase à la création d'une catégorie (pour diagnostic UI).
 let lastCategoryInsertError = null;
 const DEMO_MODE_ENABLED = false;
@@ -278,6 +297,7 @@ const authUserDropdown = document.querySelector("#auth-user-dropdown");
 const authChangeAvatarButton = document.querySelector("#auth-change-avatar-button");
 const authCalendarIcsInput = document.querySelector("#auth-calendar-ics-input");
 const authMaxHoursInput = document.querySelector("#auth-max-hours-input");
+const authLongTimerInput = document.querySelector("#auth-long-timer-input");
 const authCalendarIcsSave = document.querySelector("#auth-calendar-ics-save");
 const authCalendarIcsClear = document.querySelector("#auth-calendar-ics-clear");
 const authCalendarStatus = document.querySelector("#auth-calendar-status");
@@ -885,6 +905,7 @@ let plannedEventOverrides = loadStoredPlannedEventOverrides();
 let plannedCalendarSnapshots = loadStoredPlannedCalendarSnapshots();
 let calendarIcsUrlsByCollaborator = loadCalendarIcsUrls();
 let maxSessionHoursByCollaborator = loadMaxSessionHours();
+let longTimerAlertHoursByCollaborator = loadLongTimerAlertHours();
 let dayRangeByCollaborator = loadDayRange();
 let weeklyCapacityByCollaborator = loadWeeklyCapacity();
 let reprendreTags = [];
@@ -987,6 +1008,13 @@ authMaxHoursInput?.addEventListener("change", () => {
   if (!collaborator) return;
   void saveMaxSessionHours(collaborator, authMaxHoursInput.value);
   authMaxHoursInput.value = String(getMaxSessionHours(collaborator));
+});
+
+authLongTimerInput?.addEventListener("change", () => {
+  const collaborator = getCurrentCollaborator();
+  if (!collaborator) return;
+  void saveLongTimerAlertHours(collaborator, authLongTimerInput.value);
+  authLongTimerInput.value = String(getLongTimerAlertHours(collaborator));
 });
 
 profilCapacityInput?.addEventListener("change", () => {
@@ -3465,6 +3493,12 @@ function hydrateSharedUiPreferences(rows = []) {
         maxSessionHoursByCollaborator[normalizeText(collaborator)] = Number(value);
       }
     }
+    if (row?.preference_key === LONG_TIMER_ALERT_PREFERENCE_KEY && Number(value) > 0) {
+      const collaborator = row.collaborator_name || row.owner_user_name || "";
+      if (collaborator) {
+        longTimerAlertHoursByCollaborator[normalizeText(collaborator)] = Number(value);
+      }
+    }
     if (row?.preference_key === DAY_RANGE_PREFERENCE_KEY && value && typeof value === "object") {
       const collaborator = row.collaborator_name || row.owner_user_name || "";
       const s = Number(value.start);
@@ -4455,6 +4489,9 @@ function mapActiveSessionRowToSession(row) {
     pausedAt: row.paused_at ?? null,
     pausedDurationMs: Number(row.paused_duration_ms) || 0,
     durationMs: 0,
+    // Dernier battement connu = updated_at de la ligne. Sert à détecter un
+    // chrono abandonné (onglet fermé) à la réhydratation.
+    lastHeartbeatAt: row.updated_at ? new Date(row.updated_at).getTime() : undefined,
     dbActiveSessionId: row.active_session_id,
     dbUserId: row.user_id ?? null,
     dbProjectId: row.project_id ?? null,
@@ -4605,10 +4642,14 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     void removeStoppedSessionGhostsFromSupabase(remoteActiveSession, { refreshAfterSuccess: false });
   }
 
-  if (remoteActiveSession && !remoteActiveIsStale && !isGhostActiveSessionCandidate(remoteActiveSession, Array.from(mergedSessions.values()))) {
+  if (remoteActiveSession && !remoteActiveIsStale && !isAbandonedActiveSession(remoteActiveSession) && !isGhostActiveSessionCandidate(remoteActiveSession, Array.from(mergedSessions.values()))) {
     activeSession = remoteActiveSession;
   } else if (
     previousActiveSession &&
+    // Chrono abandonné (onglet mort, aucun battement depuis ABANDONED_HEARTBEAT_MS)
+    // : ne pas le réinstaller, sinon il repart à compter depuis started_at. Traité
+    // plus bas (nettoyage + proposition de récupération).
+    !isAbandonedActiveSession(previousActiveSession) &&
     // On conserve le chrono en cours de l'utilisateur courant même s'il est
     // server-backed. `active_sessions` est en cohérence éventuelle : une lecture
     // peut momentanément ne pas renvoyer la ligne qu'on vient d'upserter (lag de
@@ -4633,6 +4674,21 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     activeSession = normalizeSession(previousActiveSession);
   } else {
     activeSession = null;
+  }
+
+  // Chrono abandonné : détecté ci-dessus (exclu des deux branches). On le nettoie
+  // et on propose de récupérer la durée réelle, une seule fois par session.
+  if (!activeSession) {
+    const abandonedCandidate =
+      (remoteActiveSession && isAbandonedActiveSession(remoteActiveSession) && remoteActiveSession) ||
+      (previousActiveSession &&
+        normalizeText(previousActiveSession.collaborator) === normalizeText(currentUserName) &&
+        isAbandonedActiveSession(previousActiveSession) &&
+        previousActiveSession) ||
+      null;
+    if (abandonedCandidate) {
+      void handleAbandonedActiveSession(abandonedCandidate);
+    }
   }
 
   persistSessions();
@@ -7601,6 +7657,8 @@ function startTimerLoopIfNeeded() {
   timerIntervalId = window.setInterval(() => {
     updateLiveTimer();
     renderVisibleLiveViews();
+    maybeHeartbeatActiveSession();
+    void maybeAlertLongRunningTimer();
   }, 1000);
 }
 
@@ -7611,6 +7669,145 @@ function stopTimerLoop() {
 
   window.clearInterval(timerIntervalId);
   timerIntervalId = null;
+}
+
+// ─── Chrono fantôme : battement de cœur + détection d'abandon ─────────────────
+// Dernier battement fiable d'une session : max(lastHeartbeatAt, start). On borne
+// par `start` pour qu'une session fraîche (jamais encore battue) ne soit pas
+// considérée comme abandonnée.
+function getSessionLastHeartbeatMs(session) {
+  const beat = Number(session?.lastHeartbeatAt) || 0;
+  const startMs = new Date(session?.start ?? 0).getTime() || 0;
+  return Math.max(beat, startMs);
+}
+
+// Un chrono « en cours » (non mis en pause) dont le dernier battement remonte à
+// plus de ABANDONED_HEARTBEAT_MS = l'onglet propriétaire est mort. À ne pas
+// réinstaller : sinon il repart à compter depuis started_at (le fantôme).
+function isAbandonedActiveSession(session) {
+  if (!session || session.pausedAt) {
+    return false;
+  }
+  return Date.now() - getSessionLastHeartbeatMs(session) > ABANDONED_HEARTBEAT_MS;
+}
+
+// Battement : ré-upserte la session active au plus une fois par
+// HEARTBEAT_INTERVAL_MS tant qu'elle tourne. Rend updated_at fiable côté serveur
+// et rafraîchit lastHeartbeatAt côté client (persisté pour survivre à un reload).
+function maybeHeartbeatActiveSession() {
+  if (!activeSession || activeSession.pausedAt) {
+    return;
+  }
+  const now = Date.now();
+  const last = Number(activeSession.lastHeartbeatAt) || 0;
+  if (now - last < HEARTBEAT_INTERVAL_MS) {
+    return;
+  }
+  activeSession.lastHeartbeatAt = now;
+  persistActiveSession();
+  void upsertActiveSessionToSupabase(activeSession);
+}
+
+// Alerte « chrono long » (nudge) : quand un chrono VIVANT dépasse le seuil
+// configurable de l'utilisateur, on demande si tout va bien. « Corriger » arrête
+// (l'entrée reste éditable ensuite) ; « Il tourne encore » repousse d'un seuil.
+async function maybeAlertLongRunningTimer() {
+  if (longTimerAlertDialogOpen || !activeSession || activeSession.pausedAt) {
+    return;
+  }
+  const hours = getLongTimerAlertHours(activeSession.collaborator);
+  const thresholdMs = hours * 3600 * 1000;
+  const elapsedMs = getActiveSessionDurationMs(activeSession);
+  if (elapsedMs < thresholdMs) {
+    return;
+  }
+  const sessionKey = normalizeText(activeSession.id ?? "");
+  const snoozeUntil = Number(longTimerSnoozeUntilById.get(sessionKey)) || 0;
+  if (Date.now() < snoozeUntil) {
+    return;
+  }
+  longTimerAlertDialogOpen = true;
+  const h = Math.floor(elapsedMs / 3600000);
+  const m = Math.round((elapsedMs % 3600000) / 60000);
+  const label = activeSession.project || "(sans sujet)";
+  let confirmed = false;
+  try {
+    confirmed = await requestDecision({
+      eyebrow: "Chrono long",
+      title: `« ${label} » tourne depuis ${h} h ${String(m).padStart(2, "0")}`,
+      copy: "Tout va bien, ou il est resté ouvert par erreur ?",
+      detail: "« Corriger » l'arrête maintenant (tu pourras ajuster l'horaire ensuite).",
+      confirmLabel: "Corriger / arrêter",
+    });
+  } finally {
+    longTimerAlertDialogOpen = false;
+  }
+  if (confirmed) {
+    stopActiveSession();
+  } else if (sessionKey) {
+    longTimerSnoozeUntilById.set(sessionKey, Date.now() + thresholdMs);
+  }
+}
+
+// Chrono abandonné détecté à la réhydratation : on nettoie la ligne orpheline et
+// on propose de récupérer la durée réelle (jusqu'au dernier battement). En
+// dessous de ABANDONED_MIN_KEEP_MS de travail, on l'ignore silencieusement.
+async function handleAbandonedActiveSession(session) {
+  if (!session) {
+    return;
+  }
+  const sessionKey = normalizeText(session.dbActiveSessionId ?? session.id ?? "");
+  if (sessionKey && handledAbandonedSessionIds.has(sessionKey)) {
+    return;
+  }
+  if (sessionKey) {
+    handledAbandonedSessionIds.add(sessionKey);
+  }
+  // La ligne orpheline part quoi qu'il arrive : plus de fantôme au prochain load.
+  void removeStoppedSessionGhostsFromSupabase(session, { refreshAfterSuccess: false });
+
+  const lastBeat = getSessionLastHeartbeatMs(session);
+  const startMs = new Date(session.start ?? 0).getTime() || lastBeat;
+  const durationMs = Math.max(0, lastBeat - startMs);
+  const label = session.project || "(sans sujet)";
+
+  if (durationMs < ABANDONED_MIN_KEEP_MS) {
+    setAuthStatusMessage(
+      `Un chrono resté ouvert (« ${label} », sans activité) a été ignoré.`,
+      "warning",
+      { persistMs: 4200 },
+    );
+    return;
+  }
+
+  const mins = Math.round(durationMs / 60000);
+  const endLabel = new Date(lastBeat).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const keep = await requestDecision({
+    eyebrow: "Chrono resté ouvert",
+    title: `« ${label} » n'a pas été arrêté`,
+    copy: `Ce chrono tournait encore alors que l'app était fermée. Dernière activité vers ${endLabel}.`,
+    detail: `Enregistrer la durée réelle (~${mins} min), ou l'ignorer ?`,
+    confirmLabel: `Enregistrer ~${mins} min`,
+  });
+  if (!keep) {
+    setAuthStatusMessage(`Chrono resté ouvert (« ${label} ») ignoré.`, "warning", { persistMs: 3200 });
+    return;
+  }
+
+  const recovered = {
+    ...session,
+    end: new Date(lastBeat).toISOString(),
+    durationMs,
+    pausedAt: null,
+    isServerActive: false,
+    dbActiveSessionId: null,
+    dbTimeEntryId: null,
+  };
+  const payload = await buildTimeEntryPayloadFromSession(recovered, "timer");
+  if (payload) {
+    await createTimeEntry(payload, { updateExisting: false });
+    setAuthStatusMessage(`Chrono « ${label} » clôturé (~${mins} min).`, "success", { persistMs: 3600 });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -7679,6 +7876,9 @@ function renderProfilView() {
   }
   if (authMaxHoursInput) {
     authMaxHoursInput.value = String(getMaxSessionHours(collaborator));
+  }
+  if (authLongTimerInput) {
+    authLongTimerInput.value = String(getLongTimerAlertHours(collaborator));
   }
   if (authCalendarIcsInput) {
     const urls = getCalendarIcsUrls(collaborator);
@@ -11626,6 +11826,24 @@ function storeMaxSessionHours(map) {
   }
 }
 
+// ─── Alerte chrono long (nudge configurable par personne) ─────────────────────
+function loadLongTimerAlertHours() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(LONG_TIMER_ALERT_KEY) ?? "{}");
+    return typeof stored === "object" && stored !== null && !Array.isArray(stored) ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function storeLongTimerAlertHours(map) {
+  try {
+    window.localStorage.setItem(LONG_TIMER_ALERT_KEY, JSON.stringify(map));
+  } catch {
+    // ignore
+  }
+}
+
 function loadObjectPreference(storageKey) {
   try {
     const stored = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}");
@@ -11718,6 +11936,25 @@ async function saveMaxSessionHours(collaborator, hours) {
   }
   storeMaxSessionHours(maxSessionHoursByCollaborator);
   await syncSharedUiPreference(MAX_SESSION_HOURS_PREFERENCE_KEY, collaborator, maxSessionHoursByCollaborator[key] ?? null);
+}
+
+function getLongTimerAlertHours(collaborator) {
+  const raw = longTimerAlertHoursByCollaborator[normalizeText(collaborator || "")];
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_LONG_TIMER_ALERT_HOURS;
+}
+
+async function saveLongTimerAlertHours(collaborator, hours) {
+  const key = normalizeText(collaborator || "");
+  if (!key) return;
+  const n = Number(hours);
+  if (Number.isFinite(n) && n > 0) {
+    longTimerAlertHoursByCollaborator[key] = n;
+  } else {
+    delete longTimerAlertHoursByCollaborator[key];
+  }
+  storeLongTimerAlertHours(longTimerAlertHoursByCollaborator);
+  await syncSharedUiPreference(LONG_TIMER_ALERT_PREFERENCE_KEY, collaborator, longTimerAlertHoursByCollaborator[key] ?? null);
 }
 
 function updateCalendarDropdownState(hasUrl) {
