@@ -584,74 +584,58 @@
       </section>
 
       <section class="app-view" id="manager" data-view-panel="manager">
-      <section class="panel manager-panel">
-        <div class="panel-head">
-          <div>
-            <h2>Pilotage équipe</h2>
-            <p class="panel-copy">Charge, capacité et allocation des cargonautes.</p>
+      <div class="manager-wrap">
+
+        <section class="jw-card manager-pilot">
+          <div class="jw-head jw-head--end">
+            <div class="jw-headtext">
+              <h2 class="jw-title jw-title--xl">Pilotage équipe</h2>
+              <p class="jw-sub">Charge, capacité et allocation des cargonautes.</p>
+            </div>
+            <div id="manager-period-toggle" class="jw-toggle manager-period-toggle">
+              <button type="button" class="jw-toggle-btn active" data-manager-period="week">Semaine</button>
+              <button type="button" class="jw-toggle-btn" data-manager-period="month">Mois</button>
+            </div>
           </div>
-        </div>
+          <div class="manager-kpis">
+            <article class="mkpi">
+              <span class="mkpi-lbl">Temps suivi</span>
+              <strong id="report-total" class="mkpi-val">0 h 00</strong>
+              <span id="report-total-delta" class="kpi-delta" hidden></span>
+              <span id="report-range" class="mkpi-sub">Aucune plage sélectionnée</span>
+            </article>
+            <article class="mkpi">
+              <span class="mkpi-lbl">Projet dominant</span>
+              <strong id="report-top-project" class="mkpi-val">-</strong>
+              <span id="report-top-project-time" class="mkpi-sub">0 h 00</span>
+              <span id="report-top-project-delta" class="kpi-delta" hidden></span>
+            </article>
+            <article class="mkpi">
+              <span id="report-top-category-label" class="mkpi-lbl">Catégorie principale</span>
+              <strong id="report-top-category" class="mkpi-val">-</strong>
+              <span id="report-top-category-time" class="mkpi-sub">0 h 00</span>
+              <span id="report-top-category-delta" class="kpi-delta" hidden></span>
+            </article>
+            <article class="mkpi">
+              <span class="mkpi-lbl">Capacité moyenne</span>
+              <strong id="report-capacity" class="mkpi-val">-</strong>
+              <span class="mkpi-sub">Charge / capacité de l'équipe</span>
+            </article>
+          </div>
+        </section>
 
-        <div class="manager-kpis">
-          <article class="summary-card">
-            <p>Temps suivi</p>
-            <strong id="report-total">0 h 00</strong>
-            <span id="report-total-delta" class="kpi-delta" hidden></span>
-            <span id="report-range">Aucune plage sélectionnée</span>
-          </article>
-          <article class="summary-card">
-            <p>Projet dominant</p>
-            <strong id="report-top-project">-</strong>
-            <span id="report-top-project-time">0 h 00</span>
-            <span id="report-top-project-delta" class="kpi-delta" hidden></span>
-          </article>
-          <article class="summary-card">
-            <p id="report-top-category-label">Catégorie principale</p>
-            <strong id="report-top-category">-</strong>
-            <span id="report-top-category-time">0 h 00</span>
-            <span id="report-top-category-delta" class="kpi-delta" hidden></span>
-          </article>
-          <article class="summary-card">
-            <p>Capacité moyenne</p>
-            <strong id="report-capacity">-</strong>
-            <span>Charge / capacité de l'équipe</span>
-          </article>
-        </div>
-
-        <div class="manager-grid">
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3 id="manager-distribution-title">Répartition catégories</h3>
-              <p id="manager-distribution-copy">Poids relatif des catégories sur la période.</p>
-            </div>
-            <div id="manager-distribution-bar" class="distribution-bar"></div>
-            <div id="manager-distribution-legend" class="distribution-legend"></div>
-          </article>
-
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3>Évolution</h3>
-                <p>Tendance de la période ou d’un profil.</p>
-            </div>
-            <div id="evolution-grid" class="evolution-grid"></div>
-          </article>
-        </div>
-
-        <div class="manager-analysis-grid">
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3>Cargonautes</h3>
-              <p>Charge lue par cargonaute, avec un repère de capacité.</p>
-            </div>
+        <div class="manager-grid2">
+          <article class="jw-card manager-carg">
+            <h3 class="jw-title jw-title--sm">Cargonautes</h3>
             <div class="table-shell">
-              <table class="report-table">
+              <table class="report-table manager-carg-table">
                 <thead>
                   <tr>
                     <th>Personne</th>
                     <th>Temps</th>
-                    <th>% capacité</th>
+                    <th>Capacité</th>
                     <th>Projet principal</th>
-                    <th>Sessions</th>
+                    <th class="ta-right">Sess.</th>
                   </tr>
                 </thead>
                 <tbody id="team-report-list"></tbody>
@@ -659,57 +643,23 @@
             </div>
           </article>
 
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3>Analyse détaillée</h3>
-              <p>Projets et catégories sur la plage active.</p>
-            </div>
-            <div class="table-stack">
-              <div class="table-shell">
-                <table class="report-table compact-table">
-                  <thead>
-                    <tr>
-                      <th>Projet</th>
-                      <th>Temps</th>
-                      <th>%</th>
-                      <th>Sessions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="report-project-list"></tbody>
-                </table>
-              </div>
-
-              <div class="table-shell">
-                  <table class="report-table compact-table">
-                    <thead>
-                      <tr>
-                        <th id="report-category-head">Categorie</th>
-                        <th>Temps</th>
-                        <th>%</th>
-                        <th>Sessions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="report-category-list"></tbody>
-                </table>
-              </div>
-
-              <div id="report-kr-shell" class="table-shell">
-                <table class="report-table compact-table">
-                  <thead>
-                    <tr>
-                      <th>KR</th>
-                      <th>Temps</th>
-                      <th>%</th>
-                      <th>Sessions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="report-kr-list"></tbody>
-                </table>
-              </div>
-            </div>
+          <article class="jw-card manager-rep">
+            <h3 id="manager-distribution-title" class="jw-title jw-title--sm">Répartition catégories</h3>
+            <p id="manager-distribution-copy" class="jw-sub" hidden></p>
+            <div id="manager-distribution-bar" class="jw-bar"></div>
+            <div id="manager-distribution-legend" class="jw-legend"></div>
           </article>
         </div>
-      </section>
+
+        <!-- Conservés cachés pour le pipeline de rendu (Évolution + Analyse détaillée retirés visuellement, refonte 5a). -->
+        <div class="manager-legacy-hidden" hidden aria-hidden="true">
+          <div id="evolution-grid" class="evolution-grid"></div>
+          <table><tbody id="report-project-list"></tbody></table>
+          <table><thead><tr><th id="report-category-head">Categorie</th></tr></thead><tbody id="report-category-list"></tbody></table>
+          <div id="report-kr-shell"><table><tbody id="report-kr-list"></tbody></table></div>
+        </div>
+
+      </div>
       </section>
 
       <section class="app-view" id="resources" data-view-panel="resources">

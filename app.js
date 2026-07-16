@@ -1687,6 +1687,17 @@ periodSwitch.addEventListener("click", (event) => {
   renderManagerViews();
 });
 
+// Toggle Semaine/Mois intégré à la carte Pilotage (5a) — pilote le même
+// reportPeriod que la barre d'outils (conservée pour Ressources).
+document.querySelector("#manager-period-toggle")?.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-manager-period]");
+  if (!button) return;
+  reportPeriod = button.dataset.managerPeriod;
+  evolutionFilterLabel = null;
+  renderManagerControls();
+  renderManagerViews();
+});
+
 personalStatsSwitch.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-stats-mode]");
   if (!button) {
@@ -3355,8 +3366,10 @@ function renderViewChrome() {
     panel.hidden = !isActive;
   }
 
-  const isAnalysisView = allowedViews.includes(currentView) && (currentView === "manager" || currentView === "resources");
-  analysisToolbarPanel.hidden = !isAnalysisView;
+  // La vue « manager » (5a) a désormais son propre toggle Semaine/Mois dans la
+  // carte Pilotage ; la barre d'outils analytique n'est gardée que pour Ressources.
+  const isAnalysisView = allowedViews.includes(currentView) && currentView === "resources";
+  if (analysisToolbarPanel) analysisToolbarPanel.hidden = !isAnalysisView;
   if (analysisToolbarTitle) {
     analysisToolbarTitle.textContent = currentView === "resources" ? "Vue ressources" : "Pilotage manager";
   }
@@ -12660,6 +12673,13 @@ function roundToQuarterHour(minutes) {
 function renderManagerControls() {
   for (const button of periodSwitch.querySelectorAll("[data-period]")) {
     button.classList.toggle("active", button.dataset.period === reportPeriod);
+  }
+  // Sync du toggle in-card (5a) sur le même reportPeriod.
+  const managerPeriodToggle = document.querySelector("#manager-period-toggle");
+  if (managerPeriodToggle) {
+    for (const button of managerPeriodToggle.querySelectorAll("[data-manager-period]")) {
+      button.classList.toggle("active", button.dataset.managerPeriod === reportPeriod);
+    }
   }
 
   syncStatsSwitch(personalStatsSwitch);
