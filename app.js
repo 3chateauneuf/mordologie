@@ -1910,8 +1910,9 @@ agendaNextWeekButton?.addEventListener("click", () => {
 });
 
 document.querySelector("#agenda-dist-clear")?.addEventListener("click", () => {
-  agendaFocusCat = null;
-  renderAgendaDistribution();
+  // setAgendaFocus(null) réinitialise aussi l'estompage des événements
+  // (data-focus-cat + .is-focus-on), pas seulement le bandeau.
+  setAgendaFocus(null);
 });
 
 authCalendarIcsSave?.addEventListener("click", async () => {
