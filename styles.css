@@ -6259,12 +6259,14 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .manager-pilot { gap: 18px; }
 .jw-title--sm { font-size: 1.1rem; letter-spacing: -0.03em; }
 .manager-period-toggle .jw-toggle-btn { flex: 0 0 auto; min-height: 32px; }
-.manager-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+/* Scopé à .manager-pilot : ne pas impacter la vue Ressources qui réutilise
+   .manager-kpis / .kpi-delta (review Codex). */
+.manager-pilot .manager-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .mkpi { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 5px; }
 .mkpi-lbl { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #9ca3af; }
 .mkpi-val { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.7rem; letter-spacing: -0.04em; line-height: 1; color: #111827; }
 .mkpi-sub { font-size: 0.78rem; color: #9ca3af; }
-.manager-kpis .kpi-delta { display: none; } /* pas de deltas dans le prototype 5a */
+.manager-pilot .kpi-delta { display: none; } /* pas de deltas dans le prototype 5a (manager uniquement) */
 .manager-grid2 { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .manager-carg, .manager-rep { gap: 12px; }
 .manager-rep { align-self: start; gap: 14px; }
