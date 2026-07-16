@@ -10850,7 +10850,7 @@ function renderAgenda() {
   const hourHeight = 40; // densité resserrée (prototype 3a : board = 17×40 = 680px)
   agendaBoard.style.setProperty("--agenda-hour-height", `${hourHeight}px`);
   if (agendaSubtitle) {
-    agendaSubtitle.textContent = `Journée ${startHour} h – ${endHour} h (profil) · glissez pour déplacer, étirez les bords pour la durée.`;
+    agendaSubtitle.textContent = "Cliquez une catégorie pour voir quand et combien par jour · glissez / étirez les tâches.";
   }
 
   const timeRail = document.createElement("div");

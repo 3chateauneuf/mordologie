@@ -2304,17 +2304,41 @@ select.select-input {
   align-content: start;
 }
 
+.agenda-panel .panel-head h2 { font-size: 1.28rem; letter-spacing: -0.04em; }
+.agenda-panel .panel-head .panel-copy { font-size: 0.78rem; color: #9ca3af; }
+
+/* Navigation semaine : contrôle segmenté (prototype 3a) */
 .agenda-week-nav {
   display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-wrap: nowrap;
+  gap: 2px;
+  background: #eef1f6;
+  border-radius: 9px;
+  padding: 3px;
+}
+.agenda-week-nav .period-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.agenda-week-nav .period-btn:hover { color: #111827; }
+.agenda-week-nav #agenda-current-week {
+  border-color: rgba(0, 0, 0, 0.07);
+  background: #fff;
+  color: #111827;
+  font-weight: 700;
 }
 
 .agenda-week-label {
   margin: 0;
-  color: var(--muted);
-  font-size: 0.74rem;
-  font-weight: 800;
+  color: #9ca3af;
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 .agenda-time-rail {
