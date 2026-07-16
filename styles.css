@@ -6288,6 +6288,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-todo-play { flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, #0d9488 30%, #e2e8f0); background: color-mix(in srgb, #0d9488 8%, #fff); color: #0d9488; border-radius: 7px; cursor: pointer; }
 .rpr-todo-arch { flex: 0 0 auto; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: #9ca3af; border-radius: 6px; cursor: pointer; }
 .rpr-todo-arch:hover { color: #374151; background: #f1f5f9; }
+.rpr-todo-note { flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; background: none; color: #9ca3af; border-radius: 7px; cursor: pointer; transition: color 140ms ease, background 140ms ease, border-color 140ms ease; }
+.rpr-todo-note:hover { color: #374151; background: #f1f5f9; }
+.rpr-todo-note.has-note { color: #0d9488; background: color-mix(in srgb, #0d9488 8%, #fff); border-color: color-mix(in srgb, #0d9488 30%, #e2e8f0); }
+.rpr-todo-wrap { display: flex; flex-direction: column; gap: 0; }
+.rpr-todo-notearea { width: 100%; box-sizing: border-box; margin-top: 5px; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px; background: #fff; padding: 7px 9px; font-size: 0.8rem; font-family: inherit; color: #374151; line-height: 1.45; resize: vertical; min-height: 48px; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.rpr-todo-notearea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
 .rpr-todo-textwrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .rpr-todo-textwrap .rpr-todo-text { flex: none; }
 .rpr-todo-meta { font-size: 0.72rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

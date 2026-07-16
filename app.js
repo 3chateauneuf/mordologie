@@ -8455,6 +8455,7 @@ const RPR_TODO_ICONS = {
   play: `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg>`,
   arch: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4" rx="1"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 12.5h5"/></svg>`,
   trash: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h7l4 4v12H7z"/><path d="M9 11h6M9 15h4"/></svg>`,
 };
 
 function renderReprendreTodos() {
@@ -8535,6 +8536,20 @@ function renderReprendreTodos() {
     });
     row.appendChild(play);
 
+    // Bouton note : déplie un textarea sous la ligne ; icône teal si note présente.
+    if (!t.archived) {
+      const note = document.createElement("button");
+      note.type = "button";
+      note.className = "rpr-todo-note" + ((t.note && t.note.trim()) ? " has-note" : "");
+      note.title = "Note";
+      note.setAttribute("aria-label", "Note");
+      note.innerHTML = RPR_TODO_ICONS.note;
+      note.addEventListener("click", () => {
+        mutate((list) => list.map((x) => x.id === t.id ? { ...x, noteOpen: !x.noteOpen } : x));
+      });
+      row.appendChild(note);
+    }
+
     const action = document.createElement("button");
     action.type = "button";
     if (t.archived) {
@@ -8574,7 +8589,24 @@ function renderReprendreTodos() {
       });
     }
 
-    listEl.appendChild(row);
+    // Ligne + zone de note dépliable dessous (le textarea persiste sans
+    // re-render pour ne pas perdre le focus à chaque frappe).
+    const wrap = document.createElement("div");
+    wrap.className = "rpr-todo-wrap";
+    wrap.appendChild(row);
+    if (t.noteOpen && !t.archived) {
+      const ta = document.createElement("textarea");
+      ta.className = "rpr-todo-notearea";
+      ta.value = t.note || "";
+      ta.placeholder = "Note — deviendra un commentaire si la tâche démarre…";
+      ta.addEventListener("input", () => {
+        setReprendreTodoList(getReprendreTodoList().map((x) => x.id === t.id ? { ...x, note: ta.value } : x));
+        const btn = row.querySelector(".rpr-todo-note");
+        if (btn) btn.classList.toggle("has-note", Boolean(ta.value.trim()));
+      });
+      wrap.appendChild(ta);
+    }
+    listEl.appendChild(wrap);
   });
 }
 
