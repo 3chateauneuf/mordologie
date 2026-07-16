@@ -915,6 +915,10 @@ let reprendreTodos = loadReprendreTodos();
 // teal sous la barre de capture ; devient le commentaire de la session au start.
 let reprendreRepriseNote = "";
 let reprendreRepriseActive = false;
+// Sujet de la tâche « À faire » qui a produit la note de reprise : la note ne
+// sera recopiée dans le commentaire de session que si le Sujet au démarrage
+// correspond encore (sinon on colle un contexte sans rapport — review Codex).
+let reprendreRepriseSubject = "";
 let plannedEditingEventId = null;
 let plannedEditingEvent = null;
 let plannedCurrentCategories = [];
@@ -8547,9 +8551,10 @@ function renderReprendreTodos() {
       const s = document.querySelector("#rpr-subject");
       if (s) { s.value = t.text; s.focus(); refreshReprendreStart(); }
       // La note de la tâche est transportée dans l'encart de reprise → deviendra
-      // le commentaire de la session au démarrage.
+      // le commentaire de la session au démarrage (liée au sujet de la tâche).
       reprendreRepriseNote = (t.note && t.note.trim()) ? t.note : "";
       reprendreRepriseActive = Boolean(reprendreRepriseNote);
+      reprendreRepriseSubject = reprendreRepriseActive ? t.text : "";
       renderRepriseNote();
     });
     row.appendChild(play);
@@ -8656,6 +8661,7 @@ function renderRepriseNote() {
 function clearRepriseNote() {
   reprendreRepriseNote = "";
   reprendreRepriseActive = false;
+  reprendreRepriseSubject = "";
   renderRepriseNote();
 }
 
@@ -8715,7 +8721,12 @@ async function reprendreStart() {
   renderCategoryTokens();
   renderTagTokens();
   notionInput.value = "";
-  notesInput.value = reprendreRepriseNote || "";
+  // La note de reprise n'est reprise que si le Sujet correspond toujours à la
+  // tâche qui l'a produite (sinon elle appartient à un autre contexte chargé
+  // entre-temps → on ne l'attache pas).
+  const repriseMatches = reprendreRepriseActive
+    && normalizeText(subject) === normalizeText(reprendreRepriseSubject);
+  notesInput.value = repriseMatches ? reprendreRepriseNote : "";
   await handlePrimaryTimerAction();
 
   subjectEl.value = "";
@@ -8755,6 +8766,7 @@ async function reprendreStartFromMemory(memory) {
     "Couper et démarrer",
   );
   if (!ok) return;
+  clearRepriseNote(); // contexte remplacé par une carte → note de reprise obsolète
   fillFormFromMemory(memory);
   await handlePrimaryTimerAction();
 }
@@ -8776,6 +8788,7 @@ async function editMemoryInCapture(memory) {
   if (categoryEl) categoryEl.value = (memory.categories || [])[0] || "";
   reprendreTags = [...(memory.tags || [])].filter(Boolean);
   renderReprendreTags();
+  clearRepriseNote(); // contexte remplacé par une carte → note de reprise obsolète
   refreshReprendreStart();
   if (subjectEl) {
     subjectEl.focus();
