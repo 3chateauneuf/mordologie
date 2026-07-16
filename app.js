@@ -10673,6 +10673,22 @@ let agendaDistRange = null;
 function setAgendaFocus(cat) {
   agendaFocusCat = (agendaFocusCat === cat) ? null : (cat || null);
   renderAgendaDistribution();
+  applyAgendaFocusToEvents();
+}
+
+// Estompe les événements de la grille hors catégorie au focus (opacity 0.13),
+// sans re-render : on bascule un attribut sur le board + une classe par événement.
+function applyAgendaFocusToEvents() {
+  if (!agendaBoard) return;
+  const focus = agendaFocusCat ? normalizeText(agendaFocusCat) : "";
+  if (focus) {
+    agendaBoard.dataset.focusCat = focus;
+  } else {
+    delete agendaBoard.dataset.focusCat;
+  }
+  agendaBoard.querySelectorAll(".agenda-event").forEach((el) => {
+    el.classList.toggle("is-focus-on", Boolean(focus) && el.dataset.cat === focus);
+  });
 }
 
 function renderAgendaDistribution() {
@@ -10958,6 +10974,7 @@ function renderAgenda() {
           event.className = "agenda-event agenda-event--planned";
           if (visualSize !== "full") event.classList.add(`agenda-event--${visualSize}`);
           event.dataset.plannedId = plannedEvent.id;
+          event.dataset.cat = normalizeText(plannedEvent.category ?? plannedEvent.activity_category_label ?? "");
           event.title = buildPlannedEventTooltip(plannedEvent);
           applyPlannedAgendaEventColor(event, plannedEvent);
           renderPlannedAgendaEventContents(event, plannedEvent, visualSize);
@@ -10966,6 +10983,7 @@ function renderAgenda() {
           event.className = "agenda-event";
           if (visualSize !== "full") event.classList.add(`agenda-event--${visualSize}`);
           event.dataset.sessionId = session.id;
+          event.dataset.cat = normalizeText((session.categories || [])[0] || "");
           event.title = buildAgendaTooltip(session);
           applyAgendaEventColor(event, session);
           renderAgendaEventContents(event, session, visualSize);
@@ -11012,6 +11030,9 @@ function renderAgenda() {
       }
     });
   }
+
+  // Réapplique l'estompage focus aux événements fraîchement rendus.
+  applyAgendaFocusToEvents();
 }
 
 function layoutAgendaSessions(dayRows, startHour, endHour, hourHeight) {
