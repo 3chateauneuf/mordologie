@@ -493,6 +493,18 @@
             <p id="agenda-week-label" class="agenda-week-label"></p>
             <button id="agenda-calendar-sync" type="button" class="btn btn-secondary agenda-calendar-sync-btn">Sync calendrier</button>
           </div>
+          <!-- Bandeau « Répartition du temps » (prototype 3a) -->
+          <div class="agenda-dist" id="agenda-dist" hidden>
+            <div class="agenda-dist-head">
+              <span class="agenda-dist-title">Répartition du temps · <span id="agenda-dist-total">—</span></span>
+              <button class="agenda-dist-clear" id="agenda-dist-clear" type="button" hidden>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Tout afficher
+              </button>
+            </div>
+            <div class="agenda-dist-bar" id="agenda-dist-bar"></div>
+            <div class="agenda-dist-chips" id="agenda-dist-chips"></div>
+            <div class="agenda-dist-focus" id="agenda-dist-focus" hidden></div>
+          </div>
           <div id="planned-summary" class="planned-summary" hidden></div>
           <div class="agenda-board-scroll">
             <div id="agenda-board" class="agenda-board agenda-board-wide"></div>

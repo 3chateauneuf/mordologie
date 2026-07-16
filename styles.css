@@ -6193,6 +6193,29 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 /* ═══════════════════════════════════════════════════════════════════════════
    VUE « REPRENDRE » (refonte 2a) — hi-fi, namespacé rpr-*
    ═══════════════════════════════════════════════════════════════════════════ */
+/* Bandeau « Répartition du temps » (agenda 3a) */
+.agenda-dist { display: flex; flex-direction: column; gap: 9px; padding: 12px 14px; background: #fafbfc; border: 1px solid rgba(0,0,0,0.06); border-radius: 11px; }
+.agenda-dist-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.agenda-dist-title { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: #9ca3af; }
+.agenda-dist-clear { display: inline-flex; align-items: center; gap: 5px; border: none; background: none; color: #0d9488; font-size: 0.72rem; font-weight: 700; cursor: pointer; padding: 2px 4px; }
+.agenda-dist-bar { display: flex; width: 100%; height: 10px; border-radius: 999px; overflow: hidden; background: #eef1f6; }
+.agenda-dist-seg { height: 100%; cursor: pointer; transition: opacity 140ms ease; }
+.agenda-dist-seg.is-dimmed { opacity: 0.22; }
+.agenda-dist-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.agenda-dist-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 10px; font-size: 0.76rem; font-weight: 600; color: #374151; background: #fff; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: opacity 140ms ease, border-color 140ms ease; }
+.agenda-dist-chip .sw { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.agenda-dist-chip .h { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-weight: 700; color: #111827; }
+.agenda-dist-chip .p { opacity: 0.55; font-weight: 700; }
+.agenda-dist-chip.is-dimmed { opacity: 0.42; }
+.agenda-dist-focus { display: flex; gap: 6px; padding-top: 9px; margin-top: 1px; border-top: 1px solid rgba(0,0,0,0.06); }
+.agenda-dist-fday { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.agenda-dist-fbarwrap { width: 100%; height: 42px; display: flex; align-items: flex-end; }
+.agenda-dist-fbar { width: 100%; border-radius: 5px 5px 0 0; transition: height 160ms ease; min-height: 2px; }
+.agenda-dist-fh { font-size: 0.64rem; font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.agenda-dist-fday-lbl { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #9ca3af; }
+.agenda-dist-ftags { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 2px; }
+.agenda-dist-ftag { font-size: 0.58rem; font-weight: 700; border-radius: 999px; padding: 1px 6px; }
+
 .rpr-wrap { width: 1180px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .rpr-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 .rpr-capture { gap: 13px; }

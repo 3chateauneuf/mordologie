@@ -1905,6 +1905,11 @@ agendaNextWeekButton?.addEventListener("click", () => {
   shiftAgendaWeek(1);
 });
 
+document.querySelector("#agenda-dist-clear")?.addEventListener("click", () => {
+  agendaFocusCat = null;
+  renderAgendaDistribution();
+});
+
 authCalendarIcsSave?.addEventListener("click", async () => {
   const collaborator = getCurrentCollaborator();
   if (!collaborator) {
@@ -10656,6 +10661,139 @@ function renderPersonalDistribution() {
   );
 }
 
+// ── Bandeau « Répartition du temps » (agenda 3a) ──
+let agendaFocusCat = null;
+let agendaDistScopedRows = [];
+let agendaDistRange = null;
+
+function setAgendaFocus(cat) {
+  agendaFocusCat = (agendaFocusCat === cat) ? null : (cat || null);
+  renderAgendaDistribution();
+}
+
+function renderAgendaDistribution() {
+  const box = document.querySelector("#agenda-dist");
+  const barEl = document.querySelector("#agenda-dist-bar");
+  const chipsEl = document.querySelector("#agenda-dist-chips");
+  const totalEl = document.querySelector("#agenda-dist-total");
+  const clearBtn = document.querySelector("#agenda-dist-clear");
+  const focusEl = document.querySelector("#agenda-dist-focus");
+  if (!box || !barEl || !chipsEl) return;
+
+  const rows = buildReportRows(agendaDistScopedRows, "categories")
+    .slice()
+    .sort((a, b) => b.durationMs - a.durationMs);
+  const totalMs = rows.reduce((sum, r) => sum + (Number(r.durationMs) || 0), 0);
+  if (!rows.length || !totalMs) {
+    box.hidden = true;
+    agendaFocusCat = null;
+    return;
+  }
+  // Si la catégorie au focus a disparu (changement de semaine), on réinitialise.
+  if (agendaFocusCat && !rows.some((r) => r.label === agendaFocusCat)) {
+    agendaFocusCat = null;
+  }
+  box.hidden = false;
+  if (totalEl) totalEl.textContent = formatDuration(totalMs);
+  barEl.innerHTML = "";
+  chipsEl.innerHTML = "";
+
+  for (const r of rows) {
+    const color = getCategoryColor(r.label);
+    const dimmed = Boolean(agendaFocusCat) && agendaFocusCat !== r.label;
+
+    const seg = document.createElement("div");
+    seg.className = "agenda-dist-seg" + (dimmed ? " is-dimmed" : "");
+    seg.style.width = `${Math.max((r.durationMs / totalMs) * 100, 2)}%`;
+    seg.style.background = color;
+    seg.title = `${r.label} · ${formatDuration(r.durationMs)}`;
+    seg.addEventListener("click", () => setAgendaFocus(r.label));
+    barEl.append(seg);
+
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "agenda-dist-chip" + (dimmed ? " is-dimmed" : "");
+    chip.style.borderColor = `color-mix(in srgb, ${color} 28%, transparent)`;
+    const sw = document.createElement("span");
+    sw.className = "sw";
+    sw.style.background = color;
+    const nm = document.createElement("span");
+    nm.textContent = r.label;
+    const h = document.createElement("span");
+    h.className = "h";
+    h.textContent = formatDuration(r.durationMs);
+    const p = document.createElement("span");
+    p.className = "p";
+    p.textContent = formatShare(r.durationMs, totalMs);
+    chip.append(sw, nm, h, p);
+    chip.addEventListener("click", () => setAgendaFocus(r.label));
+    chipsEl.append(chip);
+  }
+  if (clearBtn) clearBtn.hidden = !agendaFocusCat;
+  renderAgendaFocusDays(focusEl);
+}
+
+// Mini-graphe par jour (7 barres) de la catégorie au focus + tags du jour.
+function renderAgendaFocusDays(focusEl) {
+  if (!focusEl) return;
+  if (!agendaFocusCat || !agendaDistRange) {
+    focusEl.hidden = true;
+    focusEl.innerHTML = "";
+    return;
+  }
+  const color = getCategoryColor(agendaFocusCat);
+  const dayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+  const start = new Date(agendaDistRange.start);
+  start.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 7 }, () => ({ ms: 0, tags: new Map() }));
+  for (const s of agendaDistScopedRows) {
+    if (!(s.categories || []).includes(agendaFocusCat)) continue;
+    const idx = Math.floor((new Date(s.start).getTime() - start.getTime()) / 86400000);
+    if (idx < 0 || idx > 6) continue;
+    days[idx].ms += Number(s.durationMs) || 0;
+    for (const tag of s.tags || []) {
+      const t = String(tag ?? "").trim();
+      if (t) days[idx].tags.set(t, (days[idx].tags.get(t) || 0) + 1);
+    }
+  }
+  const maxMs = Math.max(1, ...days.map((d) => d.ms));
+  focusEl.innerHTML = "";
+  days.forEach((d, i) => {
+    const col = document.createElement("div");
+    col.className = "agenda-dist-fday";
+    const wrap = document.createElement("div");
+    wrap.className = "agenda-dist-fbarwrap";
+    const bar = document.createElement("div");
+    bar.className = "agenda-dist-fbar";
+    bar.style.height = d.ms ? `${Math.max((d.ms / maxMs) * 100, 6)}%` : "0";
+    bar.style.background = d.ms ? color : "transparent";
+    wrap.append(bar);
+    const h = document.createElement("div");
+    h.className = "agenda-dist-fh";
+    h.style.color = d.ms ? color : "#9ca3af";
+    h.textContent = d.ms ? formatDuration(d.ms) : "—";
+    const lbl = document.createElement("div");
+    lbl.className = "agenda-dist-fday-lbl";
+    lbl.textContent = dayLabels[i];
+    col.append(wrap, h, lbl);
+    if (d.tags.size) {
+      const tg = document.createElement("div");
+      tg.className = "agenda-dist-ftags";
+      for (const [t] of [...d.tags.entries()].slice(0, 3)) {
+        const chip = document.createElement("span");
+        chip.className = "agenda-dist-ftag";
+        chip.style.background = `color-mix(in srgb, ${color} 16%, #fff)`;
+        chip.style.color = `color-mix(in srgb, ${color} 78%, #111827)`;
+        chip.textContent = t;
+        tg.append(chip);
+      }
+      col.append(tg);
+    }
+    focusEl.append(col);
+  });
+  focusEl.hidden = false;
+}
+
 function renderAgenda() {
   agendaBoard.innerHTML = "";
   visiblePlannedEvents = [];
@@ -10678,10 +10816,15 @@ function renderAgenda() {
   visiblePlannedEvents = plannedRows;
   renderPlannedSummary(plannedRows, range);
 
+  // Bandeau « Répartition du temps » (agrégation catégories de la semaine).
+  agendaDistScopedRows = scopedRows;
+  agendaDistRange = range;
+  renderAgendaDistribution();
+
   const dayRange = getDayRange(collaborator);
   const startHour = dayRange.start;
   const endHour = dayRange.end;
-  const hourHeight = 46;
+  const hourHeight = 40; // densité resserrée (prototype 3a : board = 17×40 = 680px)
   agendaBoard.style.setProperty("--agenda-hour-height", `${hourHeight}px`);
   if (agendaSubtitle) {
     agendaSubtitle.textContent = `Journée ${startHour} h – ${endHour} h (profil) · glissez pour déplacer, étirez les bords pour la durée.`;
