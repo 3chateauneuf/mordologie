@@ -911,6 +911,10 @@ let weeklyCapacityByCollaborator = loadWeeklyCapacity();
 let reprendreTags = [];
 let reprendreDragId = null;
 let reprendreTodos = loadReprendreTodos();
+// Note de reprise : note d'une tâche « À faire » démarrée, affichée dans l'encart
+// teal sous la barre de capture ; devient le commentaire de la session au start.
+let reprendreRepriseNote = "";
+let reprendreRepriseActive = false;
 let plannedEditingEventId = null;
 let plannedEditingEvent = null;
 let plannedCurrentCategories = [];
@@ -8533,6 +8537,11 @@ function renderReprendreTodos() {
     play.addEventListener("click", () => {
       const s = document.querySelector("#rpr-subject");
       if (s) { s.value = t.text; s.focus(); refreshReprendreStart(); }
+      // La note de la tâche est transportée dans l'encart de reprise → deviendra
+      // le commentaire de la session au démarrage.
+      reprendreRepriseNote = (t.note && t.note.trim()) ? t.note : "";
+      reprendreRepriseActive = Boolean(reprendreRepriseNote);
+      renderRepriseNote();
     });
     row.appendChild(play);
 
@@ -8623,6 +8632,24 @@ function reprendreAddTodo() {
   renderReprendreTodos();
 }
 
+function renderRepriseNote() {
+  const box = document.querySelector("#rpr-reprise");
+  const area = document.querySelector("#rpr-reprise-note");
+  if (!box || !area) return;
+  if (reprendreRepriseActive) {
+    box.hidden = false;
+    if (area.value !== reprendreRepriseNote) area.value = reprendreRepriseNote;
+  } else {
+    box.hidden = true;
+  }
+}
+
+function clearRepriseNote() {
+  reprendreRepriseNote = "";
+  reprendreRepriseActive = false;
+  renderRepriseNote();
+}
+
 function renderReprendreRunning() {
   const idle = document.querySelector("#rpr-idle");
   const running = document.querySelector("#rpr-running");
@@ -8644,6 +8671,7 @@ function renderReprendreRunning() {
     idle.style.display = "";
     running.style.display = "none";
     refreshReprendreStart();
+    renderRepriseNote();
   }
 }
 
@@ -8678,7 +8706,7 @@ async function reprendreStart() {
   renderCategoryTokens();
   renderTagTokens();
   notionInput.value = "";
-  notesInput.value = "";
+  notesInput.value = reprendreRepriseNote || "";
   await handlePrimaryTimerAction();
 
   subjectEl.value = "";
@@ -8686,6 +8714,7 @@ async function reprendreStart() {
   categoryEl.value = "";
   reprendreTags = [];
   renderReprendreTags();
+  clearRepriseNote();
   document.querySelector("#rpr-context")?.classList.remove("open");
 }
 
@@ -8775,6 +8804,7 @@ function initReprendreView() {
     // Ajuster sans changer d'écran : petit dialogue avec tous les champs éditables.
     openAdjustDialogForActiveSession();
   });
+  document.querySelector("#rpr-reprise-note")?.addEventListener("input", (e) => { reprendreRepriseNote = e.target.value; });
   document.querySelector("#rpr-todo-add")?.addEventListener("click", reprendreAddTodo);
   document.querySelector("#rpr-todo-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") reprendreAddTodo(); });
 }

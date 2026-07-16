@@ -6211,6 +6211,14 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-cap-tokens:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
 .rpr-optlt { color: #cbd5e1; }
 
+/* Encart « Note de reprise » (idle) : la note d'une tâche À faire démarrée */
+.rpr-reprise { display: flex; gap: 9px; align-items: flex-start; background: color-mix(in srgb, #0d9488 6%, #fff); border: 1px solid color-mix(in srgb, #0d9488 20%, transparent); border-radius: 10px; padding: 9px 11px; }
+.rpr-reprise[hidden] { display: none; }
+.rpr-reprise-ico { flex: 0 0 auto; margin-top: 2px; }
+.rpr-reprise-body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rpr-reprise-lbl { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #0d9488; }
+.rpr-reprise-area { width: 100%; box-sizing: border-box; border: none; background: transparent; resize: vertical; min-height: 34px; font-family: inherit; font-size: 0.86rem; color: #374151; outline: none; padding: 0; line-height: 1.45; }
+
 .rpr-cap-row { display: flex; align-items: center; gap: 10px; }
 .rpr-search { flex: 1; display: flex; align-items: center; gap: 11px; border: 1px solid rgba(0,0,0,0.12); border-radius: 11px; padding: 0 15px; min-height: 54px; transition: border-color 150ms ease, box-shadow 150ms ease; }
 .rpr-search:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
