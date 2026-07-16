@@ -6214,7 +6214,7 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .agenda-dist-fh { font-size: 0.64rem; font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .agenda-dist-fday-lbl { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #9ca3af; }
 .agenda-dist-ftags { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 2px; }
-.agenda-dist-ftag { font-size: 0.58rem; font-weight: 700; border-radius: 999px; padding: 1px 6px; }
+.agenda-dist-ftag { font-size: 0.58rem; font-weight: 700; border-radius: 999px; padding: 1px 6px; border: 1px solid transparent; }
 
 .rpr-wrap { width: 1180px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .rpr-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }

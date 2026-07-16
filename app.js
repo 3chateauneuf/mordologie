@@ -10786,8 +10786,11 @@ function renderAgendaFocusDays(focusEl) {
       for (const [t] of [...d.tags.entries()].slice(0, 3)) {
         const chip = document.createElement("span");
         chip.className = "agenda-dist-ftag";
-        chip.style.background = `color-mix(in srgb, ${color} 16%, #fff)`;
-        chip.style.color = `color-mix(in srgb, ${color} 78%, #111827)`;
+        // Texte très sombre (à peine teinté) pour un contraste lisible à 0.58rem,
+        // quelle que soit la teinte de catégorie ; le fond porte la couleur.
+        chip.style.background = `color-mix(in srgb, ${color} 18%, #fff)`;
+        chip.style.color = `color-mix(in srgb, ${color} 26%, #111827)`;
+        chip.style.borderColor = `color-mix(in srgb, ${color} 30%, transparent)`;
         chip.textContent = t;
         tg.append(chip);
       }
