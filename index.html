@@ -78,22 +78,10 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div id="auth-guest-shell" class="auth-shell auth-shell-guest">
-          <div class="auth-rescue-row">
-            <select id="auth-rescue-select" class="select-input auth-rescue-select"></select>
-            <button id="auth-rescue-button" type="button" class="btn btn-primary">Entrer</button>
-          </div>
-        </div>
-
-        <div id="auth-user-shell" class="auth-shell auth-shell-user" hidden>
-          <div class="auth-identity-trigger">
-            <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Ouvrir le profil">U</button>
-            <strong id="auth-user-name" class="topbar-username">Utilisateur</strong>
-          </div>
-        </div>
-
-        <div class="topbar-brand" aria-hidden="true">
-          <svg class="topbar-logo" viewBox="0 0 576.18 80.3" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mordologie">
+        <div class="topbar-brand">
+          <span class="topbar-mark" aria-hidden="true"><span class="topbar-mark-dot"></span></span>
+          <strong class="topbar-wordmark"><b>Mordologie</b> – l'analyse du mordor</strong>
+          <svg class="topbar-logo" hidden viewBox="0 0 576.18 80.3" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mordologie">
             <path fill="#1d1d1b" d="M0,1.43h19.47l12.98,37.73L45.32,1.43h19.47v77.66h-19.47v-35.86l-7.59,20.24h-10.78l-7.48-19.91v35.53H0V1.43Z"/>
             <path fill="#1d1d1b" d="M76.34,53.57v-26.73c0-15.84,10.67-26.84,26.07-26.84s25.96,11,25.96,26.84v26.73c0,15.73-10.78,26.73-25.96,26.73s-26.07-11-26.07-26.73ZM102.41,61.6c2.75,0,6.38-.77,6.38-7.37v-28.05c0-6.71-3.41-7.48-6.38-7.48s-6.49.77-6.49,7.48v28.05c0,6.6,3.74,7.37,6.49,7.37Z"/>
             <path fill="#1d1d1b" d="M140.03,1.43h25.63c15.29,0,25.96,10.34,25.96,29.15v2.09c0,11.22-3.74,19.25-10.12,23.98l9.46,22.44h-21.23l-5.94-17.71h-4.18v17.71h-19.58V1.43ZM163.24,42.9c3.85,0,9.02-1.1,9.02-10.45v-1.76c0-9.35-4.84-10.56-9.02-10.56h-3.63v22.77h3.63Z"/>
@@ -118,8 +106,8 @@
           <button type="button" data-view-target="reprendre" aria-label="Reprendre">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
-                <circle cx="12" cy="12" r="8" />
-                <path d="M10.5 9l5 3-5 3V9z" fill="currentColor" stroke="none" />
+                <path d="M6 18V9.5L12 5l6 4.5V18" />
+                <path d="M9.5 18v-4.5h5V18" />
               </svg>
             </span>
             <span class="nav-tooltip" aria-hidden="true">Reprendre</span>
@@ -147,6 +135,22 @@
             <span class="nav-tooltip" aria-hidden="true">Journal</span>
             <span class="visually-hidden">Journal</span>
           </button>
+
+          <span class="topbar-sep" aria-hidden="true"></span>
+
+          <div id="auth-user-shell" class="auth-shell auth-shell-user" hidden>
+            <div class="auth-identity-trigger">
+              <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Ouvrir le profil">U</button>
+              <strong id="auth-user-name" class="topbar-username">Utilisateur</strong>
+            </div>
+          </div>
+
+          <div id="auth-guest-shell" class="auth-shell auth-shell-guest">
+            <div class="auth-rescue-row">
+              <select id="auth-rescue-select" class="select-input auth-rescue-select"></select>
+              <button id="auth-rescue-button" type="button" class="btn btn-primary">Entrer</button>
+            </div>
+          </div>
         </nav>
       </header>
 

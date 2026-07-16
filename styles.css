@@ -140,28 +140,53 @@ button {
 }
 
 .topbar {
-  border-radius: var(--radius-panel);
-  padding: 0 16px;
-  height: 56px;
+  border-radius: 12px;
+  padding: 0 18px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0)),
-    var(--panel);
+  gap: 16px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+  backdrop-filter: none;
   position: relative;
   overflow: visible;
   z-index: 10;
 }
 
 .topbar-brand {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  pointer-events: none;
+  gap: 10px;
+}
+
+.topbar-mark {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #111827;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.topbar-mark-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ec6913;
+}
+.topbar-wordmark {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: -0.03em;
+  font-weight: 400;
+  color: #111827;
+}
+.topbar-wordmark b {
+  font-weight: 800;
 }
 
 .topbar-logo {
@@ -516,17 +541,19 @@ button {
 
 .topbar-nav a,
 .topbar-nav button {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   justify-content: center;
   padding: 0;
-  color: var(--text);
-  background: var(--panel-strong);
-  border: 1px solid var(--line);
+  color: #374151;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9px;
   appearance: none;
   font-size: 0.92rem;
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
+.topbar-nav button:hover { background: #eef1f6; }
 
 .topbar-nav button {
   font: inherit;
@@ -551,9 +578,33 @@ button {
 }
 
 .topbar-nav .active {
-  background: rgba(6, 148, 148, 0.12);
-  border-color: rgba(6, 148, 148, 0.22);
-  box-shadow: 0 8px 20px rgba(39, 56, 68, 0.07);
+  background: color-mix(in srgb, #0d9488 9%, #fff);
+  border-color: #0d9488;
+  color: #0d9488;
+  box-shadow: none;
+}
+.topbar-nav .active:hover { background: color-mix(in srgb, #0d9488 12%, #fff); }
+
+/* Séparateur + avatar (prototype topbar) */
+.topbar-sep {
+  width: 1px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 6px;
+  flex: 0 0 auto;
+}
+.topbar-nav .auth-shell-user .topbar-username { display: none; }
+.topbar-nav .auth-user-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 9px;
+  border: none;
+  background: #ec6913;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0;
 }
 
 .topbar-nav button {
@@ -6249,6 +6300,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 @media (max-width: 900px) {
   .rpr-grid3 { grid-template-columns: 1fr; }
   .rpr-grid2 { grid-template-columns: 1fr; }
+  /* Capture compacte : la grille 5 colonnes déborde / rend les champs
+     minuscules sur tablette-mobile → on empile (champs pleine largeur,
+     Démarrer pleine largeur). Le label fantôme du bouton est masqué. */
+  .rpr-cap-grid { grid-template-columns: 1fr; }
+  .rpr-cap-lbl--ph { display: none; }
+  .rpr-cap-grid .rpr-btn-start { width: 100%; }
   /* En 1 colonne (tablette/mobile), la typographie des cartes Reprendre —
      calibrée pour 3 colonnes denses — devient minuscule : on la remonte. */
   .rpr-reprendre-head p { font-size: 0.94rem; }
