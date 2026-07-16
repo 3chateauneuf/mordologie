@@ -3475,6 +3475,10 @@ function hydrateSharedUiPreferences(rows = []) {
           doneAt: item.doneAt ?? null,
           archived: Boolean(item.archived),
           archivedAt: item.archivedAt ?? null,
+          // Conserver la note de la tâche : sans ça, la réhydratation distante
+          // (reload / sync silencieux) la supprimait après saisie (review Codex).
+          note: typeof item.note === "string" ? item.note : "",
+          noteOpen: Boolean(item.noteOpen),
         }))
         .filter((item) => item.text);
       nextTodosByScope[scopeKey] = normalizedTodos;
