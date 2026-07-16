@@ -3232,6 +3232,14 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
   margin-left: auto;
 }
 
+/* Labels du profil en casse normale (comme le prototype 6a), pas en majuscules. */
+.profil-card .auth-section-label { text-transform: none; letter-spacing: 0; }
+/* Carte Compte : texte à gauche, bouton bordé à droite (prototype). */
+.profil-account { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px; }
+.profil-account-copy { font-size: 0.88rem; color: #6b7280; }
+.btn.profil-signout { border: 1px solid rgba(220, 38, 38, 0.28); background: #fff; color: #dc2626; font-weight: 700; padding: 9px 15px; border-radius: 9px; text-decoration: none; }
+.btn.profil-signout:hover { background: #fef2f2; }
+
 .profil-pref-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
