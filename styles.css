@@ -6142,7 +6142,7 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 /* ═══════════════════════════════════════════════════════════════════════════
    VUE « REPRENDRE » (refonte 2a) — hi-fi, namespacé rpr-*
    ═══════════════════════════════════════════════════════════════════════════ */
-.rpr-wrap { width: 1240px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.rpr-wrap { width: 1180px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .rpr-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 .rpr-capture { gap: 13px; }
 
@@ -6188,8 +6188,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .rpr-col { display: flex; flex-direction: column; gap: 10px; }
 .rpr-col > div:not(.rpr-col-head):not(.rpr-todo-add):not(.rpr-todo-list) { display: flex; flex-direction: column; gap: 10px; }
-.rpr-col-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 7px; border-bottom: 1px solid rgba(0,0,0,0.08); }
-.rpr-col-lbl { font-size: 0.9rem; font-weight: 800; letter-spacing: -0.01em; color: #111827; }
+.rpr-col-head { display: flex; align-items: center; gap: 9px; padding-bottom: 9px; border-bottom: 1px solid rgba(0,0,0,0.08); }
+.rpr-col-badge { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 8px; background: color-mix(in srgb, #0d9488 10%, #fff); color: #0d9488; display: inline-flex; align-items: center; justify-content: center; }
+.rpr-col-heltx { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.rpr-col-lbl { font-size: 0.9rem; font-weight: 800; letter-spacing: -0.01em; color: #111827; line-height: 1.1; }
+.rpr-col-sub { font-size: 0.67rem; font-weight: 600; color: #9ca3af; }
+.rpr-col-sub i { font-style: italic; }
 .rpr-col-cnt { font-size: 0.7rem; font-weight: 700; color: #9ca3af; background: #eef1f6; border-radius: 999px; padding: 1px 8px; }
 .rpr-qcard { display: flex; align-items: center; gap: 11px; text-align: left; width: 100%; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.08); background: #fbfcfe; border-radius: 11px; padding: 11px 12px; cursor: pointer; transition: border-color 140ms ease, background 140ms ease; }
 .rpr-qcard:hover { border-color: color-mix(in srgb, #0d9488 40%, rgba(0,0,0,0.08)); background: #fff; }
