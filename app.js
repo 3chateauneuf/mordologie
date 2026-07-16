@@ -812,7 +812,8 @@ let currentCategories = [];
 let currentTags = [];
 let timerIntervalId = null;
 let reportPeriod = "week";
-let journalSideMode = "tags";
+let journalSideMode = "categories";
+let journalCatFilter = ""; // filtre catégorie par chips (journal 4a)
 let personalPeriod = "week";
 let personalAnchorDate = new Date();
 let statsMode = "categories";
@@ -9378,6 +9379,7 @@ async function applyCategoryDeletion(cat) {
 }
 
 function renderProjectMemoryList() {
+  if (!projectMemoryList) return; // panneau « Contextes mémorisés » retiré (refonte 4a)
   projectMemoryList.innerHTML = "";
   const collaborator = getCurrentCollaborator();
 
@@ -9903,16 +9905,59 @@ function setupJournalUnifiedSearch() {
   renderJournalActiveFilterChips();
 }
 
+// Chips de catégorie (journal 4a) : une puce par catégorie présente dans le jeu
+// filtré par la recherche ; clic = filtre/défiltre.
+function renderJournalCatChips(sessions) {
+  const box = document.querySelector("#journal-cat-chips");
+  if (!box) return;
+  const cats = new Set();
+  for (const s of sessions) {
+    for (const c of (s.categories || [])) {
+      if (c) cats.add(c);
+    }
+  }
+  box.innerHTML = "";
+  for (const cat of [...cats].sort((a, b) => a.localeCompare(b, "fr"))) {
+    const color = getCategoryColor(cat);
+    const active = journalCatFilter === cat;
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "jw-chip" + (active ? " is-active" : "");
+    if (active) {
+      chip.style.background = `color-mix(in srgb, ${color} 14%, #fff)`;
+      chip.style.borderColor = color;
+      chip.style.color = `color-mix(in srgb, ${color} 55%, #111827)`;
+    } else {
+      chip.style.borderColor = `color-mix(in srgb, ${color} 30%, rgba(0,0,0,0.12))`;
+    }
+    const sw = document.createElement("span");
+    sw.className = "sw";
+    sw.style.background = color;
+    const nm = document.createElement("span");
+    nm.textContent = cat;
+    chip.append(sw, nm);
+    chip.addEventListener("click", () => {
+      journalCatFilter = active ? "" : cat;
+      renderSessionList();
+    });
+    box.append(chip);
+  }
+}
+
 function renderSessionList() {
   sessionList.innerHTML = "";
-  const visibleSessions = getFilteredJournalSessions(getScopedSessions(getSessionsWithPendingStopped()));
-  const filtersActive = Boolean(
-    journalFilterFromInput?.value ||
-      journalFilterToInput?.value ||
-      journalFilterCategoryInput?.value ||
-      journalFilterTagsInput?.value ||
-      journalFilterSubjectInput?.value,
-  );
+  const searched = getFilteredJournalSessions(getScopedSessions(getSessionsWithPendingStopped()));
+  renderJournalCatChips(searched);
+  const visibleSessions = journalCatFilter
+    ? searched.filter((s) => (s.categories || []).includes(journalCatFilter))
+    : searched;
+  const filtersActive = Boolean(journalFilterSearchInput?.value || journalCatFilter);
+  const countEl = document.querySelector("#journal-count");
+  if (countEl) {
+    countEl.textContent = visibleSessions.length
+      ? `${visibleSessions.length} entrée${visibleSessions.length > 1 ? "s" : ""}`
+      : "";
+  }
 
   if (!visibleSessions.length) {
     sessionList.append(

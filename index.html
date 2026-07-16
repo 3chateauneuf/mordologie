@@ -842,114 +842,53 @@
       </section>
 
       <section class="app-view" id="journal" data-view-panel="journal">
-      <section class="journal-grid">
-        <div class="journal-col-main">
-        <section class="panel journal-week-panel">
-          <div class="panel-head panel-head-compact">
-            <div>
-              <h2>Ma semaine</h2>
-              <p class="panel-copy">Répartition de vos catégories sur la semaine.</p>
-            </div>
-            <span id="journal-week-total" class="journal-week-total"></span>
-          </div>
-          <div id="journal-week-bar" class="distribution-bar"></div>
-          <div id="journal-week-legend" class="distribution-legend"></div>
-        </section>
-        <section class="panel journal-panel-main">
-          <div class="panel-head panel-head-compact">
-            <div>
-              <h2>Entrées récentes</h2>
-            </div>
-            <div class="journal-head-actions">
-              <button id="journal-add-btn" type="button" class="btn btn-secondary btn--sm">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Ajouter
-              </button>
-              <button id="journal-sync-btn" type="button" class="btn-sync-local" hidden>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M10 2.5A4.5 4.5 0 1 0 10.5 7M10 2.5V5.5M10 2.5H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <span id="journal-sync-label">Synchroniser</span>
-              </button>
-            </div>
-          </div>
-          <div class="journal-filters">
-            <div class="journal-filter-row journal-filter-row-top">
-              <label class="field">
-                <span>Depuis</span>
-                <input id="journal-filter-from" class="select-input" type="date" />
-              </label>
-              <label class="field">
-                <span>Jusqu'à</span>
-                <input id="journal-filter-to" class="select-input" type="date" />
-              </label>
-            </div>
-            <div class="journal-filter-row journal-filter-row-bottom">
-              <label class="field journal-filter-search-field">
-                <span>Recherche</span>
-                <input
-                  id="journal-filter-search"
-                  class="select-input journal-filter-search-input"
-                  type="text"
-                  placeholder='audit  #bio  cat:Marketing  @Yumi  "phrase exacte"'
-                  autocomplete="off"
-                  spellcheck="false"
-                />
-              </label>
-              <div class="journal-filter-actions">
-                <button id="journal-filter-help" type="button" class="btn btn-secondary" aria-label="Aide syntaxe" title="Aide syntaxe">?</button>
-                <button id="journal-filter-reset" type="button" class="btn btn-secondary" aria-label="Réinitialiser les filtres" title="Réinitialiser les filtres">↺</button>
+      <div class="journal-wrap">
+        <div class="journal-grid2">
+
+          <div class="journal-col-left">
+            <!-- Ma semaine -->
+            <section class="jw-card">
+              <div class="jw-head jw-head--baseline">
+                <h2 class="jw-title jw-title--lg">Ma semaine</h2>
+                <span id="journal-week-total" class="jw-total"></span>
               </div>
-            </div>
-            <div id="journal-filter-active-chips" class="journal-filter-active-chips" hidden></div>
-            <div id="journal-filter-help-panel" class="journal-filter-help-panel" hidden>
-              <strong>Syntaxe</strong>
-              <ul>
-                <li><code>mot</code> — cherche dans projet, tâche, notes</li>
-                <li><code>#tag</code> — filtre par tag</li>
-                <li><code>cat:nom</code> — filtre par catégorie</li>
-                <li><code>@nom</code> — filtre par collaborateur</li>
-                <li><code>"phrase exacte"</code> — recherche littérale</li>
-              </ul>
-            </div>
+              <div id="journal-week-bar" class="jw-bar"></div>
+              <div id="journal-week-legend" class="jw-legend"></div>
+            </section>
+
+            <!-- Journal -->
+            <section class="jw-card">
+              <div class="jw-head jw-head--end">
+                <div class="jw-headtext">
+                  <h2 class="jw-title jw-title--xl">Journal</h2>
+                  <p class="jw-sub">Vos entrées récentes, regroupées par jour.</p>
+                </div>
+                <span id="journal-count" class="jw-count"></span>
+              </div>
+              <label class="jw-search">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#9ca3af" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>
+                <input id="journal-filter-search" type="text" placeholder="Rechercher un sujet, client, tag…" autocomplete="off" spellcheck="false" />
+              </label>
+              <div id="journal-cat-chips" class="jw-catchips"></div>
+              <div id="session-list" class="session-list"></div>
+            </section>
           </div>
-          <div id="session-list" class="session-list"></div>
-        </section>
+
+          <!-- Catégories & tags -->
+          <section class="jw-card jw-side">
+            <div class="jw-headtext">
+              <h2 class="jw-title jw-title--md">Catégories &amp; tags</h2>
+              <p class="jw-sub">Renommez, fusionnez ou supprimez. Tout se met à jour partout.</p>
+            </div>
+            <div id="journal-side-switch" class="jw-toggle">
+              <button type="button" class="jw-toggle-btn active" data-journal-side="categories">Catégories</button>
+              <button type="button" class="jw-toggle-btn" data-journal-side="tags">Tags</button>
+            </div>
+            <div id="tag-manager-list" class="tag-manager-list"></div>
+          </section>
+
         </div>
-
-        <section class="panel journal-panel-side">
-          <div class="panel-head panel-head-compact">
-            <div>
-              <h2>Contextes mémorisés</h2>
-            </div>
-          </div>
-          <div id="project-memory-list" class="memory-list"></div>
-
-          <div class="tag-manager-divider"></div>
-
-          <div class="panel-head panel-head-compact">
-            <div id="journal-side-switch" class="view-switch journal-side-switch">
-              <button type="button" class="period-btn active" data-journal-side="tags">Tags</button>
-              <button type="button" class="period-btn" data-journal-side="categories">Catégories<span id="category-requests-badge" class="cat-requests-badge" hidden></span></button>
-            </div>
-            <button id="tag-cleanup-btn" type="button" class="btn-tag-action" hidden>Normaliser l'historique</button>
-          </div>
-          <div class="tag-manager-search">
-            <input
-              id="tag-manager-search"
-              class="select-input tag-manager-search-input"
-              type="text"
-              placeholder="Filtrer…"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <div id="tag-manager-sort" class="view-switch tag-manager-sort-switch" role="group" aria-label="Trier">
-              <button type="button" class="period-btn active" data-sort="usage">Plus utilisés</button>
-              <button type="button" class="period-btn" data-sort="alpha">A → Z</button>
-            </div>
-          </div>
-          <div id="tag-manager-list" class="tag-manager-list"></div>
-        </section>
-
-      </section>
+      </div>
       </section>
 
       <section class="app-view" id="users" data-view-panel="users">

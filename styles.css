@@ -6217,6 +6217,35 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 /* ═══════════════════════════════════════════════════════════════════════════
    VUE « REPRENDRE » (refonte 2a) — hi-fi, namespacé rpr-*
    ═══════════════════════════════════════════════════════════════════════════ */
+/* Journal 4a — refonte simplifiée (prototype) */
+.journal-wrap { width: 1180px; max-width: 100%; margin: 0 auto; }
+.journal-grid2 { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.journal-col-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.jw-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.jw-side { align-self: start; position: sticky; top: 12px; }
+.jw-head { display: flex; gap: 12px; justify-content: space-between; }
+.jw-head--baseline { align-items: baseline; }
+.jw-head--end { align-items: flex-end; flex-wrap: wrap; }
+.jw-headtext { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.jw-title { margin: 0; font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.04em; }
+.jw-title--lg { font-size: 1.4rem; }
+.jw-title--xl { font-size: 1.5rem; }
+.jw-title--md { font-size: 1.3rem; }
+.jw-sub { margin: 0; font-size: 0.82rem; color: #9ca3af; }
+.jw-total { font-size: 0.86rem; font-weight: 700; color: #6b7280; white-space: nowrap; }
+.jw-count { font-size: 0.78rem; font-weight: 700; color: #9ca3af; white-space: nowrap; }
+.jw-bar { display: flex; width: 100%; height: 14px; border-radius: 999px; overflow: hidden; background: #eef1f6; }
+.jw-legend { display: flex; flex-direction: column; gap: 1px; }
+.jw-search { display: flex; align-items: center; gap: 11px; border: 1px solid rgba(0,0,0,0.12); border-radius: 11px; padding: 0 15px; min-height: 48px; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.jw-search:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
+.jw-search input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-size: 0.95rem; color: #111827; padding: 0; font-family: inherit; }
+.jw-catchips { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.jw-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 11px; font-size: 0.8rem; font-weight: 600; cursor: pointer; background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #374151; transition: border-color 140ms ease, background 140ms ease; }
+.jw-chip .sw { width: 8px; height: 8px; border-radius: 3px; flex: 0 0 auto; }
+.jw-toggle { display: flex; gap: 3px; background: #eef1f6; border-radius: 9px; padding: 3px; }
+.jw-toggle-btn { flex: 1; min-height: 34px; padding: 0 12px; border-radius: 7px; border: 1px solid transparent; background: transparent; color: #6b7280; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 140ms ease, color 140ms ease; }
+.jw-toggle-btn.active { background: #fff; border-color: rgba(0,0,0,0.07); color: #111827; font-weight: 700; }
+
 /* Bandeau « Répartition du temps » (agenda 3a) */
 .agenda-dist { display: flex; flex-direction: column; gap: 9px; padding: 12px 14px; background: #fafbfc; border: 1px solid rgba(0,0,0,0.06); border-radius: 11px; }
 .agenda-dist-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
