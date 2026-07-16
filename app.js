@@ -1661,7 +1661,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-projectMemoryList.addEventListener("click", (event) => {
+projectMemoryList?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-memory-key]");
   if (!button) {
     return;
