@@ -6251,7 +6251,10 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .journal-col-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .journal-col-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .jw-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-.jw-side { align-self: start; position: sticky; top: 12px; }
+/* Dans la colonne flex de droite, align-self:start rétrécissait la carte à la
+   largeur de son contenu → « Catégories & tags » plus étroite que « Ce mois-ci ».
+   align-self:stretch la remet à pleine largeur (même largeur que Ce mois-ci). */
+.jw-side { align-self: stretch; position: sticky; top: 12px; }
 .jw-head { display: flex; gap: 12px; justify-content: space-between; }
 .jw-head--baseline { align-items: baseline; }
 .jw-head--end { align-items: flex-end; flex-wrap: wrap; }
