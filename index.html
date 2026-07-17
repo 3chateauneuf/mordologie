@@ -78,22 +78,10 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div id="auth-guest-shell" class="auth-shell auth-shell-guest">
-          <div class="auth-rescue-row">
-            <select id="auth-rescue-select" class="select-input auth-rescue-select"></select>
-            <button id="auth-rescue-button" type="button" class="btn btn-primary">Entrer</button>
-          </div>
-        </div>
-
-        <div id="auth-user-shell" class="auth-shell auth-shell-user" hidden>
-          <div class="auth-identity-trigger">
-            <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Ouvrir le profil">U</button>
-            <strong id="auth-user-name" class="topbar-username">Utilisateur</strong>
-          </div>
-        </div>
-
-        <div class="topbar-brand" aria-hidden="true">
-          <svg class="topbar-logo" viewBox="0 0 576.18 80.3" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mordologie">
+        <div class="topbar-brand">
+          <span class="topbar-mark" aria-hidden="true"><span class="topbar-mark-dot"></span></span>
+          <strong class="topbar-wordmark"><b>Mordologie</b> – l'analyse du mordor</strong>
+          <svg class="topbar-logo" hidden viewBox="0 0 576.18 80.3" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mordologie">
             <path fill="#1d1d1b" d="M0,1.43h19.47l12.98,37.73L45.32,1.43h19.47v77.66h-19.47v-35.86l-7.59,20.24h-10.78l-7.48-19.91v35.53H0V1.43Z"/>
             <path fill="#1d1d1b" d="M76.34,53.57v-26.73c0-15.84,10.67-26.84,26.07-26.84s25.96,11,25.96,26.84v26.73c0,15.73-10.78,26.73-25.96,26.73s-26.07-11-26.07-26.73ZM102.41,61.6c2.75,0,6.38-.77,6.38-7.37v-28.05c0-6.71-3.41-7.48-6.38-7.48s-6.49.77-6.49,7.48v28.05c0,6.6,3.74,7.37,6.49,7.37Z"/>
             <path fill="#1d1d1b" d="M140.03,1.43h25.63c15.29,0,25.96,10.34,25.96,29.15v2.09c0,11.22-3.74,19.25-10.12,23.98l9.46,22.44h-21.23l-5.94-17.71h-4.18v17.71h-19.58V1.43ZM163.24,42.9c3.85,0,9.02-1.1,9.02-10.45v-1.76c0-9.35-4.84-10.56-9.02-10.56h-3.63v22.77h3.63Z"/>
@@ -118,8 +106,8 @@
           <button type="button" data-view-target="reprendre" aria-label="Reprendre">
             <span class="nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
-                <circle cx="12" cy="12" r="8" />
-                <path d="M10.5 9l5 3-5 3V9z" fill="currentColor" stroke="none" />
+                <path d="M6 18V9.5L12 5l6 4.5V18" />
+                <path d="M9.5 18v-4.5h5V18" />
               </svg>
             </span>
             <span class="nav-tooltip" aria-hidden="true">Reprendre</span>
@@ -147,6 +135,22 @@
             <span class="nav-tooltip" aria-hidden="true">Journal</span>
             <span class="visually-hidden">Journal</span>
           </button>
+
+          <span class="topbar-sep" aria-hidden="true"></span>
+
+          <div id="auth-user-shell" class="auth-shell auth-shell-user" hidden>
+            <div class="auth-identity-trigger">
+              <button id="auth-user-avatar" class="auth-user-avatar" type="button" aria-label="Ouvrir le profil">U</button>
+              <strong id="auth-user-name" class="topbar-username">Utilisateur</strong>
+            </div>
+          </div>
+
+          <div id="auth-guest-shell" class="auth-shell auth-shell-guest">
+            <div class="auth-rescue-row">
+              <select id="auth-rescue-select" class="select-input auth-rescue-select"></select>
+              <button id="auth-rescue-button" type="button" class="btn btn-primary">Entrer</button>
+            </div>
+          </div>
         </nav>
       </header>
 
@@ -159,35 +163,41 @@
 
           <!-- Capture rapide -->
           <section class="rpr-card rpr-capture">
-            <!-- idle -->
+            <!-- idle : capture compacte une seule rangée (prototype 2a) -->
             <div id="rpr-idle">
-              <div class="rpr-cap-row">
-                <label class="rpr-search">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>
-                  <input id="rpr-subject" type="text" placeholder="Sur quoi travaillez-vous ?" autocomplete="off" />
-                </label>
-                <button class="rpr-btn-start" id="rpr-start" type="button" disabled><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 4.5l13 7.5-13 7.5V4.5z"/></svg>Démarrer</button>
-              </div>
-              <span class="rpr-hint" id="rpr-hint">Renseignez sujet, client et catégorie pour démarrer.</span>
-              <div class="rpr-context" id="rpr-context">
-                <div class="rpr-grid2">
-                  <label class="rpr-field">
-                    <span>Client <span class="rpr-req">· requis</span></span>
-                    <input class="rpr-input" id="rpr-client" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
-                  </label>
-                  <label class="rpr-field">
-                    <span>Catégorie <span class="rpr-req">· requis</span></span>
-                    <input class="rpr-input" id="rpr-category" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
-                  </label>
+              <div class="rpr-cap-grid">
+                <div class="rpr-cap-cell">
+                  <label class="rpr-cap-lbl" for="rpr-subject">Sujet</label>
+                  <input id="rpr-subject" class="rpr-cap-in rpr-cap-in--subject" type="text" placeholder="Sur quoi ?" autocomplete="off" />
                 </div>
-                <label class="rpr-field">
-                  <span>Tags <span class="rpr-opt">· optionnel</span></span>
-                  <div class="rpr-tokenfield" id="rpr-tags-field">
+                <div class="rpr-cap-cell">
+                  <label class="rpr-cap-lbl" for="rpr-client">Client <span class="rpr-req">·</span></label>
+                  <input id="rpr-client" class="rpr-cap-in" type="text" placeholder="Client" autocomplete="off" />
+                </div>
+                <div class="rpr-cap-cell">
+                  <label class="rpr-cap-lbl" for="rpr-category">Catégorie <span class="rpr-req">·</span></label>
+                  <input id="rpr-category" class="rpr-cap-in" type="text" placeholder="Catégorie" autocomplete="off" />
+                </div>
+                <div class="rpr-cap-cell">
+                  <label class="rpr-cap-lbl">Tags <span class="rpr-optlt">· opt.</span></label>
+                  <div class="rpr-cap-tokens" id="rpr-tags-field">
                     <div class="rpr-tags-list" id="rpr-tags-list"></div>
-                    <input id="rpr-tags-input" type="text" autocomplete="off" placeholder="Chercher ou créer…" />
+                    <input id="rpr-tags-input" type="text" placeholder="Tag…" autocomplete="off" />
                   </div>
-                </label>
+                </div>
+                <div class="rpr-cap-cell">
+                  <label class="rpr-cap-lbl rpr-cap-lbl--ph" aria-hidden="true">·</label>
+                  <button class="rpr-btn-start" id="rpr-start" type="button" disabled><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 4.5l13 7.5-13 7.5V4.5z"/></svg>Démarrer</button>
+                </div>
               </div>
+              <div class="rpr-reprise" id="rpr-reprise" hidden>
+                <svg class="rpr-reprise-ico" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h7l4 4v12H7z"/><path d="M9 11h6M9 15h4"/></svg>
+                <div class="rpr-reprise-body">
+                  <span class="rpr-reprise-lbl">Note reprise · deviendra un commentaire</span>
+                  <textarea id="rpr-reprise-note" class="rpr-reprise-area" placeholder="Contexte, décision, suite à donner…"></textarea>
+                </div>
+              </div>
+              <span class="rpr-hint" id="rpr-hint">Sujet, client et catégorie requis pour démarrer le compteur.</span>
             </div>
             <!-- running -->
             <div class="rpr-running" id="rpr-running" hidden>
@@ -214,15 +224,27 @@
             </div>
             <div class="rpr-grid3">
               <div class="rpr-col">
-                <div class="rpr-col-head"><span class="rpr-col-lbl">Récentes</span><span class="rpr-col-cnt" id="rpr-recent-cnt">0</span></div>
+                <div class="rpr-col-head">
+                  <span class="rpr-col-badge"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z"/><path d="M12 7.5V12l3 1.8"/></svg></span>
+                  <span class="rpr-col-heltx"><span class="rpr-col-lbl">Récentes</span><span class="rpr-col-sub">Reprises du jour</span></span>
+                  <span class="rpr-col-cnt" id="rpr-recent-cnt">0</span>
+                </div>
                 <div id="rpr-col-recent"></div>
               </div>
               <div class="rpr-col">
-                <div class="rpr-col-head"><span class="rpr-col-lbl">Fréquentes</span><span class="rpr-col-cnt" id="rpr-freq-cnt">0</span></div>
+                <div class="rpr-col-head">
+                  <span class="rpr-col-badge"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 .97 5.7L12 16.9 6.9 19.7l1-5.7-4.1-4 5.7-.8z"/></svg></span>
+                  <span class="rpr-col-heltx"><span class="rpr-col-lbl">Fréquentes</span><span class="rpr-col-sub">Vos habitudes</span></span>
+                  <span class="rpr-col-cnt" id="rpr-freq-cnt">0</span>
+                </div>
                 <div id="rpr-col-freq"></div>
               </div>
               <div class="rpr-col">
-                <div class="rpr-col-head"><span class="rpr-col-lbl">À faire</span><span class="rpr-col-cnt" id="rpr-todo-cnt">0</span></div>
+                <div class="rpr-col-head">
+                  <span class="rpr-col-badge"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></span>
+                  <span class="rpr-col-heltx"><span class="rpr-col-lbl">À faire</span><span class="rpr-col-sub"><i>À traiter · notes possibles</i></span></span>
+                  <span class="rpr-col-cnt" id="rpr-todo-cnt">0</span>
+                </div>
                 <div class="rpr-todo-add">
                   <input id="rpr-todo-input" type="text" placeholder="Ajouter une tâche…" autocomplete="off" />
                   <button id="rpr-todo-add" type="button" aria-label="Ajouter">＋</button>
@@ -471,7 +493,18 @@
             <p id="agenda-week-label" class="agenda-week-label"></p>
             <button id="agenda-calendar-sync" type="button" class="btn btn-secondary agenda-calendar-sync-btn">Sync calendrier</button>
           </div>
-          <div id="planned-summary" class="planned-summary" hidden></div>
+          <!-- Bandeau « Répartition du temps » (prototype 3a) -->
+          <div class="agenda-dist" id="agenda-dist" hidden>
+            <div class="agenda-dist-head">
+              <span class="agenda-dist-title">Répartition du temps · <span id="agenda-dist-total">—</span></span>
+              <button class="agenda-dist-clear" id="agenda-dist-clear" type="button" hidden>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Tout afficher
+              </button>
+            </div>
+            <div class="agenda-dist-bar" id="agenda-dist-bar"></div>
+            <div class="agenda-dist-chips" id="agenda-dist-chips"></div>
+            <div class="agenda-dist-focus" id="agenda-dist-focus" hidden></div>
+          </div>
           <div class="agenda-board-scroll">
             <div id="agenda-board" class="agenda-board agenda-board-wide"></div>
           </div>
@@ -551,74 +584,58 @@
       </section>
 
       <section class="app-view" id="manager" data-view-panel="manager">
-      <section class="panel manager-panel">
-        <div class="panel-head">
-          <div>
-            <h2>Pilotage équipe</h2>
-            <p class="panel-copy">Charge, capacité et allocation des cargonautes.</p>
+      <div class="manager-wrap">
+
+        <section class="jw-card manager-pilot">
+          <div class="jw-head jw-head--end">
+            <div class="jw-headtext">
+              <h2 class="jw-title jw-title--xl">Pilotage équipe</h2>
+              <p class="jw-sub">Charge, capacité et allocation des cargonautes.</p>
+            </div>
+            <div id="manager-period-toggle" class="jw-toggle manager-period-toggle">
+              <button type="button" class="jw-toggle-btn active" data-manager-period="week">Semaine</button>
+              <button type="button" class="jw-toggle-btn" data-manager-period="month">Mois</button>
+            </div>
           </div>
-        </div>
+          <div class="manager-kpis">
+            <article class="mkpi">
+              <span class="mkpi-lbl">Temps suivi</span>
+              <strong id="report-total" class="mkpi-val">0 h 00</strong>
+              <span id="report-total-delta" class="kpi-delta" hidden></span>
+              <span id="report-range" class="mkpi-sub">Aucune plage sélectionnée</span>
+            </article>
+            <article class="mkpi">
+              <span class="mkpi-lbl">Projet dominant</span>
+              <strong id="report-top-project" class="mkpi-val">-</strong>
+              <span id="report-top-project-time" class="mkpi-sub">0 h 00</span>
+              <span id="report-top-project-delta" class="kpi-delta" hidden></span>
+            </article>
+            <article class="mkpi">
+              <span id="report-top-category-label" class="mkpi-lbl">Catégorie principale</span>
+              <strong id="report-top-category" class="mkpi-val">-</strong>
+              <span id="report-top-category-time" class="mkpi-sub">0 h 00</span>
+              <span id="report-top-category-delta" class="kpi-delta" hidden></span>
+            </article>
+            <article class="mkpi">
+              <span class="mkpi-lbl">Capacité moyenne</span>
+              <strong id="report-capacity" class="mkpi-val">-</strong>
+              <span class="mkpi-sub">Charge / capacité de l'équipe</span>
+            </article>
+          </div>
+        </section>
 
-        <div class="manager-kpis">
-          <article class="summary-card">
-            <p>Temps suivi</p>
-            <strong id="report-total">0 h 00</strong>
-            <span id="report-total-delta" class="kpi-delta" hidden></span>
-            <span id="report-range">Aucune plage sélectionnée</span>
-          </article>
-          <article class="summary-card">
-            <p>Projet dominant</p>
-            <strong id="report-top-project">-</strong>
-            <span id="report-top-project-time">0 h 00</span>
-            <span id="report-top-project-delta" class="kpi-delta" hidden></span>
-          </article>
-          <article class="summary-card">
-            <p id="report-top-category-label">Catégorie principale</p>
-            <strong id="report-top-category">-</strong>
-            <span id="report-top-category-time">0 h 00</span>
-            <span id="report-top-category-delta" class="kpi-delta" hidden></span>
-          </article>
-          <article class="summary-card">
-            <p>Capacité moyenne</p>
-            <strong id="report-capacity">-</strong>
-            <span>Charge / capacité de l'équipe</span>
-          </article>
-        </div>
-
-        <div class="manager-grid">
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3 id="manager-distribution-title">Répartition catégories</h3>
-              <p id="manager-distribution-copy">Poids relatif des catégories sur la période.</p>
-            </div>
-            <div id="manager-distribution-bar" class="distribution-bar"></div>
-            <div id="manager-distribution-legend" class="distribution-legend"></div>
-          </article>
-
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3>Évolution</h3>
-                <p>Tendance de la période ou d’un profil.</p>
-            </div>
-            <div id="evolution-grid" class="evolution-grid"></div>
-          </article>
-        </div>
-
-        <div class="manager-analysis-grid">
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3>Cargonautes</h3>
-              <p>Charge lue par cargonaute, avec un repère de capacité.</p>
-            </div>
+        <div class="manager-grid2">
+          <article class="jw-card manager-carg">
+            <h3 class="jw-title jw-title--sm">Cargonautes</h3>
             <div class="table-shell">
-              <table class="report-table">
+              <table class="report-table manager-carg-table">
                 <thead>
                   <tr>
                     <th>Personne</th>
                     <th>Temps</th>
-                    <th>% capacité</th>
+                    <th>Capacité</th>
                     <th>Projet principal</th>
-                    <th>Sessions</th>
+                    <th class="ta-right">Sess.</th>
                   </tr>
                 </thead>
                 <tbody id="team-report-list"></tbody>
@@ -626,57 +643,23 @@
             </div>
           </article>
 
-          <article class="inner-card">
-            <div class="section-minihead">
-              <h3>Analyse détaillée</h3>
-              <p>Projets et catégories sur la plage active.</p>
-            </div>
-            <div class="table-stack">
-              <div class="table-shell">
-                <table class="report-table compact-table">
-                  <thead>
-                    <tr>
-                      <th>Projet</th>
-                      <th>Temps</th>
-                      <th>%</th>
-                      <th>Sessions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="report-project-list"></tbody>
-                </table>
-              </div>
-
-              <div class="table-shell">
-                  <table class="report-table compact-table">
-                    <thead>
-                      <tr>
-                        <th id="report-category-head">Categorie</th>
-                        <th>Temps</th>
-                        <th>%</th>
-                        <th>Sessions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="report-category-list"></tbody>
-                </table>
-              </div>
-
-              <div id="report-kr-shell" class="table-shell">
-                <table class="report-table compact-table">
-                  <thead>
-                    <tr>
-                      <th>KR</th>
-                      <th>Temps</th>
-                      <th>%</th>
-                      <th>Sessions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="report-kr-list"></tbody>
-                </table>
-              </div>
-            </div>
+          <article class="jw-card manager-rep">
+            <h3 id="manager-distribution-title" class="jw-title jw-title--sm">Répartition catégories</h3>
+            <p id="manager-distribution-copy" class="jw-sub" hidden></p>
+            <div id="manager-distribution-bar" class="jw-bar"></div>
+            <div id="manager-distribution-legend" class="jw-legend"></div>
           </article>
         </div>
-      </section>
+
+        <!-- Conservés cachés pour le pipeline de rendu (Évolution + Analyse détaillée retirés visuellement, refonte 5a). -->
+        <div class="manager-legacy-hidden" hidden aria-hidden="true">
+          <div id="evolution-grid" class="evolution-grid"></div>
+          <table><tbody id="report-project-list"></tbody></table>
+          <table><thead><tr><th id="report-category-head">Categorie</th></tr></thead><tbody id="report-category-list"></tbody></table>
+          <div id="report-kr-shell"><table><tbody id="report-kr-list"></tbody></table></div>
+        </div>
+
+      </div>
       </section>
 
       <section class="app-view" id="resources" data-view-panel="resources">
@@ -809,114 +792,53 @@
       </section>
 
       <section class="app-view" id="journal" data-view-panel="journal">
-      <section class="journal-grid">
-        <div class="journal-col-main">
-        <section class="panel journal-week-panel">
-          <div class="panel-head panel-head-compact">
-            <div>
-              <h2>Ma semaine</h2>
-              <p class="panel-copy">Répartition de vos catégories sur la semaine.</p>
-            </div>
-            <span id="journal-week-total" class="journal-week-total"></span>
-          </div>
-          <div id="journal-week-bar" class="distribution-bar"></div>
-          <div id="journal-week-legend" class="distribution-legend"></div>
-        </section>
-        <section class="panel journal-panel-main">
-          <div class="panel-head panel-head-compact">
-            <div>
-              <h2>Entrées récentes</h2>
-            </div>
-            <div class="journal-head-actions">
-              <button id="journal-add-btn" type="button" class="btn btn-secondary btn--sm">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Ajouter
-              </button>
-              <button id="journal-sync-btn" type="button" class="btn-sync-local" hidden>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M10 2.5A4.5 4.5 0 1 0 10.5 7M10 2.5V5.5M10 2.5H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <span id="journal-sync-label">Synchroniser</span>
-              </button>
-            </div>
-          </div>
-          <div class="journal-filters">
-            <div class="journal-filter-row journal-filter-row-top">
-              <label class="field">
-                <span>Depuis</span>
-                <input id="journal-filter-from" class="select-input" type="date" />
-              </label>
-              <label class="field">
-                <span>Jusqu'à</span>
-                <input id="journal-filter-to" class="select-input" type="date" />
-              </label>
-            </div>
-            <div class="journal-filter-row journal-filter-row-bottom">
-              <label class="field journal-filter-search-field">
-                <span>Recherche</span>
-                <input
-                  id="journal-filter-search"
-                  class="select-input journal-filter-search-input"
-                  type="text"
-                  placeholder='audit  #bio  cat:Marketing  @Yumi  "phrase exacte"'
-                  autocomplete="off"
-                  spellcheck="false"
-                />
-              </label>
-              <div class="journal-filter-actions">
-                <button id="journal-filter-help" type="button" class="btn btn-secondary" aria-label="Aide syntaxe" title="Aide syntaxe">?</button>
-                <button id="journal-filter-reset" type="button" class="btn btn-secondary" aria-label="Réinitialiser les filtres" title="Réinitialiser les filtres">↺</button>
+      <div class="journal-wrap">
+        <div class="journal-grid2">
+
+          <div class="journal-col-left">
+            <!-- Ma semaine -->
+            <section class="jw-card">
+              <div class="jw-head jw-head--baseline">
+                <h2 class="jw-title jw-title--lg">Ma semaine</h2>
+                <span id="journal-week-total" class="jw-total"></span>
               </div>
-            </div>
-            <div id="journal-filter-active-chips" class="journal-filter-active-chips" hidden></div>
-            <div id="journal-filter-help-panel" class="journal-filter-help-panel" hidden>
-              <strong>Syntaxe</strong>
-              <ul>
-                <li><code>mot</code> — cherche dans projet, tâche, notes</li>
-                <li><code>#tag</code> — filtre par tag</li>
-                <li><code>cat:nom</code> — filtre par catégorie</li>
-                <li><code>@nom</code> — filtre par collaborateur</li>
-                <li><code>"phrase exacte"</code> — recherche littérale</li>
-              </ul>
-            </div>
+              <div id="journal-week-bar" class="jw-bar"></div>
+              <div id="journal-week-legend" class="jw-legend"></div>
+            </section>
+
+            <!-- Journal -->
+            <section class="jw-card">
+              <div class="jw-head jw-head--end">
+                <div class="jw-headtext">
+                  <h2 class="jw-title jw-title--xl">Journal</h2>
+                  <p class="jw-sub">Vos entrées récentes, regroupées par jour.</p>
+                </div>
+                <span id="journal-count" class="jw-count"></span>
+              </div>
+              <label class="jw-search">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#9ca3af" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>
+                <input id="journal-filter-search" type="text" placeholder="Rechercher un sujet, client, tag…" autocomplete="off" spellcheck="false" />
+              </label>
+              <div id="journal-cat-chips" class="jw-catchips"></div>
+              <div id="session-list" class="session-list"></div>
+            </section>
           </div>
-          <div id="session-list" class="session-list"></div>
-        </section>
+
+          <!-- Catégories & tags -->
+          <section class="jw-card jw-side">
+            <div class="jw-headtext">
+              <h2 class="jw-title jw-title--md">Catégories &amp; tags</h2>
+              <p class="jw-sub">Renommez, fusionnez ou supprimez. Tout se met à jour partout.</p>
+            </div>
+            <div id="journal-side-switch" class="jw-toggle">
+              <button type="button" class="jw-toggle-btn active" data-journal-side="categories">Catégories</button>
+              <button type="button" class="jw-toggle-btn" data-journal-side="tags">Tags</button>
+            </div>
+            <div id="tag-manager-list" class="tag-manager-list"></div>
+          </section>
+
         </div>
-
-        <section class="panel journal-panel-side">
-          <div class="panel-head panel-head-compact">
-            <div>
-              <h2>Contextes mémorisés</h2>
-            </div>
-          </div>
-          <div id="project-memory-list" class="memory-list"></div>
-
-          <div class="tag-manager-divider"></div>
-
-          <div class="panel-head panel-head-compact">
-            <div id="journal-side-switch" class="view-switch journal-side-switch">
-              <button type="button" class="period-btn active" data-journal-side="tags">Tags</button>
-              <button type="button" class="period-btn" data-journal-side="categories">Catégories<span id="category-requests-badge" class="cat-requests-badge" hidden></span></button>
-            </div>
-            <button id="tag-cleanup-btn" type="button" class="btn-tag-action" hidden>Normaliser l'historique</button>
-          </div>
-          <div class="tag-manager-search">
-            <input
-              id="tag-manager-search"
-              class="select-input tag-manager-search-input"
-              type="text"
-              placeholder="Filtrer…"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <div id="tag-manager-sort" class="view-switch tag-manager-sort-switch" role="group" aria-label="Trier">
-              <button type="button" class="period-btn active" data-sort="usage">Plus utilisés</button>
-              <button type="button" class="period-btn" data-sort="alpha">A → Z</button>
-            </div>
-          </div>
-          <div id="tag-manager-list" class="tag-manager-list"></div>
-        </section>
-
-      </section>
+      </div>
       </section>
 
       <section class="app-view" id="users" data-view-panel="users">
@@ -1008,11 +930,9 @@
             </div>
           </article>
 
-          <article class="panel profil-card">
-            <div class="section-minihead">
-              <h3>Compte</h3>
-            </div>
-            <button id="auth-signout-button" type="button" class="btn btn-ghost-danger">Se déconnecter</button>
+          <article class="panel profil-card profil-account">
+            <span class="profil-account-copy">Session ouverte sur cet appareil</span>
+            <button id="auth-signout-button" type="button" class="btn btn-ghost-danger profil-signout">Se déconnecter</button>
           </article>
 
         </div>

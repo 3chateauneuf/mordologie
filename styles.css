@@ -140,28 +140,53 @@ button {
 }
 
 .topbar {
-  border-radius: var(--radius-panel);
-  padding: 0 16px;
-  height: 56px;
+  border-radius: 12px;
+  padding: 0 18px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0)),
-    var(--panel);
+  gap: 16px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+  backdrop-filter: none;
   position: relative;
   overflow: visible;
   z-index: 10;
 }
 
 .topbar-brand {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  pointer-events: none;
+  gap: 10px;
+}
+
+.topbar-mark {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #111827;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.topbar-mark-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ec6913;
+}
+.topbar-wordmark {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: -0.03em;
+  font-weight: 400;
+  color: #111827;
+}
+.topbar-wordmark b {
+  font-weight: 800;
 }
 
 .topbar-logo {
@@ -516,17 +541,19 @@ button {
 
 .topbar-nav a,
 .topbar-nav button {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   justify-content: center;
   padding: 0;
-  color: var(--text);
-  background: var(--panel-strong);
-  border: 1px solid var(--line);
+  color: #374151;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9px;
   appearance: none;
   font-size: 0.92rem;
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
+.topbar-nav button:hover { background: #eef1f6; }
 
 .topbar-nav button {
   font: inherit;
@@ -551,9 +578,33 @@ button {
 }
 
 .topbar-nav .active {
-  background: rgba(6, 148, 148, 0.12);
-  border-color: rgba(6, 148, 148, 0.22);
-  box-shadow: 0 8px 20px rgba(39, 56, 68, 0.07);
+  background: color-mix(in srgb, #0d9488 9%, #fff);
+  border-color: #0d9488;
+  color: #0d9488;
+  box-shadow: none;
+}
+.topbar-nav .active:hover { background: color-mix(in srgb, #0d9488 12%, #fff); }
+
+/* Séparateur + avatar (prototype topbar) */
+.topbar-sep {
+  width: 1px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 6px;
+  flex: 0 0 auto;
+}
+.topbar-nav .auth-shell-user .topbar-username { display: none; }
+.topbar-nav .auth-user-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 9px;
+  border: none;
+  background: #ec6913;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0;
 }
 
 .topbar-nav button {
@@ -2253,17 +2304,41 @@ select.select-input {
   align-content: start;
 }
 
+.agenda-panel .panel-head h2 { font-size: 1.28rem; letter-spacing: -0.04em; }
+.agenda-panel .panel-head .panel-copy { font-size: 0.78rem; color: #9ca3af; }
+
+/* Navigation semaine : contrôle segmenté (prototype 3a) */
 .agenda-week-nav {
   display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-wrap: nowrap;
+  gap: 2px;
+  background: #eef1f6;
+  border-radius: 9px;
+  padding: 3px;
+}
+.agenda-week-nav .period-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.agenda-week-nav .period-btn:hover { color: #111827; }
+.agenda-week-nav #agenda-current-week {
+  border-color: rgba(0, 0, 0, 0.07);
+  background: #fff;
+  color: #111827;
+  font-weight: 700;
 }
 
 .agenda-week-label {
   margin: 0;
-  color: var(--muted);
-  font-size: 0.74rem;
-  font-weight: 800;
+  color: #9ca3af;
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 .agenda-time-rail {
@@ -3156,6 +3231,14 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .profil-photo-btn {
   margin-left: auto;
 }
+
+/* Labels du profil en casse normale (comme le prototype 6a), pas en majuscules. */
+.profil-card .auth-section-label { text-transform: none; letter-spacing: 0; }
+/* Carte Compte : texte à gauche, bouton bordé à droite (prototype). */
+.profil-account { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px; }
+.profil-account-copy { font-size: 0.88rem; color: #6b7280; }
+.btn.profil-signout { border: 1px solid rgba(220, 38, 38, 0.28); background: #fff; color: #dc2626; font-weight: 700; padding: 9px 15px; border-radius: 9px; text-decoration: none; }
+.btn.profil-signout:hover { background: #fef2f2; }
 
 .profil-pref-grid {
   display: grid;
@@ -6142,15 +6225,115 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 /* ═══════════════════════════════════════════════════════════════════════════
    VUE « REPRENDRE » (refonte 2a) — hi-fi, namespacé rpr-*
    ═══════════════════════════════════════════════════════════════════════════ */
-.rpr-wrap { width: 1240px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+/* Journal 4a — refonte simplifiée (prototype) */
+.journal-wrap { width: 1180px; max-width: 100%; margin: 0 auto; }
+.journal-grid2 { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.journal-col-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.jw-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.jw-side { align-self: start; position: sticky; top: 12px; }
+.jw-head { display: flex; gap: 12px; justify-content: space-between; }
+.jw-head--baseline { align-items: baseline; }
+.jw-head--end { align-items: flex-end; flex-wrap: wrap; }
+.jw-headtext { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.jw-title { margin: 0; font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.04em; }
+.jw-title--lg { font-size: 1.4rem; }
+.jw-title--xl { font-size: 1.5rem; }
+.jw-title--md { font-size: 1.3rem; }
+.jw-sub { margin: 0; font-size: 0.82rem; color: #9ca3af; }
+.jw-total { font-size: 0.86rem; font-weight: 700; color: #6b7280; white-space: nowrap; }
+.jw-count { font-size: 0.78rem; font-weight: 700; color: #9ca3af; white-space: nowrap; }
+.jw-bar { display: flex; width: 100%; height: 14px; border-radius: 999px; overflow: hidden; background: #eef1f6; }
+.jw-legend { display: flex; flex-direction: column; gap: 1px; }
+.jw-search { display: flex; align-items: center; gap: 11px; border: 1px solid rgba(0,0,0,0.12); border-radius: 11px; padding: 0 15px; min-height: 48px; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.jw-search:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
+.jw-search input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-size: 0.95rem; color: #111827; padding: 0; font-family: inherit; }
+.jw-catchips { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.jw-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 11px; font-size: 0.8rem; font-weight: 600; cursor: pointer; background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #374151; transition: border-color 140ms ease, background 140ms ease; }
+.jw-chip .sw { width: 8px; height: 8px; border-radius: 3px; flex: 0 0 auto; }
+.jw-toggle { display: flex; gap: 3px; background: #eef1f6; border-radius: 9px; padding: 3px; }
+.jw-toggle-btn { flex: 1; min-height: 34px; padding: 0 12px; border-radius: 7px; border: 1px solid transparent; background: transparent; color: #6b7280; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 140ms ease, color 140ms ease; }
+.jw-toggle-btn.active { background: #fff; border-color: rgba(0,0,0,0.07); color: #111827; font-weight: 700; }
+
+/* Pilotage 5a — refonte simplifiée (prototype) */
+.manager-wrap { width: 1180px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.manager-pilot { gap: 18px; }
+.jw-title--sm { font-size: 1.1rem; letter-spacing: -0.03em; }
+.manager-period-toggle .jw-toggle-btn { flex: 0 0 auto; min-height: 32px; }
+/* Scopé à .manager-pilot : ne pas impacter la vue Ressources qui réutilise
+   .manager-kpis / .kpi-delta (review Codex). */
+.manager-pilot .manager-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.mkpi { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 5px; }
+.mkpi-lbl { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #9ca3af; }
+.mkpi-val { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.7rem; letter-spacing: -0.04em; line-height: 1; color: #111827; }
+.mkpi-sub { font-size: 0.78rem; color: #9ca3af; }
+.manager-pilot .kpi-delta { display: none; } /* pas de deltas dans le prototype 5a (manager uniquement) */
+.manager-grid2 { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.manager-carg, .manager-rep { gap: 12px; }
+.manager-rep { align-self: start; gap: 14px; }
+/* Table Cargonautes : lignes claires facon prototype */
+.manager-carg-table { width: 100%; border-collapse: collapse; }
+.manager-carg-table thead th { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #9ca3af; text-align: left; padding: 0 6px 8px; border-bottom: 1px solid rgba(0,0,0,0.08); }
+.manager-carg-table thead th.ta-right { text-align: right; }
+.manager-carg-table tbody td { padding: 10px 6px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.88rem; color: #6b7280; vertical-align: middle; }
+.manager-carg-table tbody tr:last-child td { border-bottom: none; }
+
+/* Bandeau « Répartition du temps » (agenda 3a) */
+.agenda-dist { display: flex; flex-direction: column; gap: 9px; padding: 12px 14px; background: #fafbfc; border: 1px solid rgba(0,0,0,0.06); border-radius: 11px; }
+.agenda-dist-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.agenda-dist-title { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: #9ca3af; }
+.agenda-dist-clear { display: inline-flex; align-items: center; gap: 5px; border: none; background: none; color: #0d9488; font-size: 0.72rem; font-weight: 700; cursor: pointer; padding: 2px 4px; }
+.agenda-dist-bar { display: flex; width: 100%; height: 10px; border-radius: 999px; overflow: hidden; background: #eef1f6; }
+.agenda-dist-seg { height: 100%; cursor: pointer; transition: opacity 140ms ease; }
+.agenda-dist-seg.is-dimmed { opacity: 0.22; }
+.agenda-dist-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.agenda-dist-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 10px; font-size: 0.76rem; font-weight: 600; color: #374151; background: #fff; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: opacity 140ms ease, border-color 140ms ease; }
+.agenda-dist-chip .sw { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.agenda-dist-chip .h { font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-weight: 700; color: #111827; }
+.agenda-dist-chip .p { opacity: 0.55; font-weight: 700; }
+.agenda-dist-chip.is-dimmed { opacity: 0.42; }
+.agenda-dist-focus { display: flex; gap: 6px; padding-top: 9px; margin-top: 1px; border-top: 1px solid rgba(0,0,0,0.06); }
+.agenda-dist-fday { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.agenda-dist-fbarwrap { width: 100%; height: 42px; display: flex; align-items: flex-end; }
+.agenda-dist-fbar { width: 100%; border-radius: 5px 5px 0 0; transition: height 160ms ease; min-height: 2px; }
+.agenda-dist-fh { font-size: 0.64rem; font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.agenda-dist-fday-lbl { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #9ca3af; }
+.agenda-dist-ftags { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 2px; }
+.agenda-dist-ftag { font-size: 0.58rem; font-weight: 700; border-radius: 999px; padding: 1px 6px; border: 1px solid transparent; }
+/* Focus catégorie : estompe les événements hors catégorie (prototype 3a). */
+.agenda-board[data-focus-cat] .agenda-event { opacity: 0.13; pointer-events: none; transition: opacity 140ms ease; }
+.agenda-board[data-focus-cat] .agenda-event.is-focus-on { opacity: 1; pointer-events: auto; }
+
+.rpr-wrap { width: 1180px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 .rpr-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 .rpr-capture { gap: 13px; }
+
+/* Capture compacte « une seule rangée » (prototype 2a idle) */
+.rpr-cap-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) auto; gap: 10px; align-items: start; }
+.rpr-cap-cell { position: relative; display: flex; flex-direction: column; gap: 5px; }
+.rpr-cap-lbl { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #9ca3af; }
+.rpr-cap-lbl--ph { color: transparent; user-select: none; }
+.rpr-cap-in { width: 100%; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; background: #fff; padding: 0 12px; min-height: 46px; font-size: 0.9rem; font-family: inherit; color: #111827; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.rpr-cap-in--subject { padding: 0 13px; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.02rem; letter-spacing: -0.02em; }
+.rpr-cap-in:focus { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
+.rpr-cap-in::placeholder { color: #a3a7ad; }
+.rpr-cap-tokens { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; padding: 0 8px; min-height: 46px; box-sizing: border-box; background: #fff; }
+.rpr-cap-tokens input { flex: 1 1 60px; min-width: 52px; border: none; background: transparent; padding: 3px 2px; font-size: 0.84rem; outline: none; font-family: inherit; }
+.rpr-cap-tokens:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
+.rpr-optlt { color: #cbd5e1; }
+
+/* Encart « Note de reprise » (idle) : la note d'une tâche À faire démarrée */
+.rpr-reprise { display: flex; gap: 9px; align-items: flex-start; background: color-mix(in srgb, #0d9488 6%, #fff); border: 1px solid color-mix(in srgb, #0d9488 20%, transparent); border-radius: 10px; padding: 9px 11px; }
+.rpr-reprise[hidden] { display: none; }
+.rpr-reprise-ico { flex: 0 0 auto; margin-top: 2px; }
+.rpr-reprise-body { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rpr-reprise-lbl { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #0d9488; }
+.rpr-reprise-area { width: 100%; box-sizing: border-box; border: none; background: transparent; resize: vertical; min-height: 34px; font-family: inherit; font-size: 0.86rem; color: #374151; outline: none; padding: 0; line-height: 1.45; }
 
 .rpr-cap-row { display: flex; align-items: center; gap: 10px; }
 .rpr-search { flex: 1; display: flex; align-items: center; gap: 11px; border: 1px solid rgba(0,0,0,0.12); border-radius: 11px; padding: 0 15px; min-height: 54px; transition: border-color 150ms ease, box-shadow 150ms ease; }
 .rpr-search:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
 .rpr-search input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-family: "Bricolage Grotesque", sans-serif; font-size: 1.15rem; letter-spacing: -0.02em; color: #111827; padding: 0; }
-.rpr-btn-start { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; min-height: 54px; padding: 0 22px; border-radius: 11px; border: none; background: #0d9488; color: #fff; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 150ms ease; }
+.rpr-btn-start { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 10px; border: none; background: #0d9488; color: #fff; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 150ms ease; }
 .rpr-btn-start:hover { background: #0f766e; }
 .rpr-btn-start:disabled { background: #e2e8f0; color: #94a3b8; cursor: default; }
 .rpr-hint { font-size: 0.8rem; color: #9ca3af; }
@@ -6188,8 +6371,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .rpr-col { display: flex; flex-direction: column; gap: 10px; }
 .rpr-col > div:not(.rpr-col-head):not(.rpr-todo-add):not(.rpr-todo-list) { display: flex; flex-direction: column; gap: 10px; }
-.rpr-col-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 7px; border-bottom: 1px solid rgba(0,0,0,0.08); }
-.rpr-col-lbl { font-size: 0.9rem; font-weight: 800; letter-spacing: -0.01em; color: #111827; }
+.rpr-col-head { display: flex; align-items: center; gap: 9px; padding-bottom: 9px; border-bottom: 1px solid rgba(0,0,0,0.08); }
+.rpr-col-badge { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 8px; background: color-mix(in srgb, #0d9488 10%, #fff); color: #0d9488; display: inline-flex; align-items: center; justify-content: center; }
+.rpr-col-heltx { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.rpr-col-lbl { font-size: 0.9rem; font-weight: 800; letter-spacing: -0.01em; color: #111827; line-height: 1.1; }
+.rpr-col-sub { font-size: 0.67rem; font-weight: 600; color: #9ca3af; }
+.rpr-col-sub i { font-style: italic; }
 .rpr-col-cnt { font-size: 0.7rem; font-weight: 700; color: #9ca3af; background: #eef1f6; border-radius: 999px; padding: 1px 8px; }
 .rpr-qcard { display: flex; align-items: center; gap: 11px; text-align: left; width: 100%; box-sizing: border-box; border: 1px solid rgba(0,0,0,0.08); background: #fbfcfe; border-radius: 11px; padding: 11px 12px; cursor: pointer; transition: border-color 140ms ease, background 140ms ease; }
 .rpr-qcard:hover { border-color: color-mix(in srgb, #0d9488 40%, rgba(0,0,0,0.08)); background: #fff; }
@@ -6219,6 +6406,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 .rpr-todo-play { flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, #0d9488 30%, #e2e8f0); background: color-mix(in srgb, #0d9488 8%, #fff); color: #0d9488; border-radius: 7px; cursor: pointer; }
 .rpr-todo-arch { flex: 0 0 auto; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: #9ca3af; border-radius: 6px; cursor: pointer; }
 .rpr-todo-arch:hover { color: #374151; background: #f1f5f9; }
+.rpr-todo-note { flex: 0 0 auto; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; background: none; color: #9ca3af; border-radius: 7px; cursor: pointer; transition: color 140ms ease, background 140ms ease, border-color 140ms ease; }
+.rpr-todo-note:hover { color: #374151; background: #f1f5f9; }
+.rpr-todo-note.has-note { color: #0d9488; background: color-mix(in srgb, #0d9488 8%, #fff); border-color: color-mix(in srgb, #0d9488 30%, #e2e8f0); }
+.rpr-todo-wrap { display: flex; flex-direction: column; gap: 0; }
+.rpr-todo-notearea { width: 100%; box-sizing: border-box; margin-top: 5px; border: 1px solid rgba(0,0,0,0.12); border-radius: 8px; background: #fff; padding: 7px 9px; font-size: 0.8rem; font-family: inherit; color: #374151; line-height: 1.45; resize: vertical; min-height: 48px; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
+.rpr-todo-notearea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px color-mix(in srgb, #0d9488 14%, transparent); }
 .rpr-todo-textwrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .rpr-todo-textwrap .rpr-todo-text { flex: none; }
 .rpr-todo-meta { font-size: 0.72rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -6231,6 +6424,12 @@ body.alt-clone-mode .agenda-event[data-session-id]:hover {
 @media (max-width: 900px) {
   .rpr-grid3 { grid-template-columns: 1fr; }
   .rpr-grid2 { grid-template-columns: 1fr; }
+  /* Capture compacte : la grille 5 colonnes déborde / rend les champs
+     minuscules sur tablette-mobile → on empile (champs pleine largeur,
+     Démarrer pleine largeur). Le label fantôme du bouton est masqué. */
+  .rpr-cap-grid { grid-template-columns: 1fr; }
+  .rpr-cap-lbl--ph { display: none; }
+  .rpr-cap-grid .rpr-btn-start { width: 100%; }
   /* En 1 colonne (tablette/mobile), la typographie des cartes Reprendre —
      calibrée pour 3 colonnes denses — devient minuscule : on la remonte. */
   .rpr-reprendre-head p { font-size: 0.94rem; }

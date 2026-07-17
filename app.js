@@ -812,7 +812,8 @@ let currentCategories = [];
 let currentTags = [];
 let timerIntervalId = null;
 let reportPeriod = "week";
-let journalSideMode = "tags";
+let journalSideMode = "categories";
+let journalCatFilter = ""; // filtre catégorie par chips (journal 4a)
 let personalPeriod = "week";
 let personalAnchorDate = new Date();
 let statsMode = "categories";
@@ -911,6 +912,14 @@ let weeklyCapacityByCollaborator = loadWeeklyCapacity();
 let reprendreTags = [];
 let reprendreDragId = null;
 let reprendreTodos = loadReprendreTodos();
+// Note de reprise : note d'une tâche « À faire » démarrée, affichée dans l'encart
+// teal sous la barre de capture ; devient le commentaire de la session au start.
+let reprendreRepriseNote = "";
+let reprendreRepriseActive = false;
+// Sujet de la tâche « À faire » qui a produit la note de reprise : la note ne
+// sera recopiée dans le commentaire de session que si le Sujet au démarrage
+// correspond encore (sinon on colle un contexte sans rapport — review Codex).
+let reprendreRepriseSubject = "";
 let plannedEditingEventId = null;
 let plannedEditingEvent = null;
 let plannedCurrentCategories = [];
@@ -1652,7 +1661,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-projectMemoryList.addEventListener("click", (event) => {
+projectMemoryList?.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-memory-key]");
   if (!button) {
     return;
@@ -1673,6 +1682,17 @@ periodSwitch.addEventListener("click", (event) => {
   }
 
   reportPeriod = button.dataset.period;
+  evolutionFilterLabel = null;
+  renderManagerControls();
+  renderManagerViews();
+});
+
+// Toggle Semaine/Mois intégré à la carte Pilotage (5a) — pilote le même
+// reportPeriod que la barre d'outils (conservée pour Ressources).
+document.querySelector("#manager-period-toggle")?.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-manager-period]");
+  if (!button) return;
+  reportPeriod = button.dataset.managerPeriod;
   evolutionFilterLabel = null;
   renderManagerControls();
   renderManagerViews();
@@ -1899,6 +1919,12 @@ agendaCurrentWeekButton?.addEventListener("click", () => {
 
 agendaNextWeekButton?.addEventListener("click", () => {
   shiftAgendaWeek(1);
+});
+
+document.querySelector("#agenda-dist-clear")?.addEventListener("click", () => {
+  // setAgendaFocus(null) réinitialise aussi l'estompage des événements
+  // (data-focus-cat + .is-focus-on), pas seulement le bandeau.
+  setAgendaFocus(null);
 });
 
 authCalendarIcsSave?.addEventListener("click", async () => {
@@ -3340,8 +3366,10 @@ function renderViewChrome() {
     panel.hidden = !isActive;
   }
 
-  const isAnalysisView = allowedViews.includes(currentView) && (currentView === "manager" || currentView === "resources");
-  analysisToolbarPanel.hidden = !isAnalysisView;
+  // La vue « manager » (5a) a désormais son propre toggle Semaine/Mois dans la
+  // carte Pilotage ; la barre d'outils analytique n'est gardée que pour Ressources.
+  const isAnalysisView = allowedViews.includes(currentView) && currentView === "resources";
+  if (analysisToolbarPanel) analysisToolbarPanel.hidden = !isAnalysisView;
   if (analysisToolbarTitle) {
     analysisToolbarTitle.textContent = currentView === "resources" ? "Vue ressources" : "Pilotage manager";
   }
@@ -3466,6 +3494,10 @@ function hydrateSharedUiPreferences(rows = []) {
           doneAt: item.doneAt ?? null,
           archived: Boolean(item.archived),
           archivedAt: item.archivedAt ?? null,
+          // Conserver la note de la tâche : sans ça, la réhydratation distante
+          // (reload / sync silencieux) la supprimait après saisie (review Codex).
+          note: typeof item.note === "string" ? item.note : "",
+          noteOpen: Boolean(item.noteOpen),
         }))
         .filter((item) => item.text);
       nextTodosByScope[scopeKey] = normalizedTodos;
@@ -8455,6 +8487,7 @@ const RPR_TODO_ICONS = {
   play: `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5.5l11 6.5-11 6.5V5.5z"/></svg>`,
   arch: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4" rx="1"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9"/><path d="M9.5 12.5h5"/></svg>`,
   trash: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h7l4 4v12H7z"/><path d="M9 11h6M9 15h4"/></svg>`,
 };
 
 function renderReprendreTodos() {
@@ -8532,8 +8565,28 @@ function renderReprendreTodos() {
     play.addEventListener("click", () => {
       const s = document.querySelector("#rpr-subject");
       if (s) { s.value = t.text; s.focus(); refreshReprendreStart(); }
+      // La note de la tâche est transportée dans l'encart de reprise → deviendra
+      // le commentaire de la session au démarrage (liée au sujet de la tâche).
+      reprendreRepriseNote = (t.note && t.note.trim()) ? t.note : "";
+      reprendreRepriseActive = Boolean(reprendreRepriseNote);
+      reprendreRepriseSubject = reprendreRepriseActive ? t.text : "";
+      renderRepriseNote();
     });
     row.appendChild(play);
+
+    // Bouton note : déplie un textarea sous la ligne ; icône teal si note présente.
+    if (!t.archived) {
+      const note = document.createElement("button");
+      note.type = "button";
+      note.className = "rpr-todo-note" + ((t.note && t.note.trim()) ? " has-note" : "");
+      note.title = "Note";
+      note.setAttribute("aria-label", "Note");
+      note.innerHTML = RPR_TODO_ICONS.note;
+      note.addEventListener("click", () => {
+        mutate((list) => list.map((x) => x.id === t.id ? { ...x, noteOpen: !x.noteOpen } : x));
+      });
+      row.appendChild(note);
+    }
 
     const action = document.createElement("button");
     action.type = "button";
@@ -8574,7 +8627,24 @@ function renderReprendreTodos() {
       });
     }
 
-    listEl.appendChild(row);
+    // Ligne + zone de note dépliable dessous (le textarea persiste sans
+    // re-render pour ne pas perdre le focus à chaque frappe).
+    const wrap = document.createElement("div");
+    wrap.className = "rpr-todo-wrap";
+    wrap.appendChild(row);
+    if (t.noteOpen && !t.archived) {
+      const ta = document.createElement("textarea");
+      ta.className = "rpr-todo-notearea";
+      ta.value = t.note || "";
+      ta.placeholder = "Note — deviendra un commentaire si la tâche démarre…";
+      ta.addEventListener("input", () => {
+        setReprendreTodoList(getReprendreTodoList().map((x) => x.id === t.id ? { ...x, note: ta.value } : x));
+        const btn = row.querySelector(".rpr-todo-note");
+        if (btn) btn.classList.toggle("has-note", Boolean(ta.value.trim()));
+      });
+      wrap.appendChild(ta);
+    }
+    listEl.appendChild(wrap);
   });
 }
 
@@ -8589,6 +8659,25 @@ function reprendreAddTodo() {
   setReprendreTodoList(list);
   input.value = "";
   renderReprendreTodos();
+}
+
+function renderRepriseNote() {
+  const box = document.querySelector("#rpr-reprise");
+  const area = document.querySelector("#rpr-reprise-note");
+  if (!box || !area) return;
+  if (reprendreRepriseActive) {
+    box.hidden = false;
+    if (area.value !== reprendreRepriseNote) area.value = reprendreRepriseNote;
+  } else {
+    box.hidden = true;
+  }
+}
+
+function clearRepriseNote() {
+  reprendreRepriseNote = "";
+  reprendreRepriseActive = false;
+  reprendreRepriseSubject = "";
+  renderRepriseNote();
 }
 
 function renderReprendreRunning() {
@@ -8612,6 +8701,7 @@ function renderReprendreRunning() {
     idle.style.display = "";
     running.style.display = "none";
     refreshReprendreStart();
+    renderRepriseNote();
   }
 }
 
@@ -8646,7 +8736,12 @@ async function reprendreStart() {
   renderCategoryTokens();
   renderTagTokens();
   notionInput.value = "";
-  notesInput.value = "";
+  // La note de reprise n'est reprise que si le Sujet correspond toujours à la
+  // tâche qui l'a produite (sinon elle appartient à un autre contexte chargé
+  // entre-temps → on ne l'attache pas).
+  const repriseMatches = reprendreRepriseActive
+    && normalizeText(subject) === normalizeText(reprendreRepriseSubject);
+  notesInput.value = repriseMatches ? reprendreRepriseNote : "";
   await handlePrimaryTimerAction();
 
   subjectEl.value = "";
@@ -8654,6 +8749,7 @@ async function reprendreStart() {
   categoryEl.value = "";
   reprendreTags = [];
   renderReprendreTags();
+  clearRepriseNote();
   document.querySelector("#rpr-context")?.classList.remove("open");
 }
 
@@ -8685,6 +8781,7 @@ async function reprendreStartFromMemory(memory) {
     "Couper et démarrer",
   );
   if (!ok) return;
+  clearRepriseNote(); // contexte remplacé par une carte → note de reprise obsolète
   fillFormFromMemory(memory);
   await handlePrimaryTimerAction();
 }
@@ -8706,6 +8803,7 @@ async function editMemoryInCapture(memory) {
   if (categoryEl) categoryEl.value = (memory.categories || [])[0] || "";
   reprendreTags = [...(memory.tags || [])].filter(Boolean);
   renderReprendreTags();
+  clearRepriseNote(); // contexte remplacé par une carte → note de reprise obsolète
   refreshReprendreStart();
   if (subjectEl) {
     subjectEl.focus();
@@ -8743,6 +8841,7 @@ function initReprendreView() {
     // Ajuster sans changer d'écran : petit dialogue avec tous les champs éditables.
     openAdjustDialogForActiveSession();
   });
+  document.querySelector("#rpr-reprise-note")?.addEventListener("input", (e) => { reprendreRepriseNote = e.target.value; });
   document.querySelector("#rpr-todo-add")?.addEventListener("click", reprendreAddTodo);
   document.querySelector("#rpr-todo-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") reprendreAddTodo(); });
 }
@@ -9293,6 +9392,7 @@ async function applyCategoryDeletion(cat) {
 }
 
 function renderProjectMemoryList() {
+  if (!projectMemoryList) return; // panneau « Contextes mémorisés » retiré (refonte 4a)
   projectMemoryList.innerHTML = "";
   const collaborator = getCurrentCollaborator();
 
@@ -9818,16 +9918,59 @@ function setupJournalUnifiedSearch() {
   renderJournalActiveFilterChips();
 }
 
+// Chips de catégorie (journal 4a) : une puce par catégorie présente dans le jeu
+// filtré par la recherche ; clic = filtre/défiltre.
+function renderJournalCatChips(sessions) {
+  const box = document.querySelector("#journal-cat-chips");
+  if (!box) return;
+  const cats = new Set();
+  for (const s of sessions) {
+    for (const c of (s.categories || [])) {
+      if (c) cats.add(c);
+    }
+  }
+  box.innerHTML = "";
+  for (const cat of [...cats].sort((a, b) => a.localeCompare(b, "fr"))) {
+    const color = getCategoryColor(cat);
+    const active = journalCatFilter === cat;
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "jw-chip" + (active ? " is-active" : "");
+    if (active) {
+      chip.style.background = `color-mix(in srgb, ${color} 14%, #fff)`;
+      chip.style.borderColor = color;
+      chip.style.color = `color-mix(in srgb, ${color} 55%, #111827)`;
+    } else {
+      chip.style.borderColor = `color-mix(in srgb, ${color} 30%, rgba(0,0,0,0.12))`;
+    }
+    const sw = document.createElement("span");
+    sw.className = "sw";
+    sw.style.background = color;
+    const nm = document.createElement("span");
+    nm.textContent = cat;
+    chip.append(sw, nm);
+    chip.addEventListener("click", () => {
+      journalCatFilter = active ? "" : cat;
+      renderSessionList();
+    });
+    box.append(chip);
+  }
+}
+
 function renderSessionList() {
   sessionList.innerHTML = "";
-  const visibleSessions = getFilteredJournalSessions(getScopedSessions(getSessionsWithPendingStopped()));
-  const filtersActive = Boolean(
-    journalFilterFromInput?.value ||
-      journalFilterToInput?.value ||
-      journalFilterCategoryInput?.value ||
-      journalFilterTagsInput?.value ||
-      journalFilterSubjectInput?.value,
-  );
+  const searched = getFilteredJournalSessions(getScopedSessions(getSessionsWithPendingStopped()));
+  renderJournalCatChips(searched);
+  const visibleSessions = journalCatFilter
+    ? searched.filter((s) => (s.categories || []).includes(journalCatFilter))
+    : searched;
+  const filtersActive = Boolean(journalFilterSearchInput?.value || journalCatFilter);
+  const countEl = document.querySelector("#journal-count");
+  if (countEl) {
+    countEl.textContent = visibleSessions.length
+      ? `${visibleSessions.length} entrée${visibleSessions.length > 1 ? "s" : ""}`
+      : "";
+  }
 
   if (!visibleSessions.length) {
     sessionList.append(
@@ -10594,6 +10737,158 @@ function renderPersonalDistribution() {
   );
 }
 
+// ── Bandeau « Répartition du temps » (agenda 3a) ──
+let agendaFocusCat = null;
+let agendaDistScopedRows = [];
+let agendaDistRange = null;
+
+function setAgendaFocus(cat) {
+  agendaFocusCat = (agendaFocusCat === cat) ? null : (cat || null);
+  renderAgendaDistribution();
+  applyAgendaFocusToEvents();
+}
+
+// Estompe les événements de la grille hors catégorie au focus (opacity 0.13),
+// sans re-render : on bascule un attribut sur le board + une classe par événement.
+function applyAgendaFocusToEvents() {
+  if (!agendaBoard) return;
+  const focus = agendaFocusCat ? normalizeText(agendaFocusCat) : "";
+  if (focus) {
+    agendaBoard.dataset.focusCat = focus;
+  } else {
+    delete agendaBoard.dataset.focusCat;
+  }
+  agendaBoard.querySelectorAll(".agenda-event").forEach((el) => {
+    el.classList.toggle("is-focus-on", Boolean(focus) && el.dataset.cat === focus);
+  });
+}
+
+function renderAgendaDistribution() {
+  const box = document.querySelector("#agenda-dist");
+  const barEl = document.querySelector("#agenda-dist-bar");
+  const chipsEl = document.querySelector("#agenda-dist-chips");
+  const totalEl = document.querySelector("#agenda-dist-total");
+  const clearBtn = document.querySelector("#agenda-dist-clear");
+  const focusEl = document.querySelector("#agenda-dist-focus");
+  if (!box || !barEl || !chipsEl) return;
+
+  const rows = buildReportRows(agendaDistScopedRows, "categories")
+    .slice()
+    .sort((a, b) => b.durationMs - a.durationMs);
+  const totalMs = rows.reduce((sum, r) => sum + (Number(r.durationMs) || 0), 0);
+  if (!rows.length || !totalMs) {
+    box.hidden = true;
+    agendaFocusCat = null;
+    return;
+  }
+  // Si la catégorie au focus a disparu (changement de semaine), on réinitialise.
+  if (agendaFocusCat && !rows.some((r) => r.label === agendaFocusCat)) {
+    agendaFocusCat = null;
+  }
+  box.hidden = false;
+  if (totalEl) totalEl.textContent = formatDuration(totalMs);
+  barEl.innerHTML = "";
+  chipsEl.innerHTML = "";
+
+  for (const r of rows) {
+    const color = getCategoryColor(r.label);
+    const dimmed = Boolean(agendaFocusCat) && agendaFocusCat !== r.label;
+
+    const seg = document.createElement("div");
+    seg.className = "agenda-dist-seg" + (dimmed ? " is-dimmed" : "");
+    seg.style.width = `${Math.max((r.durationMs / totalMs) * 100, 2)}%`;
+    seg.style.background = color;
+    seg.title = `${r.label} · ${formatDuration(r.durationMs)}`;
+    seg.addEventListener("click", () => setAgendaFocus(r.label));
+    barEl.append(seg);
+
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "agenda-dist-chip" + (dimmed ? " is-dimmed" : "");
+    chip.style.borderColor = `color-mix(in srgb, ${color} 28%, transparent)`;
+    const sw = document.createElement("span");
+    sw.className = "sw";
+    sw.style.background = color;
+    const nm = document.createElement("span");
+    nm.textContent = r.label;
+    const h = document.createElement("span");
+    h.className = "h";
+    h.textContent = formatDuration(r.durationMs);
+    const p = document.createElement("span");
+    p.className = "p";
+    p.textContent = formatShare(r.durationMs, totalMs);
+    chip.append(sw, nm, h, p);
+    chip.addEventListener("click", () => setAgendaFocus(r.label));
+    chipsEl.append(chip);
+  }
+  if (clearBtn) clearBtn.hidden = !agendaFocusCat;
+  renderAgendaFocusDays(focusEl);
+}
+
+// Mini-graphe par jour (7 barres) de la catégorie au focus + tags du jour.
+function renderAgendaFocusDays(focusEl) {
+  if (!focusEl) return;
+  if (!agendaFocusCat || !agendaDistRange) {
+    focusEl.hidden = true;
+    focusEl.innerHTML = "";
+    return;
+  }
+  const color = getCategoryColor(agendaFocusCat);
+  const dayLabels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+  const start = new Date(agendaDistRange.start);
+  start.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 7 }, () => ({ ms: 0, tags: new Map() }));
+  for (const s of agendaDistScopedRows) {
+    if (!(s.categories || []).includes(agendaFocusCat)) continue;
+    const idx = Math.floor((new Date(s.start).getTime() - start.getTime()) / 86400000);
+    if (idx < 0 || idx > 6) continue;
+    days[idx].ms += Number(s.durationMs) || 0;
+    for (const tag of s.tags || []) {
+      const t = String(tag ?? "").trim();
+      if (t) days[idx].tags.set(t, (days[idx].tags.get(t) || 0) + 1);
+    }
+  }
+  const maxMs = Math.max(1, ...days.map((d) => d.ms));
+  focusEl.innerHTML = "";
+  days.forEach((d, i) => {
+    const col = document.createElement("div");
+    col.className = "agenda-dist-fday";
+    const wrap = document.createElement("div");
+    wrap.className = "agenda-dist-fbarwrap";
+    const bar = document.createElement("div");
+    bar.className = "agenda-dist-fbar";
+    bar.style.height = d.ms ? `${Math.max((d.ms / maxMs) * 100, 6)}%` : "0";
+    bar.style.background = d.ms ? color : "transparent";
+    wrap.append(bar);
+    const h = document.createElement("div");
+    h.className = "agenda-dist-fh";
+    h.style.color = d.ms ? color : "#9ca3af";
+    h.textContent = d.ms ? formatDuration(d.ms) : "—";
+    const lbl = document.createElement("div");
+    lbl.className = "agenda-dist-fday-lbl";
+    lbl.textContent = dayLabels[i];
+    col.append(wrap, h, lbl);
+    if (d.tags.size) {
+      const tg = document.createElement("div");
+      tg.className = "agenda-dist-ftags";
+      for (const [t] of [...d.tags.entries()].slice(0, 3)) {
+        const chip = document.createElement("span");
+        chip.className = "agenda-dist-ftag";
+        // Texte très sombre (à peine teinté) pour un contraste lisible à 0.58rem,
+        // quelle que soit la teinte de catégorie ; le fond porte la couleur.
+        chip.style.background = `color-mix(in srgb, ${color} 18%, #fff)`;
+        chip.style.color = `color-mix(in srgb, ${color} 26%, #111827)`;
+        chip.style.borderColor = `color-mix(in srgb, ${color} 30%, transparent)`;
+        chip.textContent = t;
+        tg.append(chip);
+      }
+      col.append(tg);
+    }
+    focusEl.append(col);
+  });
+  focusEl.hidden = false;
+}
+
 function renderAgenda() {
   agendaBoard.innerHTML = "";
   visiblePlannedEvents = [];
@@ -10616,13 +10911,18 @@ function renderAgenda() {
   visiblePlannedEvents = plannedRows;
   renderPlannedSummary(plannedRows, range);
 
+  // Bandeau « Répartition du temps » (agrégation catégories de la semaine).
+  agendaDistScopedRows = scopedRows;
+  agendaDistRange = range;
+  renderAgendaDistribution();
+
   const dayRange = getDayRange(collaborator);
   const startHour = dayRange.start;
   const endHour = dayRange.end;
-  const hourHeight = 46;
+  const hourHeight = 40; // densité resserrée (prototype 3a : board = 17×40 = 680px)
   agendaBoard.style.setProperty("--agenda-hour-height", `${hourHeight}px`);
   if (agendaSubtitle) {
-    agendaSubtitle.textContent = `Journée ${startHour} h – ${endHour} h (profil) · glissez pour déplacer, étirez les bords pour la durée.`;
+    agendaSubtitle.textContent = "Cliquez une catégorie pour voir quand et combien par jour · glissez / étirez les tâches.";
   }
 
   const timeRail = document.createElement("div");
@@ -10746,6 +11046,7 @@ function renderAgenda() {
           event.className = "agenda-event agenda-event--planned";
           if (visualSize !== "full") event.classList.add(`agenda-event--${visualSize}`);
           event.dataset.plannedId = plannedEvent.id;
+          event.dataset.cat = normalizeText(plannedEvent.category ?? plannedEvent.activity_category_label ?? "");
           event.title = buildPlannedEventTooltip(plannedEvent);
           applyPlannedAgendaEventColor(event, plannedEvent);
           renderPlannedAgendaEventContents(event, plannedEvent, visualSize);
@@ -10754,6 +11055,7 @@ function renderAgenda() {
           event.className = "agenda-event";
           if (visualSize !== "full") event.classList.add(`agenda-event--${visualSize}`);
           event.dataset.sessionId = session.id;
+          event.dataset.cat = normalizeText((session.categories || [])[0] || "");
           event.title = buildAgendaTooltip(session);
           applyAgendaEventColor(event, session);
           renderAgendaEventContents(event, session, visualSize);
@@ -10800,6 +11102,9 @@ function renderAgenda() {
       }
     });
   }
+
+  // Réapplique l'estompage focus aux événements fraîchement rendus.
+  applyAgendaFocusToEvents();
 }
 
 function layoutAgendaSessions(dayRows, startHour, endHour, hourHeight) {
@@ -12368,6 +12673,13 @@ function roundToQuarterHour(minutes) {
 function renderManagerControls() {
   for (const button of periodSwitch.querySelectorAll("[data-period]")) {
     button.classList.toggle("active", button.dataset.period === reportPeriod);
+  }
+  // Sync du toggle in-card (5a) sur le même reportPeriod.
+  const managerPeriodToggle = document.querySelector("#manager-period-toggle");
+  if (managerPeriodToggle) {
+    for (const button of managerPeriodToggle.querySelectorAll("[data-manager-period]")) {
+      button.classList.toggle("active", button.dataset.managerPeriod === reportPeriod);
+    }
   }
 
   syncStatsSwitch(personalStatsSwitch);
