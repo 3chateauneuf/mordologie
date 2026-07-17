@@ -8048,6 +8048,7 @@ function render() {
   renderProjectMemoryList();
   renderTagManager();
   renderJournalWeekDistribution();
+  renderJournalMonthDistribution();
   renderSessionList();
   renderSyncButton();
   renderPendingSyncIndicator();
@@ -13828,6 +13829,30 @@ function renderJournalWeekDistribution() {
 
   if (totalEl) totalEl.textContent = totalMs ? formatDuration(totalMs) : "";
   renderDistribution(bar, legend, categoryRows, totalMs, "Aucune session cette semaine.", {
+    colorResolver: (row) => getDistributionColor(row.label),
+  });
+}
+
+// « Ce mois-ci » : même agrégation que « Ma semaine » mais sur le mois en cours
+// (répartition du temps par catégorie), pour compléter la vue hebdomadaire.
+function renderJournalMonthDistribution() {
+  const bar = document.querySelector("#journal-month-bar");
+  const legend = document.querySelector("#journal-month-legend");
+  const totalEl = document.querySelector("#journal-month-total");
+  if (!bar || !legend) return;
+
+  const collaborator = getCurrentCollaborator();
+  const range = getPeriodRange(getReportAnchorDate(), "month");
+  const rows = getAllSessionsWithActive().filter(
+    (session) =>
+      isSessionInRange(session, range) &&
+      (!collaborator || normalizeText(session.collaborator) === normalizeText(collaborator)),
+  );
+  const totalMs = rows.reduce((sum, session) => sum + (Number(session.durationMs) || 0), 0);
+  const categoryRows = buildReportRows(rows, "categories");
+
+  if (totalEl) totalEl.textContent = totalMs ? formatDuration(totalMs) : "";
+  renderDistribution(bar, legend, categoryRows, totalMs, "Aucune session ce mois-ci.", {
     colorResolver: (row) => getDistributionColor(row.label),
   });
 }
