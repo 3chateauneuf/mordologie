@@ -8435,8 +8435,10 @@ function renderReprendreTags() {
 }
 
 function addReprendreTag(value) {
-  const v = String(value || "").trim();
-  if (v && !reprendreTags.some((t) => t.toLowerCase() === v.toLowerCase())) {
+  // Normalise dès la saisie (sans accents + minuscules, comme à l'enregistrement)
+  // pour ne pas créer de doublons « réunion » / « reunion ».
+  const v = normalizeTag(value);
+  if (v && !reprendreTags.some((t) => normalizeTag(t) === v)) {
     reprendreTags.push(v);
   }
   const input = document.querySelector("#rpr-tags-input");
