@@ -76,6 +76,22 @@
     </script>
   </head>
   <body>
+    <div id="login-gate" class="login-gate">
+      <div class="login-card">
+        <div class="login-brand">
+          <span class="topbar-mark" aria-hidden="true"><span class="topbar-mark-dot"></span></span>
+          <strong class="login-brand-txt"><b>Mordologie</b> – l'analyse du mordor</strong>
+        </div>
+        <h1 class="login-title">Connexion</h1>
+        <p class="login-sub">Accès réservé.</p>
+        <form id="login-form" class="login-form" autocomplete="on">
+          <label class="login-field"><span>Email</span><input id="login-email" type="email" autocomplete="username" required placeholder="vous@exemple.com" /></label>
+          <label class="login-field"><span>Mot de passe</span><input id="login-password" type="password" autocomplete="current-password" required placeholder="••••••••" /></label>
+          <p id="login-error" class="login-error" role="alert" hidden></p>
+          <button id="login-submit" type="submit" class="login-btn">Se connecter</button>
+        </form>
+      </div>
+    </div>
     <main class="app-shell">
       <header class="topbar">
         <div class="topbar-brand">
@@ -145,12 +161,7 @@
             </div>
           </div>
 
-          <div id="auth-guest-shell" class="auth-shell auth-shell-guest">
-            <div class="auth-rescue-row">
-              <select id="auth-rescue-select" class="select-input auth-rescue-select"></select>
-              <button id="auth-rescue-button" type="button" class="btn btn-primary">Entrer</button>
-            </div>
-          </div>
+          <div id="auth-guest-shell" class="auth-shell auth-shell-guest" hidden></div>
         </nav>
       </header>
 
