@@ -5619,8 +5619,15 @@ function hideLoginGate() {
 // user_name) puis lance l'app via le flux existant (scoping par nom).
 async function enterAppForAuthUser(authUser) {
   await ensureReferenceCatalogLoaded();
+  const authId = String(authUser?.id ?? "");
   const email = normalizeText(authUser?.email ?? "");
-  const appUser = getKnownUsers().find((u) => normalizeText(u.email ?? "") === email);
+  const users = getKnownUsers();
+  // Rattachement par auth_user_id (UID Supabase) en priorité — indépendant de
+  // l'email ; repli sur l'email si le lien UID n'est pas encore posé.
+  const appUser =
+    (authId && users.find((u) => String(u.auth_user_id ?? "") === authId)) ||
+    (email && users.find((u) => normalizeText(u.email ?? "") === email)) ||
+    null;
   if (!appUser) {
     // Authentifié mais rattaché à aucun profil connu : on refuse et on déconnecte.
     if (loginErrorEl) {
