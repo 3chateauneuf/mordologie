@@ -293,6 +293,13 @@ const authUserAvatar = document.querySelector("#auth-user-avatar");
 const authAvatarInput = document.querySelector("#auth-avatar-input");
 const authRolePill = document.querySelector("#auth-role-pill");
 const authSignoutButton = document.querySelector("#auth-signout-button");
+// Écran de connexion (Supabase Auth, email + mot de passe) — la porte d'accès.
+const loginGate = document.querySelector("#login-gate");
+const loginForm = document.querySelector("#login-form");
+const loginEmailInput = document.querySelector("#login-email");
+const loginPasswordInput = document.querySelector("#login-password");
+const loginErrorEl = document.querySelector("#login-error");
+const loginSubmitButton = document.querySelector("#login-submit");
 const authUserDropdown = document.querySelector("#auth-user-dropdown");
 const authChangeAvatarButton = document.querySelector("#auth-change-avatar-button");
 const authCalendarIcsInput = document.querySelector("#auth-calendar-ics-input");
@@ -5601,20 +5608,93 @@ function stopActiveSession() {
 //   render, and recovers the local "rescue" name when no remote session.
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function initializeAuth() {
-  const rescueName = loadStoredLocalRescueName();
-  if (rescueName) {
-    await applyLocalRescueAccess(rescueName, { silent: true });
+function showLoginGate() {
+  if (loginGate) loginGate.hidden = false;
+}
+function hideLoginGate() {
+  if (loginGate) loginGate.hidden = true;
+}
+
+// Résout le collaborateur à partir du compte Supabase authentifié (email →
+// user_name) puis lance l'app via le flux existant (scoping par nom).
+async function enterAppForAuthUser(authUser) {
+  await ensureReferenceCatalogLoaded();
+  const email = normalizeText(authUser?.email ?? "");
+  const appUser = getKnownUsers().find((u) => normalizeText(u.email ?? "") === email);
+  if (!appUser) {
+    // Authentifié mais rattaché à aucun profil connu : on refuse et on déconnecte.
+    if (loginErrorEl) {
+      loginErrorEl.textContent = "Ce compte n'est rattaché à aucun profil.";
+      loginErrorEl.hidden = false;
+    }
+    showLoginGate();
+    await window.supabase?.auth.signOut().catch(() => {});
     return;
   }
-  if (window.supabase) {
-    await ensureReferenceCatalogLoaded();
-    await pushPendingLocalUpdates();
-    await loadServerBackedState({ silent: true });
-    startRemoteSyncLoop();
-  }
-  render();
+  hideLoginGate();
+  await applyLocalRescueAccess(appUser.user_name, { silent: true });
 }
+
+// L'accès est désormais gardé par Supabase Auth : sans session valide, on
+// affiche l'écran de connexion et l'app ne charge aucune donnée.
+async function initializeAuth() {
+  if (!window.supabase) {
+    showLoginGate();
+    return;
+  }
+  let session = null;
+  try {
+    const { data } = await window.supabase.auth.getSession();
+    session = data?.session ?? null;
+  } catch (_) {
+    session = null;
+  }
+  if (!session) {
+    showLoginGate();
+    return;
+  }
+  await enterAppForAuthUser(session.user);
+}
+
+async function handleLoginSubmit() {
+  if (!window.supabase || !loginEmailInput || !loginPasswordInput) return;
+  const email = loginEmailInput.value.trim();
+  const password = loginPasswordInput.value;
+  if (!email || !password) return;
+  if (loginSubmitButton) loginSubmitButton.disabled = true;
+  if (loginErrorEl) loginErrorEl.hidden = true;
+  try {
+    const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
+    if (error || !data?.user) {
+      if (loginErrorEl) {
+        loginErrorEl.textContent = "Email ou mot de passe incorrect.";
+        loginErrorEl.hidden = false;
+      }
+      return;
+    }
+    if (loginPasswordInput) loginPasswordInput.value = "";
+    await enterAppForAuthUser(data.user);
+  } catch (_) {
+    if (loginErrorEl) {
+      loginErrorEl.textContent = "Connexion impossible. Réessaie.";
+      loginErrorEl.hidden = false;
+    }
+  } finally {
+    if (loginSubmitButton) loginSubmitButton.disabled = false;
+  }
+}
+
+loginForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void handleLoginSubmit();
+});
+
+// Réagit à une déconnexion (ici ou depuis un autre onglet).
+window.supabase?.auth.onAuthStateChange((event) => {
+  if (event === "SIGNED_OUT") {
+    showLoginGate();
+  }
+});
 
 function setAuthStatusMessage(message = "", tone = "neutral", options = {}) {
   if (!authStatus) {
@@ -5796,6 +5876,9 @@ async function handleAuthSignOut() {
   stopRemoteSyncLoop();
   resetComposerForm();
   render();
+  // Ferme la session Supabase et ré-affiche l'écran de connexion (accès gardé).
+  await window.supabase?.auth.signOut().catch(() => {});
+  showLoginGate();
 }
 
 async function ensureReferenceCatalogLoaded(force = false) {
