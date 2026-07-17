@@ -3267,58 +3267,6 @@ function getInitialView() {
   return ["reprendre", "agenda", "cadre", "manager", "resources", "users", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
 }
 
-function setupSingleSelectionDisplay({ input, container }) {
-  if (!input || !container) {
-    return;
-  }
-
-  input.addEventListener("input", () => {
-    renderSingleSelectionTag(input, container, { forceHidden: true });
-  });
-
-  input.addEventListener("blur", () => {
-    renderSingleSelectionTag(input, container);
-  });
-
-  input.addEventListener("focus", () => {
-    renderSingleSelectionTag(input, container, { forceHidden: true });
-  });
-}
-
-function renderSingleSelectionTag(input, container, options = {}) {
-  if (!input || !container) {
-    return;
-  }
-
-  const value = input.value.trim();
-  container.innerHTML = "";
-
-  if (!value || options.forceHidden) {
-    container.hidden = true;
-    return;
-  }
-
-  const chip = document.createElement("span");
-  chip.className = "token-chip single-token-chip";
-
-  const label = document.createElement("span");
-  label.textContent = value;
-
-  const remove = document.createElement("button");
-  remove.type = "button";
-  remove.setAttribute("aria-label", `Retirer ${value}`);
-  remove.textContent = "x";
-  remove.addEventListener("click", () => {
-    input.value = "";
-    container.hidden = true;
-    updateFieldManageButtons();
-    input.focus();
-  });
-
-  chip.append(label, remove);
-  container.append(chip);
-  container.hidden = false;
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SECTION: VIEW NAVIGATION & UI CHROME
@@ -6758,18 +6706,6 @@ async function upsertActiveSessionToSupabase(session) {
   });
 }
 
-async function removeActiveSessionFromSupabase(sessionId, options = {}) {
-  if (!sessionId) {
-    return false;
-  }
-
-  return executeSupabaseMutation({
-    queryFactory: (supabase) => supabase.from("active_sessions").delete().eq("active_session_id", sessionId),
-    errorLogLabel: "active_sessions delete failed",
-    errorMessage: "Impossible de nettoyer la session active sur le serveur.",
-    refreshAfterSuccess: options.refreshAfterSuccess ?? true,
-  });
-}
 
 async function removeStoppedSessionGhostsFromSupabase(session, options = {}) {
   if (!window.supabase || !session) {
@@ -11222,13 +11158,6 @@ function renderAgenda() {
   applyAgendaFocusToEvents();
 }
 
-function layoutAgendaSessions(dayRows, startHour, endHour, hourHeight) {
-  return layoutAgendaTimedRows(dayRows, startHour, endHour, hourHeight, (session) => session.start, (session) => session.end);
-}
-
-function layoutAgendaPlannedEvents(dayRows, startHour, endHour, hourHeight) {
-  return layoutAgendaTimedRows(dayRows, startHour, endHour, hourHeight, (event) => event.start_at, (event) => event.end_at);
-}
 
 function layoutAgendaTimedRows(dayRows, startHour, endHour, hourHeight, getStart, getEnd) {
   const preparedRows = dayRows.map((session) => {
@@ -13419,27 +13348,6 @@ function renderUsersAdminDisplayCard(user) {
   return card;
 }
 
-function createUsersAdminDisplayField(labelText, valueText, metaText = "") {
-  const field = document.createElement("div");
-  field.className = "users-display-field";
-
-  const label = document.createElement("span");
-  label.className = "users-display-label";
-  label.textContent = labelText;
-
-  const value = document.createElement("strong");
-  value.textContent = valueText;
-
-  field.append(label, value);
-  if (metaText) {
-    const meta = document.createElement("span");
-    meta.className = "muted-copy";
-    meta.textContent = metaText;
-    field.append(meta);
-  }
-
-  return field;
-}
 
 function renderUsersAdminEditorCard(user, isNew) {
   const draft = usersAdminDraft ?? createUsersAdminDraft(user);
@@ -13962,17 +13870,6 @@ function getCapacityHoursForRange(collaborator, range) {
   return Number(((weeklyCapacityHours * rangeDurationDays) / 7).toFixed(1));
 }
 
-function formatCapacityRate(durationMs, capacityHours) {
-  if (!capacityHours) {
-    return "-";
-  }
-
-  return new Intl.NumberFormat("fr-FR", {
-    style: "percent",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format((Number(durationMs) || 0) / 3600000 / capacityHours);
-}
 
 // Cellule capacité avec barre + sémaphore (handoff 5a) :
 // ok teal < 95 %, ambre >= 95 %, rouge > 100 %.
@@ -15146,14 +15043,6 @@ function inferPillKind(label) {
   return knownCategories.includes(normalizedLabel) ? "category" : "neutral";
 }
 
-function fillDatalist(element, values) {
-  element.innerHTML = "";
-  for (const value of values) {
-    const option = document.createElement("option");
-    option.value = value;
-    element.append(option);
-  }
-}
 
 function mergeSuggestionValues(...lists) {
   return Array.from(new Set(lists.flat().filter(Boolean))).sort((a, b) => a.localeCompare(b, "fr"));
@@ -15289,11 +15178,6 @@ function formatShortDate(dateValue) {
   }).format(new Date(dateValue));
 }
 
-function formatDayLabel(dateValue) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "long",
-  }).format(new Date(dateValue));
-}
 
 function formatAgendaDayLabel(dateValue) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -15356,14 +15240,6 @@ function formatDateInput(date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatDateTimeLocal(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
 
 function formatTimeLabel(date) {
   return new Intl.DateTimeFormat("fr-FR", {
