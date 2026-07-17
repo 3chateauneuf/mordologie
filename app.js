@@ -5649,8 +5649,26 @@ async function enterAppForAuthUser(authUser) {
 
 // L'accès est désormais gardé par Supabase Auth : sans session valide, on
 // affiche l'écran de connexion et l'app ne charge aucune donnée.
+// Sans session, on ne laisse rien de l'utilisateur précédent monté derrière la
+// porte : le boot charge sessions/activeSession depuis localStorage et démarre le
+// chrono + render() AVANT initializeAuth. On coupe et on vide avant d'afficher.
+function resetLocalStateForGate() {
+  stopTimerLoop();
+  stopRemoteSyncLoop();
+  activeSession = null;
+  persistActiveSession();
+  sessions = [];
+  accessProfile = { mode: "open", role: "open", session: null, appUser: null };
+  try {
+    render();
+  } catch (_) {
+    // le rendu ne doit jamais empêcher l'affichage de la porte
+  }
+}
+
 async function initializeAuth() {
   if (!window.supabase) {
+    resetLocalStateForGate();
     showLoginGate();
     return;
   }
@@ -5662,6 +5680,7 @@ async function initializeAuth() {
     session = null;
   }
   if (!session) {
+    resetLocalStateForGate();
     showLoginGate();
     return;
   }
