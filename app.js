@@ -5809,6 +5809,12 @@ async function applyLocalRescueAccess(rawName, { silent = false } = {}) {
     };
   }
 
+  // Restaure les sessions locales depuis localStorage avant la fusion serveur :
+  // si resetLocalStateForGate a vidé le tableau en mémoire (écran de login), on
+  // ne doit pas perdre une session locale non encore synchronisée — hydrate
+  // fusionne local + serveur.
+  sessions = loadSessions();
+
   const remoteLoaded = await loadServerBackedState({ silent: true });
   if (window.supabase) {
     startRemoteSyncLoop();
