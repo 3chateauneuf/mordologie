@@ -8874,11 +8874,60 @@ function initReprendreView() {
   ["#rpr-subject", "#rpr-client", "#rpr-category"].forEach((sel) => {
     document.querySelector(sel)?.addEventListener("input", refreshReprendreStart);
   });
-  document.querySelector("#rpr-tags-input")?.addEventListener("keydown", (e) => {
-    if (e.key === ",") {
-      const v = e.target.value.replace(/,/g, "").trim();
+  // Enter / Tab / virgule dans Client / Catégorie / Tags. L'autocomplete
+  // n'agit que si une suggestion est surlignée ; on gère en phase de CAPTURE
+  // pour : (1) créer/ajouter le tag saisi même sans suggestion surlignée,
+  // (2) laisser Tab filer vers le bouton Démarrer, (3) démarrer le chrono sur
+  // Entrée dès que Sujet + Client + Catégorie sont remplis.
+  const captureFieldKeydown = (e) => {
+    if (e.key !== "Enter" && e.key !== "Tab" && e.key !== ",") return;
+    const startBtnEl = document.querySelector("#rpr-start");
+    const tagsEl = document.querySelector("#rpr-tags-input");
+    const isTags = e.currentTarget === tagsEl;
+    const acSelected =
+      !autocompletePopover.hidden &&
+      autocompleteState.config?.input === e.currentTarget &&
+      autocompleteState.items[autocompleteState.activeIndex];
+
+    if (isTags && e.key === ",") {
+      const v = e.currentTarget.value.replace(/,/g, "").trim();
       if (v) { e.preventDefault(); addReprendreTag(v); }
+      return;
     }
+
+    if (isTags && e.key === "Tab") {
+      // Valide le tag en cours puis laisse le focus filer vers « Démarrer »
+      // (on bloque l'autocomplete sans preventDefault → Tab agit normalement).
+      const v = e.currentTarget.value.trim();
+      if (v) addReprendreTag(v);
+      hideAutocomplete();
+      e.stopImmediatePropagation();
+      return;
+    }
+
+    if (e.key === "Enter") {
+      if (acSelected) return; // suggestion surlignée → l'autocomplete l'applique
+      if (isTags) {
+        const v = e.currentTarget.value.trim();
+        if (v) { // saisie de tag en cours → on l'ajoute d'abord
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          addReprendreTag(v);
+          hideAutocomplete();
+          return;
+        }
+      }
+      // champ complété (ou tags vide) → démarrer si Sujet+Client+Catégorie prêts
+      if (startBtnEl && !startBtnEl.disabled) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        hideAutocomplete();
+        void reprendreStart();
+      }
+    }
+  };
+  ["#rpr-client", "#rpr-category", "#rpr-tags-input"].forEach((sel) => {
+    document.querySelector(sel)?.addEventListener("keydown", captureFieldKeydown, true);
   });
   document.querySelector("#rpr-pause")?.addEventListener("click", () => { togglePauseSession(); renderReprendreView(); });
   document.querySelector("#rpr-stop")?.addEventListener("click", async () => {
