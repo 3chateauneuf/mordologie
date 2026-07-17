@@ -835,18 +835,30 @@
             </section>
           </div>
 
-          <!-- Catégories & tags -->
-          <section class="jw-card jw-side">
-            <div class="jw-headtext">
-              <h2 class="jw-title jw-title--md">Catégories &amp; tags</h2>
-              <p class="jw-sub">Renommez, fusionnez ou supprimez. Tout se met à jour partout.</p>
-            </div>
-            <div id="journal-side-switch" class="jw-toggle">
-              <button type="button" class="jw-toggle-btn active" data-journal-side="categories">Catégories</button>
-              <button type="button" class="jw-toggle-btn" data-journal-side="tags">Tags</button>
-            </div>
-            <div id="tag-manager-list" class="tag-manager-list"></div>
-          </section>
+          <div class="journal-col-right">
+            <!-- Ce mois-ci -->
+            <section class="jw-card">
+              <div class="jw-head jw-head--baseline">
+                <h2 class="jw-title jw-title--md">Ce mois-ci</h2>
+                <span id="journal-month-total" class="jw-total"></span>
+              </div>
+              <div id="journal-month-bar" class="jw-bar"></div>
+              <div id="journal-month-legend" class="jw-legend"></div>
+            </section>
+
+            <!-- Catégories & tags -->
+            <section class="jw-card jw-side">
+              <div class="jw-headtext">
+                <h2 class="jw-title jw-title--md">Catégories &amp; tags</h2>
+                <p class="jw-sub">Renommez, fusionnez ou supprimez. Tout se met à jour partout.</p>
+              </div>
+              <div id="journal-side-switch" class="jw-toggle">
+                <button type="button" class="jw-toggle-btn active" data-journal-side="categories">Catégories</button>
+                <button type="button" class="jw-toggle-btn" data-journal-side="tags">Tags</button>
+              </div>
+              <div id="tag-manager-list" class="tag-manager-list"></div>
+            </section>
+          </div>
 
         </div>
       </div>
