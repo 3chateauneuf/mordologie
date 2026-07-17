@@ -5638,8 +5638,13 @@ async function enterAppForAuthUser(authUser) {
     await window.supabase?.auth.signOut().catch(() => {});
     return;
   }
-  hideLoginGate();
+  // On charge d'abord (données + rendu), on fixe la vue de destination, PUIS on
+  // révèle l'app : évite le flash de l'écran d'accueil #guide après le login.
   await applyLocalRescueAccess(appUser.user_name, { silent: true });
+  if (currentView === "guide") {
+    setCurrentView("reprendre");
+  }
+  hideLoginGate();
 }
 
 // L'accès est désormais gardé par Supabase Auth : sans session valide, on
