@@ -850,6 +850,10 @@ let accessProfile = {
   appUser: null,
 };
 const autocompletePopover = createAutocompletePopover();
+// Config d'autocomplete par input. Permet de rejouer l'action « créer /
+// demander » d'un champ depuis n'importe quelle sortie (Entrée, Tab, clic
+// ailleurs, démarrage du chrono), pas seulement depuis la liste ouverte.
+const autocompleteConfigByInput = new Map();
 let autocompleteState = {
   config: null,
   items: [],
@@ -2512,9 +2516,6 @@ function initializeAutocomplete() {
       allowRequest: () => canRequestSharedCategory(),
       requestLabel: (value) => `Demander « ${value} » à l'admin`,
       requestValue: (value) => openCategoryRequestDialog(value, null),
-      // Catégorie de Reprendre : pas de .token-field autour, mais captureFieldKeydown
-      // et le circuit création / demande s'appuient sur la présélection.
-      keepPreselection: true,
       applyValue: (value) => {
         const el = document.querySelector("#rpr-category");
         if (el) el.value = normalizeCategorySelection(value).category || value;
@@ -2524,9 +2525,6 @@ function initializeAutocomplete() {
     {
       input: document.querySelector("#rpr-tags-input"),
       getOptions: () => uniqueTokenValues("tags"),
-      // Champ à jetons sans .token-field autour : on le signale explicitement
-      // pour qu'il garde la présélection dont dépend captureFieldKeydown.
-      keepPreselection: true,
       applyValue: (value) => addReprendreTag(value),
     },
   ];
@@ -2573,6 +2571,7 @@ function initializeAutocomplete() {
 
 function setupAutocompleteInput(config) {
   config.input.removeAttribute("list");
+  autocompleteConfigByInput.set(config.input, config);
 
   config.input.addEventListener("pointerdown", () => {
     clearAutocompleteHideTimeout();
@@ -2665,7 +2664,9 @@ function openAutocomplete(config) {
   autocompleteState = {
     config,
     items,
-    activeIndex: shouldPreselectFirstOption(config) ? 0 : -1,
+    // Jamais de présélection, dans aucun champ : ce qui est tapé reste ce qui
+    // sera validé. Choisir une option demande ↓/↑, un clic, ou Tab.
+    activeIndex: -1,
   };
 
   renderAutocomplete(query);
@@ -2860,15 +2861,32 @@ function getImmediateAutocompleteSuggestion(query) {
 // reprendre ces quatre chemins ensemble ; ce n'est pas le sujet de ce correctif,
 // et personne ne s'est plaint de la substitution à cet endroit. On garde donc
 // leur comportement historique, intact.
-// Le critère est « champ à jetons », pas « champ qui sait créer ». Sujet sait
-// créer une référence lui aussi (allowCreate) : s'appuyer là-dessus rendait la
-// présélection à Sujet et laissait le bug intact. Les jetons se reconnaissent à
-// leur conteneur .token-field, ou par keepPreselection quand il n'y en a pas.
-function shouldPreselectFirstOption(config) {
-  if (config.keepPreselection) {
-    return true;
+// Une valeur absente du catalogue ne doit jamais devenir un jeton brut : elle
+// perdrait son ID canonique et court-circuiterait la validation (création par un
+// manager, demande à l'admin pour un cadre). Tant que la présélection existait,
+// c'est elle qui déclenchait l'action ; sans elle, il faut la rejouer
+// explicitement — et depuis TOUTES les sorties du champ, pas seulement Entrée :
+// Tab, clic ailleurs, ou démarrage du chrono depuis Reprendre.
+//
+// On recalcule les items depuis le config plutôt que de lire le popover : la
+// liste peut déjà être refermée au moment du blur.
+function applyPendingCreationForValue(input, rawValue) {
+  const config = autocompleteConfigByInput.get(input);
+  const value = String(rawValue ?? "").trim();
+  if (!config || !value) {
+    return false;
   }
-  return Boolean(config.input?.closest?.(".token-field"));
+  const normalizedValue = normalizeText(value);
+  const pending = buildAutocompleteItems(config, value).find(
+    (item) =>
+      (item.type === "create" || item.type === "request") &&
+      normalizeText(item.value) === normalizedValue,
+  );
+  if (!pending) {
+    return false;
+  }
+  void applyAutocompleteItem(pending, config);
+  return true;
 }
 
 // L'action « créer / demander » appelée par la saisie elle-même. Elle porte
@@ -6403,13 +6421,16 @@ function findReferenceMatch(rows, labelField, rawValue) {
     return null;
   }
 
-  const exact = rows.find((row) => normalizer(row[labelField] ?? "") === normalized);
-  if (exact) {
-    return exact;
-  }
-
-  const startsWithMatches = rows.filter((row) => normalizer(row[labelField] ?? "").startsWith(normalized));
-  return startsWithMatches.length === 1 ? startsWithMatches[0] : null;
+  // Correspondance EXACTE uniquement. Le repli « une seule entrée commence par
+  // ce texte » rendait certains noms impossibles : avec « Admin RH » au
+  // catalogue, taper « Admin » retombait dessus — y compris dans les fonctions
+  // de création, où l'entrée était jugée déjà existante. On ne pouvait donc
+  // jamais créer « Admin », ni « Test » à côté de « Test de limites de Codex ».
+  //
+  // Choisir une entrée existante reste possible et explicite : la liste de
+  // suggestions, avec ↓/↑ ou un clic. Un texte qui ne correspond à rien est une
+  // nouvelle référence et passe par le circuit création / demande.
+  return rows.find((row) => normalizer(row[labelField] ?? "") === normalized) ?? null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -9022,6 +9043,14 @@ function initReprendreView() {
 
     if (e.key === "Enter") {
       if (acSelected) return; // suggestion surlignée → l'autocomplete l'applique
+      // Catégorie absente du catalogue : la créer / la demander AVANT de
+      // démarrer, sinon la session part avec un libellé sans ID canonique.
+      if (!isTags && applyPendingCreationForValue(e.currentTarget, e.currentTarget.value)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        hideAutocomplete();
+        return;
+      }
       if (isTags) {
         const v = e.currentTarget.value.trim();
         if (v) { // saisie de tag en cours → on l'ajoute d'abord
@@ -15022,6 +15051,13 @@ function focusTokenFieldInput(input) {
 function commitTokenInput(input, config) {
   const tokens = parseTokenString(input.value);
   if (!tokens.length) {
+    input.value = "";
+    return;
+  }
+
+  // Catégorie inconnue : la créer / la demander plutôt qu'en faire un libellé
+  // libre. Vaut pour toutes les sorties du champ, y compris le blur.
+  if (tokens.length === 1 && applyPendingCreationForValue(input, tokens[0])) {
     input.value = "";
     return;
   }
