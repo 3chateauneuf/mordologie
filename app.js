@@ -4673,7 +4673,10 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
 
   // Chrono récupéré après un silence (l'autre poste dormait) : on le signale, et
   // cette machine reprend le battement tout de suite pour redevenir le porteur.
+  // Au-delà du plafond de durée, on le fige d'abord sur son dernier battement
+  // (adoptActiveSessionHeartbeat laisse alors la main : un chrono en pause ne bat pas).
   if (activeSession) {
+    clampOverlongResumedSession(activeSession);
     adoptActiveSessionHeartbeat(activeSession);
   }
 
@@ -7775,6 +7778,41 @@ function getHeartbeatGapMs(session) {
     return 0;
   }
   return Math.max(0, Date.now() - getSessionLastHeartbeatMs(session));
+}
+
+// Garde-fou de durée à la reprise. Un chrono retrouvé si vieux qu'il dépasse
+// MAX_REASONABLE_ACTIVE_SESSION_MS ne doit pas repartir tel quel : il compterait
+// les jours pendant lesquels aucune machine ne le portait, et finirait par
+// enregistrer une durée absurde. On ne le supprime pas pour autant — on le fige
+// sur son dernier battement, exactement comme une pause manuelle
+// (cf. togglePauseSession) : le compteur s'arrête, rien n'est perdu, et la
+// reprise ne comptera pas le sommeil (le trou part dans pausedDurationMs).
+// L'utilisateur voit le chrono et tranche : « Reprendre » ou arrêter.
+function clampOverlongResumedSession(session) {
+  if (!session || session.pausedAt) {
+    return false;
+  }
+  if (!isStaleActiveSessionCandidate(session)) {
+    return false;
+  }
+
+  // getSessionLastHeartbeatMs borne à start : la durée figée n'est jamais négative.
+  const lastBeat = getSessionLastHeartbeatMs(session);
+  session.pausedAt = new Date(lastBeat).toISOString();
+  stopTimerLoop();
+  persistActiveSession();
+  void upsertActiveSessionToSupabase(session);
+
+  const label = session.project || "(sans sujet)";
+  const lastBeatLabel = new Date(lastBeat).toLocaleString("fr-FR", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+  setAuthStatusMessage(
+    `Chrono « ${label} » mis en pause sur sa dernière activité (${lastBeatLabel}) : il tournait depuis trop longtemps. Reprends-le ou arrête-le.`,
+    "warning",
+    { persistMs: 8000 },
+  );
+  return true;
 }
 
 // Cette machine devient le porteur du chrono : elle reprend le battement sans
