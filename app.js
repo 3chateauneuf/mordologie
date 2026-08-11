@@ -2602,12 +2602,24 @@ function setupAutocompleteInput(config) {
 
     if (event.key === "Enter" || event.key === "Tab") {
       // Entrée valide ce qui est écrit. Elle n'applique une option que si
-      // l'utilisateur l'a choisie lui-même (↓/↑). Tab complète en plus la
-      // suggestion immédiate — celle que le hint annonce à l'écran.
+      // l'utilisateur l'a choisie lui-même (↓/↑) — sauf l'action créer/demander,
+      // qui porte le texte tapé et n'impose donc rien. Tab complète en plus la
+      // suggestion immédiate, celle que le hint annonce à l'écran.
+      const typed = config.input.value.trim();
       const chosen = autocompleteState.items[autocompleteState.activeIndex] ?? null;
       const selected = chosen
-        ?? (event.key === "Tab" ? getImmediateAutocompleteSuggestion(config.input.value.trim()) : null);
+        ?? (event.key === "Tab"
+          ? getImmediateAutocompleteSuggestion(typed)
+          : getPendingCreationItem(typed));
       if (!selected) {
+        // Rien à appliquer : la saisie vaut telle quelle. Dans un dialogue,
+        // laisser filer Entrée déclencherait le bouton par défaut du
+        // <form method="dialog"> — la croix de fermeture — qui refermerait tout
+        // en jetant les modifications. On la neutralise donc ici.
+        if (event.key === "Enter" && config.input.closest("dialog")) {
+          event.preventDefault();
+          hideAutocomplete();
+        }
         return;
       }
       event.preventDefault();
@@ -2833,6 +2845,23 @@ function getImmediateAutocompleteSuggestion(query) {
   return normalizeText(first.value).startsWith(normalizedQuery) ? first : null;
 }
 
+// L'action « créer / demander » appelée par la saisie elle-même. Elle porte
+// exactement le texte tapé — la déclencher n'impose donc rien, contrairement à
+// une option qui remplacerait la saisie. C'est ce qui garde la taxonomie
+// canonique (création d'une vraie catégorie avec son ID, ou demande à l'admin)
+// au lieu de coller un libellé libre qui contournerait le circuit.
+function getPendingCreationItem(query) {
+  const normalizedQuery = normalizeText(query ?? "");
+  if (!normalizedQuery) {
+    return null;
+  }
+  return autocompleteState.items.find(
+    (item) =>
+      (item.type === "create" || item.type === "request") &&
+      normalizeText(item.value) === normalizedQuery,
+  ) ?? null;
+}
+
 // Un champ « token » (Catégorie, Tags) laisse passer la touche à l'autocomplete
 // uniquement quand celui-ci va vraiment agir. Sinon c'est au champ de valider le
 // texte tapé. Sans cette distinction, une saisie qui garde le popover ouvert
@@ -2849,8 +2878,12 @@ function willAutocompleteHandleKey(input, key) {
   if (autocompleteState.activeIndex >= 0) {
     return key === "Enter" || key === "Tab";
   }
-  // Aucune option choisie : seule Tab peut encore compléter, et seulement si la
-  // suggestion immédiate est annoncée à l'écran.
+  // Aucune option choisie. Entrée reste à l'autocomplete s'il a une création /
+  // demande à déclencher pour ce texte ; sinon c'est au champ de le valider.
+  if (key === "Enter") {
+    return Boolean(getPendingCreationItem(input.value.trim()));
+  }
+  // Tab ne complète que si la suggestion immédiate est annoncée à l'écran.
   return key === "Tab" && Boolean(getImmediateAutocompleteSuggestion(input.value.trim()));
 }
 
