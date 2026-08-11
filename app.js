@@ -2512,6 +2512,9 @@ function initializeAutocomplete() {
       allowRequest: () => canRequestSharedCategory(),
       requestLabel: (value) => `Demander « ${value} » à l'admin`,
       requestValue: (value) => openCategoryRequestDialog(value, null),
+      // Catégorie de Reprendre : pas de .token-field autour, mais captureFieldKeydown
+      // et le circuit création / demande s'appuient sur la présélection.
+      keepPreselection: true,
       applyValue: (value) => {
         const el = document.querySelector("#rpr-category");
         if (el) el.value = normalizeCategorySelection(value).category || value;
@@ -2857,15 +2860,14 @@ function getImmediateAutocompleteSuggestion(query) {
 // reprendre ces quatre chemins ensemble ; ce n'est pas le sujet de ce correctif,
 // et personne ne s'est plaint de la substitution à cet endroit. On garde donc
 // leur comportement historique, intact.
+// Le critère est « champ à jetons », pas « champ qui sait créer ». Sujet sait
+// créer une référence lui aussi (allowCreate) : s'appuyer là-dessus rendait la
+// présélection à Sujet et laissait le bug intact. Les jetons se reconnaissent à
+// leur conteneur .token-field, ou par keepPreselection quand il n'y en a pas.
 function shouldPreselectFirstOption(config) {
   if (config.keepPreselection) {
     return true;
   }
-  // Catégories : elles portent un circuit création / demande à l'admin.
-  if (config.allowCreate || config.allowRequest) {
-    return true;
-  }
-  // Champs à jetons du formulaire principal et des dialogues.
   return Boolean(config.input?.closest?.(".token-field"));
 }
 
