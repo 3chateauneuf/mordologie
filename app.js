@@ -853,7 +853,7 @@ const autocompletePopover = createAutocompletePopover();
 let autocompleteState = {
   config: null,
   items: [],
-  activeIndex: 0,
+  activeIndex: -1,
 };
 let autocompleteHideTimeoutId = null;
 let fieldManageState = null;
@@ -2512,6 +2512,9 @@ function initializeAutocomplete() {
       allowRequest: () => canRequestSharedCategory(),
       requestLabel: (value) => `Demander « ${value} » à l'admin`,
       requestValue: (value) => openCategoryRequestDialog(value, null),
+      // Catégorie de Reprendre : pas de .token-field autour, mais captureFieldKeydown
+      // et le circuit création / demande s'appuient sur la présélection.
+      keepPreselection: true,
       applyValue: (value) => {
         const el = document.querySelector("#rpr-category");
         if (el) el.value = normalizeCategorySelection(value).category || value;
@@ -2521,6 +2524,9 @@ function initializeAutocomplete() {
     {
       input: document.querySelector("#rpr-tags-input"),
       getOptions: () => uniqueTokenValues("tags"),
+      // Champ à jetons sans .token-field autour : on le signale explicitement
+      // pour qu'il garde la présélection dont dépend captureFieldKeydown.
+      keepPreselection: true,
       applyValue: (value) => addReprendreTag(value),
     },
   ];
@@ -2601,8 +2607,25 @@ function setupAutocompleteInput(config) {
     }
 
     if (event.key === "Enter" || event.key === "Tab") {
-      const selected = autocompleteState.items[autocompleteState.activeIndex];
+      // Entrée valide ce qui est écrit. Elle n'applique une option que si
+      // l'utilisateur l'a choisie lui-même (↓/↑) — sauf l'action créer/demander,
+      // qui porte le texte tapé et n'impose donc rien. Tab complète en plus la
+      // suggestion immédiate, celle que le hint annonce à l'écran.
+      const typed = config.input.value.trim();
+      const chosen = autocompleteState.items[autocompleteState.activeIndex] ?? null;
+      const selected = chosen
+        ?? (event.key === "Tab"
+          ? getImmediateAutocompleteSuggestion(typed)
+          : getPendingCreationItem(typed));
       if (!selected) {
+        // Rien à appliquer : la saisie vaut telle quelle. Dans un dialogue,
+        // laisser filer Entrée déclencherait le bouton par défaut du
+        // <form method="dialog"> — la croix de fermeture — qui refermerait tout
+        // en jetant les modifications. On la neutralise donc ici.
+        if (event.key === "Enter" && config.input.closest("dialog")) {
+          event.preventDefault();
+          hideAutocomplete();
+        }
         return;
       }
       event.preventDefault();
@@ -2642,7 +2665,7 @@ function openAutocomplete(config) {
   autocompleteState = {
     config,
     items,
-    activeIndex: 0,
+    activeIndex: shouldPreselectFirstOption(config) ? 0 : -1,
   };
 
   renderAutocomplete(query);
@@ -2807,13 +2830,93 @@ function getAutocompleteScore(value, normalizedQuery) {
   return Number.POSITIVE_INFINITY;
 }
 
+// « Suggestion immédiate » : la première option qui prolonge exactement ce qui
+// est tapé. Elle n'est jamais appliquée d'office — seule Tab la complète, et
+// uniquement quand le hint l'annonce à l'écran. Une seule source pour les deux
+// (affichage et raccourci) : impossible que Tab complète en silence.
+function getImmediateAutocompleteSuggestion(query) {
+  const first = autocompleteState.items[0];
+  const normalizedQuery = normalizeText(query ?? "");
+  if (!first || first.type !== "option" || !normalizedQuery) {
+    return null;
+  }
+  if (autocompleteState.items.length < 3) {
+    return null;
+  }
+  return normalizeText(first.value).startsWith(normalizedQuery) ? first : null;
+}
+
+// Faut-il surligner d'office la première option à l'ouverture ?
+//
+// Non pour la saisie libre (Sujet, Client, filtres) : c'est là que la
+// présélection faisait mal. Taper « Test » puis Entrée démarrait « Test de
+// limites de Codex » — la suggestion se substituait à la saisie, impossible de
+// valider un texte court qui préfixe un texte existant.
+//
+// Oui pour les champs à jetons (Catégorie, Tags) : leur validation ne passe pas
+// par la frappe seule mais par des circuits qui s'appuient sur cette
+// présélection — transformation en chip, création d'une catégorie canonique,
+// demande à l'admin, démarrage du chrono depuis Reprendre. Y toucher demande de
+// reprendre ces quatre chemins ensemble ; ce n'est pas le sujet de ce correctif,
+// et personne ne s'est plaint de la substitution à cet endroit. On garde donc
+// leur comportement historique, intact.
+// Le critère est « champ à jetons », pas « champ qui sait créer ». Sujet sait
+// créer une référence lui aussi (allowCreate) : s'appuyer là-dessus rendait la
+// présélection à Sujet et laissait le bug intact. Les jetons se reconnaissent à
+// leur conteneur .token-field, ou par keepPreselection quand il n'y en a pas.
+function shouldPreselectFirstOption(config) {
+  if (config.keepPreselection) {
+    return true;
+  }
+  return Boolean(config.input?.closest?.(".token-field"));
+}
+
+// L'action « créer / demander » appelée par la saisie elle-même. Elle porte
+// exactement le texte tapé — la déclencher n'impose donc rien, contrairement à
+// une option qui remplacerait la saisie. C'est ce qui garde la taxonomie
+// canonique (création d'une vraie catégorie avec son ID, ou demande à l'admin)
+// au lieu de coller un libellé libre qui contournerait le circuit.
+function getPendingCreationItem(query) {
+  const normalizedQuery = normalizeText(query ?? "");
+  if (!normalizedQuery) {
+    return null;
+  }
+  return autocompleteState.items.find(
+    (item) =>
+      (item.type === "create" || item.type === "request") &&
+      normalizeText(item.value) === normalizedQuery,
+  ) ?? null;
+}
+
+// Un champ « token » (Catégorie, Tags) laisse passer la touche à l'autocomplete
+// uniquement quand celui-ci va vraiment agir. Sinon c'est au champ de valider le
+// texte tapé. Sans cette distinction, une saisie qui garde le popover ouvert
+// (préfixe, ou correspondance exacte) ne devient jamais un chip : elle reste
+// dans l'input, readFormValues ne lit que les chips, et la session démarre sans
+// sa catégorie ni ses tags — en silence.
+function willAutocompleteHandleKey(input, key) {
+  if (autocompletePopover.hidden || autocompleteState.config?.input !== input) {
+    return false;
+  }
+  if (key === "ArrowDown" || key === "ArrowUp" || key === "Escape") {
+    return true;
+  }
+  if (autocompleteState.activeIndex >= 0) {
+    return key === "Enter" || key === "Tab";
+  }
+  // Aucune option choisie. Entrée reste à l'autocomplete s'il a une création /
+  // demande à déclencher pour ce texte ; sinon c'est au champ de le valider.
+  if (key === "Enter") {
+    return Boolean(getPendingCreationItem(input.value.trim()));
+  }
+  // Tab ne complète que si la suggestion immédiate est annoncée à l'écran.
+  return key === "Tab" && Boolean(getImmediateAutocompleteSuggestion(input.value.trim()));
+}
+
 function renderAutocomplete(query) {
   autocompletePopover.innerHTML = "";
 
-  const shouldShowHint =
-    autocompleteState.items.length >= 3 &&
-    autocompleteState.items[0]?.type === "option" &&
-    normalizeText(autocompleteState.items[0].value).startsWith(normalizeText(query));
+  const shouldShowHint = Boolean(getImmediateAutocompleteSuggestion(query));
 
   if (shouldShowHint) {
     const hint = document.createElement("div");
@@ -2871,7 +2974,11 @@ function moveAutocompleteSelection(direction) {
     return;
   }
 
-  autocompleteState.activeIndex = (autocompleteState.activeIndex + direction + itemCount) % itemCount;
+  // Depuis « aucune sélection » (-1) : ↓ prend la première option, ↑ la dernière.
+  const current = autocompleteState.activeIndex;
+  autocompleteState.activeIndex = current < 0
+    ? (direction > 0 ? 0 : itemCount - 1)
+    : (current + direction + itemCount) % itemCount;
   renderAutocomplete(autocompleteState.config?.input.value.trim() ?? "");
 }
 
@@ -2904,7 +3011,7 @@ function hideAutocomplete() {
   autocompleteState = {
     config: null,
     items: [],
-    activeIndex: 0,
+    activeIndex: -1,
   };
 }
 
@@ -14866,10 +14973,9 @@ function setupTokenInput(input, config) {
   }
 
   input.addEventListener("keydown", (event) => {
-    const autocompleteOpenForInput =
-      !autocompletePopover.hidden && autocompleteState.config?.input === input;
-
-    if (autocompleteOpenForInput && (event.key === "Enter" || event.key === "Tab" || event.key === "ArrowDown" || event.key === "ArrowUp")) {
+    // On ne cède la touche que si l'autocomplete va réellement l'utiliser :
+    // popover ouvert ne suffit pas, sinon le texte tapé n'est jamais validé.
+    if (willAutocompleteHandleKey(input, event.key)) {
       return;
     }
 
@@ -14888,7 +14994,15 @@ function setupTokenInput(input, config) {
   });
 
   input.addEventListener("blur", () => {
-    if (!autocompletePopover.hidden && autocompleteState.config?.input === input) {
+    // On ne renonce à valider que si une option est réellement sélectionnée
+    // (navigation clavier en cours, ou clic sur une option : son pointerdown
+    // annule le blur). Un popover simplement ouvert ne doit plus empêcher la
+    // validation, sinon quitter le champ au Tab efface ce qui a été tapé.
+    if (
+      !autocompletePopover.hidden &&
+      autocompleteState.config?.input === input &&
+      autocompleteState.activeIndex >= 0
+    ) {
       return;
     }
     commitTokenInput(input, config);
