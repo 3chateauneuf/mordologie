@@ -854,6 +854,11 @@ const autocompletePopover = createAutocompletePopover();
 // demander » d'un champ depuis n'importe quelle sortie (Entrée, Tab, clic
 // ailleurs, démarrage du chrono), pas seulement depuis la liste ouverte.
 const autocompleteConfigByInput = new Map();
+// Création de référence lancée par la saisie (blur, Entrée, Tab) et pas encore
+// revenue de Supabase. Tout enregistrement doit l'attendre.
+let pendingReferenceCreation = null;
+let pendingReferenceCreationInput = null;
+let pendingReferenceCreationValue = "";
 let autocompleteState = {
   config: null,
   items: [],
@@ -1189,6 +1194,9 @@ async function handlePrimaryTimerAction() {
   }
   timerStartInFlight = true;
   try {
+    // Le clic sur Démarrer a fait blurer Catégorie : si ce blur a lancé la
+    // création d'une catégorie, elle n'est pas encore dans currentCategories.
+    await settlePendingReferenceCreation();
     const sessionDraft = await validateAndNormalizeMainForm();
     if (!sessionDraft) {
       return;
@@ -2039,11 +2047,11 @@ plannedCancelButton?.addEventListener("click", () => {
 });
 
 plannedIgnoreButton?.addEventListener("click", () => {
-  applyPlannedEventDecision("ignored");
+  void applyPlannedEventDecision("ignored");
 });
 
 plannedSaveButton?.addEventListener("click", () => {
-  applyPlannedEventDecision("validated");
+  void applyPlannedEventDecision("validated");
 });
 
 plannedApplySuggestionButton?.addEventListener("click", () => {
@@ -2885,8 +2893,49 @@ function applyPendingCreationForValue(input, rawValue) {
   if (!pending) {
     return false;
   }
-  void applyAutocompleteItem(pending, config);
+  // Le champ n'est plus vidé d'entrée de jeu, donc la même valeur repasse ici
+  // à chaque sortie : Entrée puis le blur du clic qui suit. Sans ce verrou, ça
+  // fait deux insertions — la seconde ne voit pas encore la première dans le
+  // catalogue et crée un doublon avec un autre CAT-.
+  if (
+    pendingReferenceCreation &&
+    pendingReferenceCreationInput === input &&
+    pendingReferenceCreationValue === normalizedValue
+  ) {
+    return true;
+  }
+  // La création part vers Supabase : tant qu'elle n'a pas répondu, la valeur
+  // n'est dans aucun état lisible. Tout ce qui enregistre doit donc l'attendre
+  // (voir settlePendingReferenceCreation), sinon un clic sur Démarrer /
+  // Enregistrer juste après le blur sauve la session sans sa catégorie.
+  const task = applyAutocompleteItem(pending, config);
+  pendingReferenceCreation = task;
+  pendingReferenceCreationInput = input;
+  pendingReferenceCreationValue = normalizedValue;
+  void task.finally(() => {
+    if (pendingReferenceCreation === task) {
+      pendingReferenceCreation = null;
+      pendingReferenceCreationInput = null;
+      pendingReferenceCreationValue = "";
+    }
+  });
   return true;
+}
+
+// À appeler en tête de tout chemin qui lit l'état des champs pour enregistrer.
+// Boucle plutôt qu'un simple await : la création en cours peut en déclencher
+// une autre (un blur en chaîne quand le focus rebondit) et il faut que la file
+// soit vide, pas seulement la première tâche.
+async function settlePendingReferenceCreation() {
+  while (pendingReferenceCreation) {
+    const current = pendingReferenceCreation;
+    await current.catch(() => {});
+    if (pendingReferenceCreation === current) {
+      pendingReferenceCreation = null;
+      pendingReferenceCreationInput = null;
+      pendingReferenceCreationValue = "";
+    }
+  }
 }
 
 // L'action « créer / demander » appelée par la saisie elle-même. Elle porte
@@ -12254,10 +12303,14 @@ function buildPlannedSessionDraft() {
   };
 }
 
-function applyPlannedEventDecision(mode) {
+async function applyPlannedEventDecision(mode) {
   if (!plannedEditingEventId) {
     return;
   }
+
+  // Même course qu'au démarrage du chrono : le clic sur Enregistrer blure
+  // Catégorie, dont la création peut être encore en vol.
+  await settlePendingReferenceCreation();
 
   setPlannedDialogStatus("");
   const basePayload = {
@@ -15057,8 +15110,12 @@ function commitTokenInput(input, config) {
 
   // Catégorie inconnue : la créer / la demander plutôt qu'en faire un libellé
   // libre. Vaut pour toutes les sorties du champ, y compris le blur.
+  //
+  // On ne vide pas le champ ici : applyValue le fait lui-même une fois la
+  // référence créée. Le vider tout de suite jetait définitivement le texte tapé
+  // quand l'insert échouait, et laissait le champ vide pendant l'aller-retour
+  // réseau alors que rien n'était encore enregistré.
   if (tokens.length === 1 && applyPendingCreationForValue(input, tokens[0])) {
-    input.value = "";
     return;
   }
 
