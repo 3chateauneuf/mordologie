@@ -2833,6 +2833,27 @@ function getImmediateAutocompleteSuggestion(query) {
   return normalizeText(first.value).startsWith(normalizedQuery) ? first : null;
 }
 
+// Un champ « token » (Catégorie, Tags) laisse passer la touche à l'autocomplete
+// uniquement quand celui-ci va vraiment agir. Sinon c'est au champ de valider le
+// texte tapé. Sans cette distinction, une saisie qui garde le popover ouvert
+// (préfixe, ou correspondance exacte) ne devient jamais un chip : elle reste
+// dans l'input, readFormValues ne lit que les chips, et la session démarre sans
+// sa catégorie ni ses tags — en silence.
+function willAutocompleteHandleKey(input, key) {
+  if (autocompletePopover.hidden || autocompleteState.config?.input !== input) {
+    return false;
+  }
+  if (key === "ArrowDown" || key === "ArrowUp" || key === "Escape") {
+    return true;
+  }
+  if (autocompleteState.activeIndex >= 0) {
+    return key === "Enter" || key === "Tab";
+  }
+  // Aucune option choisie : seule Tab peut encore compléter, et seulement si la
+  // suggestion immédiate est annoncée à l'écran.
+  return key === "Tab" && Boolean(getImmediateAutocompleteSuggestion(input.value.trim()));
+}
+
 function renderAutocomplete(query) {
   autocompletePopover.innerHTML = "";
 
@@ -14893,10 +14914,9 @@ function setupTokenInput(input, config) {
   }
 
   input.addEventListener("keydown", (event) => {
-    const autocompleteOpenForInput =
-      !autocompletePopover.hidden && autocompleteState.config?.input === input;
-
-    if (autocompleteOpenForInput && (event.key === "Enter" || event.key === "Tab" || event.key === "ArrowDown" || event.key === "ArrowUp")) {
+    // On ne cède la touche que si l'autocomplete va réellement l'utiliser :
+    // popover ouvert ne suffit pas, sinon le texte tapé n'est jamais validé.
+    if (willAutocompleteHandleKey(input, event.key)) {
       return;
     }
 
@@ -14915,7 +14935,15 @@ function setupTokenInput(input, config) {
   });
 
   input.addEventListener("blur", () => {
-    if (!autocompletePopover.hidden && autocompleteState.config?.input === input) {
+    // On ne renonce à valider que si une option est réellement sélectionnée
+    // (navigation clavier en cours, ou clic sur une option : son pointerdown
+    // annule le blur). Un popover simplement ouvert ne doit plus empêcher la
+    // validation, sinon quitter le champ au Tab efface ce qui a été tapé.
+    if (
+      !autocompletePopover.hidden &&
+      autocompleteState.config?.input === input &&
+      autocompleteState.activeIndex >= 0
+    ) {
       return;
     }
     commitTokenInput(input, config);
