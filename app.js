@@ -853,7 +853,7 @@ const autocompletePopover = createAutocompletePopover();
 let autocompleteState = {
   config: null,
   items: [],
-  activeIndex: 0,
+  activeIndex: -1,
 };
 let autocompleteHideTimeoutId = null;
 let fieldManageState = null;
@@ -2601,7 +2601,12 @@ function setupAutocompleteInput(config) {
     }
 
     if (event.key === "Enter" || event.key === "Tab") {
-      const selected = autocompleteState.items[autocompleteState.activeIndex];
+      // Entrée valide ce qui est écrit. Elle n'applique une option que si
+      // l'utilisateur l'a choisie lui-même (↓/↑). Tab complète en plus la
+      // suggestion immédiate — celle que le hint annonce à l'écran.
+      const chosen = autocompleteState.items[autocompleteState.activeIndex] ?? null;
+      const selected = chosen
+        ?? (event.key === "Tab" ? getImmediateAutocompleteSuggestion(config.input.value.trim()) : null);
       if (!selected) {
         return;
       }
@@ -2642,7 +2647,12 @@ function openAutocomplete(config) {
   autocompleteState = {
     config,
     items,
-    activeIndex: 0,
+    // Aucune option présélectionnée : ce qui est tapé reste ce qui sera validé.
+    // Avec activeIndex à 0, la première option était surlignée d'office et
+    // Entrée l'appliquait — taper « Test » puis Entrée démarrait « Test de
+    // limites de Codex ». Une suggestion ne doit jamais s'imposer : il faut ↓/↑,
+    // un clic, ou Tab (suggestion immédiate) pour en choisir une.
+    activeIndex: -1,
   };
 
   renderAutocomplete(query);
@@ -2807,13 +2817,26 @@ function getAutocompleteScore(value, normalizedQuery) {
   return Number.POSITIVE_INFINITY;
 }
 
+// « Suggestion immédiate » : la première option qui prolonge exactement ce qui
+// est tapé. Elle n'est jamais appliquée d'office — seule Tab la complète, et
+// uniquement quand le hint l'annonce à l'écran. Une seule source pour les deux
+// (affichage et raccourci) : impossible que Tab complète en silence.
+function getImmediateAutocompleteSuggestion(query) {
+  const first = autocompleteState.items[0];
+  const normalizedQuery = normalizeText(query ?? "");
+  if (!first || first.type !== "option" || !normalizedQuery) {
+    return null;
+  }
+  if (autocompleteState.items.length < 3) {
+    return null;
+  }
+  return normalizeText(first.value).startsWith(normalizedQuery) ? first : null;
+}
+
 function renderAutocomplete(query) {
   autocompletePopover.innerHTML = "";
 
-  const shouldShowHint =
-    autocompleteState.items.length >= 3 &&
-    autocompleteState.items[0]?.type === "option" &&
-    normalizeText(autocompleteState.items[0].value).startsWith(normalizeText(query));
+  const shouldShowHint = Boolean(getImmediateAutocompleteSuggestion(query));
 
   if (shouldShowHint) {
     const hint = document.createElement("div");
@@ -2871,7 +2894,11 @@ function moveAutocompleteSelection(direction) {
     return;
   }
 
-  autocompleteState.activeIndex = (autocompleteState.activeIndex + direction + itemCount) % itemCount;
+  // Depuis « aucune sélection » (-1) : ↓ prend la première option, ↑ la dernière.
+  const current = autocompleteState.activeIndex;
+  autocompleteState.activeIndex = current < 0
+    ? (direction > 0 ? 0 : itemCount - 1)
+    : (current + direction + itemCount) % itemCount;
   renderAutocomplete(autocompleteState.config?.input.value.trim() ?? "");
 }
 
@@ -2904,7 +2931,7 @@ function hideAutocomplete() {
   autocompleteState = {
     config: null,
     items: [],
-    activeIndex: 0,
+    activeIndex: -1,
   };
 }
 
