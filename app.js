@@ -2521,6 +2521,9 @@ function initializeAutocomplete() {
     {
       input: document.querySelector("#rpr-tags-input"),
       getOptions: () => uniqueTokenValues("tags"),
+      // Champ à jetons sans .token-field autour : on le signale explicitement
+      // pour qu'il garde la présélection dont dépend captureFieldKeydown.
+      keepPreselection: true,
       applyValue: (value) => addReprendreTag(value),
     },
   ];
@@ -2659,12 +2662,7 @@ function openAutocomplete(config) {
   autocompleteState = {
     config,
     items,
-    // Aucune option présélectionnée : ce qui est tapé reste ce qui sera validé.
-    // Avec activeIndex à 0, la première option était surlignée d'office et
-    // Entrée l'appliquait — taper « Test » puis Entrée démarrait « Test de
-    // limites de Codex ». Une suggestion ne doit jamais s'imposer : il faut ↓/↑,
-    // un clic, ou Tab (suggestion immédiate) pour en choisir une.
-    activeIndex: -1,
+    activeIndex: shouldPreselectFirstOption(config) ? 0 : -1,
   };
 
   renderAutocomplete(query);
@@ -2843,6 +2841,32 @@ function getImmediateAutocompleteSuggestion(query) {
     return null;
   }
   return normalizeText(first.value).startsWith(normalizedQuery) ? first : null;
+}
+
+// Faut-il surligner d'office la première option à l'ouverture ?
+//
+// Non pour la saisie libre (Sujet, Client, filtres) : c'est là que la
+// présélection faisait mal. Taper « Test » puis Entrée démarrait « Test de
+// limites de Codex » — la suggestion se substituait à la saisie, impossible de
+// valider un texte court qui préfixe un texte existant.
+//
+// Oui pour les champs à jetons (Catégorie, Tags) : leur validation ne passe pas
+// par la frappe seule mais par des circuits qui s'appuient sur cette
+// présélection — transformation en chip, création d'une catégorie canonique,
+// demande à l'admin, démarrage du chrono depuis Reprendre. Y toucher demande de
+// reprendre ces quatre chemins ensemble ; ce n'est pas le sujet de ce correctif,
+// et personne ne s'est plaint de la substitution à cet endroit. On garde donc
+// leur comportement historique, intact.
+function shouldPreselectFirstOption(config) {
+  if (config.keepPreselection) {
+    return true;
+  }
+  // Catégories : elles portent un circuit création / demande à l'admin.
+  if (config.allowCreate || config.allowRequest) {
+    return true;
+  }
+  // Champs à jetons du formulaire principal et des dialogues.
+  return Boolean(config.input?.closest?.(".token-field"));
 }
 
 // L'action « créer / demander » appelée par la saisie elle-même. Elle porte
