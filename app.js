@@ -398,7 +398,6 @@ const teamReportList = document.querySelector("#team-report-list");
 const reportProjectList = document.querySelector("#report-project-list");
 const reportCategoryHead = document.querySelector("#report-category-head");
 const reportCategoryList = document.querySelector("#report-category-list");
-const usersAdminShell = document.querySelector("#users-admin-shell");
 const sessionList = document.querySelector("#session-list");
 const journalFilterFromInput = document.querySelector("#journal-filter-from");
 const journalFilterToInput = document.querySelector("#journal-filter-to");
@@ -892,8 +891,6 @@ const PLANNED_WORK_DAYS = new Set([1, 2, 3, 4, 5]);
 const PLANNED_WORK_START_HOUR = 9;
 const PLANNED_WORK_END_HOUR = 18;
 let authRescueOptionsSignature = "";
-let usersAdminEditingId = null;
-let usersAdminDraft = null;
 let pendingStoppedSessionState = loadPendingStoppedSessionState();
 let recentlyStoppedSessionGuards = loadRecentlyStoppedSessionGuards();
 
@@ -3404,7 +3401,7 @@ function scheduleAutocompleteHide() {
 
 function getInitialView() {
   const hash = window.location.hash.replace("#", "");
-  return ["reprendre", "agenda", "cadre", "manager", "resources", "users", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
+  return ["reprendre", "agenda", "cadre", "manager", "resources", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
 }
 
 
@@ -4250,28 +4247,6 @@ function setPlannedDialogStatus(message = "", tone = "error") {
 function extractFirstUrl(rawValue = "") {
   const match = String(rawValue ?? "").match(/https?:\/\/[^\s)]+/i);
   return match ? match[0] : "";
-}
-
-function setUsersAdminDraftStatus(message = "", tone = "error") {
-  if (!usersAdminDraft) {
-    return;
-  }
-  usersAdminDraft.statusMessage = message;
-  usersAdminDraft.statusTone = tone;
-}
-
-function clearUsersAdminDraftTransientState() {
-  if (!usersAdminDraft) {
-    return;
-  }
-  usersAdminDraft.confirm_delete = false;
-  setUsersAdminDraftStatus("");
-}
-
-function failUsersAdminDraft(message, tone = "error") {
-  setUsersAdminDraftStatus(message, tone);
-  renderUsersAdmin();
-  return false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -6076,7 +6051,7 @@ function getAllowedViewsForRole(role = getAccessRole()) {
     return ["reprendre", "agenda", "cadre", "journal", "guide", "profil"];
   }
   if (role === "admin") {
-    return ["reprendre", "agenda", "cadre", "manager", "resources", "users", "journal", "guide", "profil"];
+    return ["reprendre", "agenda", "cadre", "manager", "resources", "journal", "guide", "profil"];
   }
   if (role === "manager") {
     return ["reprendre", "agenda", "cadre", "manager", "resources", "journal", "guide", "profil"];
@@ -8152,7 +8127,6 @@ function render() {
   renderManagerControls();
   renderManagerViews();
   renderResourcesViews();
-  renderUsersAdmin();
   renderGuideView();
 }
 
@@ -12989,10 +12963,8 @@ function renderManagerViews() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SECTION: RESOURCES, GUIDE & USERS ADMIN
-// Purpose: Read-only resource lists, the onboarding guide (different copy
-//   per role), and the manager-only users admin CRUD (display ↔ editor
-//   cards, save/delete, role and team assignment).
+// SECTION: RESOURCES & GUIDE
+// Purpose: Read-only resource lists and the onboarding guide.
 // ═══════════════════════════════════════════════════════════════════════════
 
 function renderResourcesViews() {
@@ -13407,373 +13379,6 @@ function buildGuideForExistingUser(hasCalendar) {
   }));
 
   return root;
-}
-
-function renderUsersAdmin() {
-  if (!usersAdminShell) {
-    return;
-  }
-
-  usersAdminShell.innerHTML = "";
-
-  if (getAccessRole() !== "admin") {
-    usersAdminShell.append(createEmptyState("Cette vue est reservee a l'administration."));
-    return;
-  }
-
-  const rows = [...referenceCatalog.users].sort((left, right) => left.user_name.localeCompare(right.user_name, "fr"));
-  const head = document.createElement("div");
-  head.className = "users-admin-head";
-
-  const addButton = document.createElement("button");
-  addButton.type = "button";
-  addButton.className = "btn btn-primary";
-  addButton.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11"/></svg> Ajouter`;
-  addButton.addEventListener("click", () => {
-    usersAdminEditingId = "__new__";
-    usersAdminDraft = createUsersAdminDraft();
-    renderUsersAdmin();
-  });
-
-  head.append(addButton);
-  usersAdminShell.append(head);
-
-  const list = document.createElement("div");
-  list.className = "users-admin-list";
-
-  if (usersAdminEditingId === "__new__" && usersAdminDraft) {
-    list.append(renderUsersAdminEditorCard(null, true));
-  }
-
-  if (!rows.length && usersAdminEditingId !== "__new__") {
-    list.append(createEmptyState("Aucun utilisateur actif pour le moment."));
-  } else {
-    for (const user of rows) {
-      const isEditing = usersAdminEditingId === user.user_id;
-      list.append(isEditing ? renderUsersAdminEditorCard(user, false) : renderUsersAdminDisplayCard(user));
-    }
-  }
-
-  usersAdminShell.append(list);
-}
-
-function createUsersAdminDraft(user = null) {
-  const defaultTeamName =
-    accessProfile.appUser?.team_name ||
-    accessProfile.appUser?.managed_team_name ||
-    user?.team_name ||
-    "Equipe";
-
-  return {
-    user_id: user?.user_id ?? null,
-    user_name: user?.user_name ?? "",
-    email: user?.email ?? "",
-    role: user?.role ?? "cadre",
-    team_name: user?.team_name ?? defaultTeamName,
-    managed_team_name: user?.managed_team_name ?? "",
-    confirm_delete: false,
-    statusMessage: "",
-    statusTone: "error",
-  };
-}
-
-function renderUsersAdminDisplayCard(user) {
-  const card = document.createElement("article");
-  card.className = "users-user-card users-user-row";
-
-  const identity = document.createElement("div");
-  identity.className = "users-row-identity";
-  const avatar = document.createElement("span");
-  avatar.className = "users-avatar";
-  avatar.textContent = getUserAvatarMonogram(user.user_name ?? "?");
-  const nameCopy = document.createElement("div");
-  nameCopy.className = "users-row-copy";
-  const nameEl = document.createElement("strong");
-  nameEl.textContent = user.user_name ?? "Sans nom";
-  const statusDot = document.createElement("span");
-  statusDot.className = `users-status-dot users-status-dot--${user.status === "active" ? "active" : "inactive"}`;
-  statusDot.title = user.status === "active" ? "Actif" : "Inactif";
-  nameCopy.append(nameEl, statusDot);
-  identity.append(avatar, nameCopy);
-
-  const emailEl = document.createElement("span");
-  emailEl.className = "users-row-email muted-copy";
-  emailEl.textContent = user.email || "—";
-
-  const roleBadge = document.createElement("span");
-  roleBadge.className = `pill users-role-badge users-role-badge--${user.role ?? "cadre"}`;
-  roleBadge.textContent = formatUsersRoleLabel(user.role ?? "cadre");
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.className = "btn users-edit-btn";
-  editButton.title = `Modifier ${user.user_name ?? ""}`;
-  editButton.setAttribute("aria-label", `Modifier ${user.user_name ?? ""}`);
-  editButton.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z"/></svg>`;
-  editButton.addEventListener("click", () => {
-    usersAdminEditingId = user.user_id;
-    usersAdminDraft = createUsersAdminDraft(user);
-    renderUsersAdmin();
-  });
-
-  card.append(identity, emailEl, roleBadge, editButton);
-  return card;
-}
-
-
-function renderUsersAdminEditorCard(user, isNew) {
-  const draft = usersAdminDraft ?? createUsersAdminDraft(user);
-  const card = document.createElement("article");
-  card.className = "users-user-card users-user-card--editing";
-
-  const grid = document.createElement("div");
-  grid.className = "users-edit-grid";
-
-  const nameField = createUsersAdminInputField("Personne", "text", draft.user_name, "Ex. Paulo");
-  nameField.input.addEventListener("input", (event) => {
-    usersAdminDraft.user_name = event.target.value;
-    clearUsersAdminDraftTransientState();
-  });
-
-  const emailField = createUsersAdminInputField("Email", "email", draft.email, "prenom@domaine.fr");
-  emailField.input.addEventListener("input", (event) => {
-    usersAdminDraft.email = event.target.value;
-    clearUsersAdminDraftTransientState();
-  });
-
-  const roleField = document.createElement("label");
-  roleField.className = "field";
-  const roleLabel = document.createElement("span");
-  roleLabel.textContent = "Role";
-  const roleSelect = document.createElement("select");
-  roleSelect.className = "select-input users-role-select";
-  [
-    ["cadre", "Utilisateur normal"],
-    ["manager", "Manager"],
-    ["admin", "Admin"],
-  ].forEach(([value, label]) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    roleSelect.append(option);
-  });
-  roleSelect.value = draft.role;
-  roleSelect.addEventListener("change", (event) => {
-    usersAdminDraft.role = event.target.value;
-    clearUsersAdminDraftTransientState();
-  });
-  roleField.append(roleLabel, roleSelect);
-
-  grid.append(nameField.field, emailField.field, roleField);
-
-  const status = document.createElement("p");
-  status.className = "users-edit-status";
-  status.hidden = !draft.statusMessage;
-  status.textContent = draft.statusMessage || "";
-  status.dataset.tone = draft.statusMessage ? draft.statusTone || "error" : "";
-
-  const actions = document.createElement("div");
-  actions.className = "dialog-actions users-edit-actions";
-
-  if (!isNew) {
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "btn btn-ghost-danger dialog-action-danger";
-    deleteButton.textContent = draft.confirm_delete ? "Confirmer la suppression" : "Supprimer";
-    deleteButton.addEventListener("click", async () => {
-      if (!usersAdminDraft.confirm_delete) {
-        usersAdminDraft.confirm_delete = true;
-        renderUsersAdmin();
-        return;
-      }
-      await deleteManagedUser(user);
-    });
-    actions.append(deleteButton);
-  }
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.className = "btn btn-secondary";
-  cancelButton.textContent = "Annuler";
-  cancelButton.addEventListener("click", () => {
-    usersAdminEditingId = null;
-    usersAdminDraft = null;
-    renderUsersAdmin();
-  });
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.className = "btn btn-primary";
-  saveButton.textContent = isNew ? "Creer" : "Enregistrer";
-  saveButton.addEventListener("click", async () => {
-    await saveManagedUser(user, isNew);
-  });
-
-  actions.append(cancelButton, saveButton);
-  card.append(grid, status, actions);
-  return card;
-}
-
-function createUsersAdminInputField(labelText, type, value, placeholder = "") {
-  const field = document.createElement("label");
-  field.className = "field";
-  const label = document.createElement("span");
-  label.textContent = labelText;
-  const input = document.createElement("input");
-  input.type = type;
-  input.value = value;
-  input.placeholder = placeholder;
-  field.append(label, input);
-  return { field, input };
-}
-
-function formatUsersRoleLabel(role) {
-  return (
-    {
-      cadre: "Utilisateur normal",
-      manager: "Manager",
-      admin: "Admin",
-    }[role] ?? "Utilisateur normal"
-  );
-}
-
-function validateManagedUserDraft(draft, user = null) {
-  const userName = draft.user_name.trim();
-  const email = draft.email.trim();
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const duplicateName = referenceCatalog.users.find((item) =>
-    item.user_id !== (user?.user_id ?? null) && normalizeComparableText(item.user_name) === normalizeComparableText(userName),
-  );
-  const duplicateEmail = email
-    ? referenceCatalog.users.find((item) =>
-        item.user_id !== (user?.user_id ?? null) && normalizeText(item.email || "") === normalizeText(email),
-      )
-    : null;
-
-  if (!userName) {
-    return { ok: false, message: "Le nom de la personne est requis." };
-  }
-  if (duplicateName) {
-    return { ok: false, message: "Ce nom est déjà utilisé. Choisissez un nom unique pour éviter les collisions de profil." };
-  }
-  if (email && !emailPattern.test(email)) {
-    return { ok: false, message: "L'adresse email semble invalide." };
-  }
-  if (duplicateEmail) {
-    return { ok: false, message: "Cette adresse e-mail est déjà associée à un autre utilisateur." };
-  }
-
-  return {
-    ok: true,
-    userName,
-    email,
-  };
-}
-
-async function saveManagedUser(user, isNew) {
-  if (!usersAdminDraft) {
-    return false;
-  }
-  if (!window.supabase) {
-    return failUsersAdminDraft("La synchronisation distante est indisponible pour le moment.");
-  }
-
-  const validation = validateManagedUserDraft(usersAdminDraft, user);
-  if (!validation.ok) {
-    return failUsersAdminDraft(validation.message);
-  }
-
-  const { userName, email } = validation;
-
-  const basePayload = {
-    user_name: userName,
-    email: email || null,
-    role: usersAdminDraft.role || "cadre",
-    team_name: usersAdminDraft.team_name,
-    managed_team_name: usersAdminDraft.role === "manager" ? usersAdminDraft.team_name : null,
-    updated_at: new Date().toISOString(),
-  };
-
-  let error = null;
-  if (isNew) {
-    const nextId = await getNextPrefixedId("users", "user_id", "USR-", 3);
-    if (!nextId) {
-      return failUsersAdminDraft("Impossible de preparer le nouvel utilisateur.");
-    }
-
-    ({ error } = await window.supabase.from("users").insert([
-      {
-        user_id: nextId,
-        ...basePayload,
-        weekly_capacity_hours: 40,
-        status: "active",
-      },
-    ]));
-  } else {
-    ({ error } = await window.supabase
-      .from("users")
-      .update(basePayload)
-      .eq("user_id", user.user_id));
-  }
-
-  if (error) {
-    console.error("Users save failed:", error);
-    return failUsersAdminDraft("Impossible d'enregistrer cet utilisateur pour le moment.");
-  }
-
-  await ensureReferenceCatalogLoaded(true);
-  if (accessProfile.appUser?.user_id === user?.user_id) {
-    const refreshedCurrentUser = findKnownUserByName(userName) ?? accessProfile.appUser;
-    accessProfile = {
-      ...accessProfile,
-      role: basePayload.role,
-      appUser: refreshedCurrentUser,
-    };
-    storeLocalRescueName(refreshedCurrentUser.user_name);
-  }
-
-  usersAdminEditingId = null;
-  usersAdminDraft = null;
-  setAuthStatusMessage(isNew ? "Utilisateur cree." : "Utilisateur mis a jour.", "success", { persistMs: 2400 });
-  render();
-  return true;
-}
-
-async function deleteManagedUser(user) {
-  if (!window.supabase || !user?.user_id) {
-    return failUsersAdminDraft("La synchronisation distante est indisponible pour le moment.");
-  }
-  if (accessProfile.appUser?.user_id === user.user_id) {
-    return failUsersAdminDraft("Impossible de supprimer le profil actuellement utilise.", "warning");
-  }
-
-  let { error } = await window.supabase.from("users").delete().eq("user_id", user.user_id);
-  if (error?.code === "23503") {
-    ({ error } = await window.supabase
-      .from("users")
-      .update({ status: "inactive", updated_at: new Date().toISOString() })
-      .eq("user_id", user.user_id));
-    if (!error) {
-      await ensureReferenceCatalogLoaded(true);
-      usersAdminEditingId = null;
-      usersAdminDraft = null;
-      setAuthStatusMessage("Utilisateur retire de la liste active.", "success", { persistMs: 2400 });
-      render();
-      return true;
-    }
-  }
-
-  if (error) {
-    console.error("Users delete failed:", error);
-    return failUsersAdminDraft("Impossible de supprimer cet utilisateur pour le moment.");
-  }
-
-  await ensureReferenceCatalogLoaded(true);
-  usersAdminEditingId = null;
-  usersAdminDraft = null;
-  setAuthStatusMessage("Utilisateur supprime.", "success", { persistMs: 2400 });
-  render();
-  return true;
 }
 
 function getAnalysisExportRows() {
