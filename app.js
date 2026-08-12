@@ -15777,7 +15777,14 @@ async function submitCategoryRequestDraft() {
     sourceInput.value = "";
   }
   setAuthStatusMessage(`Demande envoyée pour « ${request.label} ».`, "success", { persistMs: 2800 });
-  closeCategoryRequestDialog();
+  // Ne fermer que si le dialogue montre encore NOTRE demande. Après une annulation
+  // pendant l'insert, il peut déjà en afficher une autre : la fermer engloutirait
+  // une demande que le cadre n'a pas encore envoyée, et sa justification avec.
+  // L'identité de l'objet suffit — openCategoryRequestDialog en construit un neuf
+  // à chaque ouverture, et categoryRequestState repasse à null à la fermeture.
+  if (categoryRequestState === request) {
+    closeCategoryRequestDialog();
+  }
 }
 
 categoryRequestSubmitBtn?.addEventListener("click", (event) => {
