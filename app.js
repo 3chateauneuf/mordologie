@@ -2878,11 +2878,16 @@ function getImmediateAutocompleteSuggestion(query) {
 //
 // On recalcule les items depuis le config plutôt que de lire le popover : la
 // liste peut déjà être refermée au moment du blur.
+//
+// Renvoie le type de l'action déclenchée — "create" ou "request" — ou null si
+// la valeur n'en demandait aucune. Les deux ne se traitent pas pareil ensuite :
+// une création rate et laisse la valeur récupérable, une demande part vers
+// l'admin et le libellé ne doit plus servir tant qu'il n'est pas approuvé.
 function applyPendingCreationForValue(input, rawValue) {
   const config = autocompleteConfigByInput.get(input);
   const value = String(rawValue ?? "").trim();
   if (!config || !value) {
-    return false;
+    return null;
   }
   const normalizedValue = normalizeText(value);
   const pending = buildAutocompleteItems(config, value).find(
@@ -2891,9 +2896,9 @@ function applyPendingCreationForValue(input, rawValue) {
       normalizeText(item.value) === normalizedValue,
   );
   if (!pending) {
-    return false;
+    return null;
   }
-  // Le champ n'est plus vidé d'entrée de jeu, donc la même valeur repasse ici
+  // Une création laisse le texte dans le champ, donc la même valeur repasse ici
   // à chaque sortie : Entrée puis le blur du clic qui suit. Sans ce verrou, ça
   // fait deux insertions — la seconde ne voit pas encore la première dans le
   // catalogue et crée un doublon avec un autre CAT-.
@@ -2902,7 +2907,7 @@ function applyPendingCreationForValue(input, rawValue) {
     pendingReferenceCreationInput === input &&
     pendingReferenceCreationValue === normalizedValue
   ) {
-    return true;
+    return pending.type;
   }
   // La création part vers Supabase : tant qu'elle n'a pas répondu, la valeur
   // n'est dans aucun état lisible. Tout ce qui enregistre doit donc l'attendre
@@ -2919,7 +2924,7 @@ function applyPendingCreationForValue(input, rawValue) {
       pendingReferenceCreationValue = "";
     }
   });
-  return true;
+  return pending.type;
 }
 
 // À appeler en tête de tout chemin qui lit l'état des champs pour enregistrer.
@@ -15110,13 +15115,25 @@ function commitTokenInput(input, config) {
 
   // Catégorie inconnue : la créer / la demander plutôt qu'en faire un libellé
   // libre. Vaut pour toutes les sorties du champ, y compris le blur.
-  //
-  // On ne vide pas le champ ici : applyValue le fait lui-même une fois la
-  // référence créée. Le vider tout de suite jetait définitivement le texte tapé
-  // quand l'insert échouait, et laissait le champ vide pendant l'aller-retour
-  // réseau alors que rien n'était encore enregistré.
-  if (tokens.length === 1 && applyPendingCreationForValue(input, tokens[0])) {
-    return;
+  if (tokens.length === 1) {
+    // Appel gardé par tokens.length : la fonction a des effets de bord, elle ne
+    // doit pas partir sur une saisie multi-jetons.
+    const pendingType = applyPendingCreationForValue(input, tokens[0]);
+    if (pendingType) {
+      // « request » : le libellé attend l'admin. Le laisser dans le champ le
+      // ferait relire en brut par buildPlannedSessionDraft et par
+      // validated_category — l'approbation serait contournée — et chaque
+      // passage suivant sur le champ renverrait la même demande, sans qu'aucune
+      // contrainte d'unicité côté base ne les dédoublonne.
+      //
+      // « create » : on garde le texte. applyValue videra le champ une fois la
+      // référence en base ; s'il échoue, c'est le seul endroit où ce que
+      // l'utilisateur a tapé survit encore.
+      if (pendingType === "request") {
+        input.value = "";
+      }
+      return;
+    }
   }
 
   const nextValues = config.singleValue
