@@ -15723,7 +15723,14 @@ function closeCategoryRequestDialog() {
 }
 
 async function submitCategoryRequestDraft() {
-  if (!categoryRequestState || !window.supabase) return;
+  // Photo fixe de la demande traitée par CET appel. categoryRequestState et
+  // categoryRequestSourceInput sont des variables de module : annuler pendant
+  // que l'insert est en vol puis en ouvrir une autre les réécrit, et la réponse
+  // tardive de la première viderait le champ de la seconde en annonçant le
+  // mauvais libellé. Rien de ce qui suit l'await ne doit plus les relire.
+  const request = categoryRequestState;
+  const sourceInput = categoryRequestSourceInput;
+  if (!request || !window.supabase) return;
   const appUser = accessProfile.appUser;
   if (!appUser?.user_id || !appUser?.user_name) {
     if (categoryRequestError) {
@@ -15736,9 +15743,9 @@ async function submitCategoryRequestDraft() {
   const payload = {
     user_id:              appUser.user_id,
     user_name:            appUser.user_name,
-    label:                categoryRequestState.label,
+    label:                request.label,
     justification:        (categoryRequestJustification?.value ?? "").trim() || null,
-    source_time_entry_id: categoryRequestState.sourceTimeEntryId,
+    source_time_entry_id: request.sourceTimeEntryId,
   };
 
   if (categoryRequestSubmitBtn) {
@@ -15766,10 +15773,10 @@ async function submitCategoryRequestDraft() {
   // L'insert est passé : le libellé part vers l'admin, il n'a plus rien à faire
   // dans le champ. Avant closeCategoryRequestDialog, dont l'événement « close »
   // remet la référence à zéro.
-  if (categoryRequestSourceInput) {
-    categoryRequestSourceInput.value = "";
+  if (sourceInput) {
+    sourceInput.value = "";
   }
-  setAuthStatusMessage(`Demande envoyée pour « ${categoryRequestState.label} ».`, "success", { persistMs: 2800 });
+  setAuthStatusMessage(`Demande envoyée pour « ${request.label} ».`, "success", { persistMs: 2800 });
   closeCategoryRequestDialog();
 }
 
