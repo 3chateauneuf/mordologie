@@ -11,7 +11,6 @@ insert into users (
   user_name,
   email,
   auth_user_id,
-  role,
   team_name,
   managed_team_name,
   manager_user_id,
@@ -20,12 +19,12 @@ insert into users (
   created_at,
   updated_at
 ) values
-  ('USR-001', 'Claire', 'claire@cargonautes.fr', null, 'cadre', 'Conseil Operations France', null, 'USR-002', 39.00, 'active', '2025-09-01T08:00:00Z', '2026-04-10T08:00:00Z'),
-  ('USR-002', 'Paulo', 'paulo@cargonautes.fr', null, 'manager', 'Conseil Operations France', 'Conseil Operations France', null, 39.00, 'active', '2025-09-01T08:00:00Z', '2026-04-10T08:00:00Z'),
-  ('USR-003', 'Tristan', 'tristan@cargonautes.fr', null, 'cadre', 'Conseil Operations France', null, 'USR-002', 39.00, 'active', '2025-10-01T08:00:00Z', '2026-04-10T08:00:00Z'),
-  ('USR-004', 'Martin Salles', 'martin.salles@cargonautes.fr', null, 'cadre', 'Conseil Operations France', null, 'USR-002', 39.00, 'active', '2025-10-15T08:00:00Z', '2026-04-10T08:00:00Z'),
-  ('USR-005', 'Alexis', 'alexis@cargonautes.fr', null, 'cadre', 'Conseil Operations France', null, 'USR-002', 37.00, 'active', '2025-11-01T08:00:00Z', '2026-04-10T08:00:00Z'),
-  ('USR-006', 'Eduardo', 'eduardo@cargonautes.fr', null, 'admin', 'Conseil Operations France', null, null, 39.00, 'active', '2025-11-15T08:00:00Z', '2026-04-10T08:00:00Z');
+  ('USR-001', 'Claire', 'claire@cargonautes.fr', null, 'Conseil Operations France', null, 'USR-002', 39.00, 'active', '2025-09-01T08:00:00Z', '2026-04-10T08:00:00Z'),
+  ('USR-002', 'Paulo', 'paulo@cargonautes.fr', null, 'Conseil Operations France', 'Conseil Operations France', null, 39.00, 'active', '2025-09-01T08:00:00Z', '2026-04-10T08:00:00Z'),
+  ('USR-003', 'Tristan', 'tristan@cargonautes.fr', null, 'Conseil Operations France', null, 'USR-002', 39.00, 'active', '2025-10-01T08:00:00Z', '2026-04-10T08:00:00Z'),
+  ('USR-004', 'Martin Salles', 'martin.salles@cargonautes.fr', null, 'Conseil Operations France', null, 'USR-002', 39.00, 'active', '2025-10-15T08:00:00Z', '2026-04-10T08:00:00Z'),
+  ('USR-005', 'Alexis', 'alexis@cargonautes.fr', null, 'Conseil Operations France', null, 'USR-002', 37.00, 'active', '2025-11-01T08:00:00Z', '2026-04-10T08:00:00Z'),
+  ('USR-006', 'Eduardo', 'eduardo@cargonautes.fr', null, 'Conseil Operations France', null, null, 39.00, 'active', '2025-11-15T08:00:00Z', '2026-04-10T08:00:00Z');
 
 insert into categories (
   activity_category_id,

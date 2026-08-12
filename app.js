@@ -300,7 +300,6 @@ const authUserName = document.querySelector("#auth-user-name");
 const authUserEmail = document.querySelector("#auth-user-email");
 const authUserAvatar = document.querySelector("#auth-user-avatar");
 const authAvatarInput = document.querySelector("#auth-avatar-input");
-const authRolePill = document.querySelector("#auth-role-pill");
 const authSignoutButton = document.querySelector("#auth-signout-button");
 // Écran de connexion (Supabase Auth, email + mot de passe) — la porte d'accès.
 const loginGate = document.querySelector("#login-gate");
@@ -408,7 +407,6 @@ const teamReportList = document.querySelector("#team-report-list");
 const reportProjectList = document.querySelector("#report-project-list");
 const reportCategoryHead = document.querySelector("#report-category-head");
 const reportCategoryList = document.querySelector("#report-category-list");
-const usersAdminShell = document.querySelector("#users-admin-shell");
 const sessionList = document.querySelector("#session-list");
 const journalFilterFromInput = document.querySelector("#journal-filter-from");
 const journalFilterToInput = document.querySelector("#journal-filter-to");
@@ -425,12 +423,7 @@ const journalFilterResetButton = document.querySelector("#journal-filter-reset")
 const journalSideSwitch = document.querySelector("#journal-side-switch");
 const tagManagerSearchInput = document.querySelector("#tag-manager-search");
 const tagManagerSortSwitch  = document.querySelector("#tag-manager-sort");
-const categoryRequestsBadge = document.querySelector("#category-requests-badge");
 let tagManagerSortMode = "usage"; // "usage" (count desc) | "alpha" (locale asc)
-// Demandes de catégorie en attente (admin/manager) — voir section Phase B.
-let pendingCategoryRequests = [];
-let categoryRequestsLoaded = false;
-let categoryRequestsLoading = false;
 const projectMemoryList = document.querySelector("#project-memory-list");
 const sessionItemTemplate = document.querySelector("#session-item-template");
 const resourceTotal = document.querySelector("#resource-total");
@@ -907,8 +900,6 @@ const PLANNED_WORK_DAYS = new Set([1, 2, 3, 4, 5]);
 const PLANNED_WORK_START_HOUR = 9;
 const PLANNED_WORK_END_HOUR = 18;
 let authRescueOptionsSignature = "";
-let usersAdminEditingId = null;
-let usersAdminDraft = null;
 let pendingStoppedSessionState = loadPendingStoppedSessionState();
 let recentlyStoppedSessionGuards = loadRecentlyStoppedSessionGuards();
 
@@ -2357,9 +2348,6 @@ function initializeAutocomplete() {
           userName: collaboratorInput.value.trim(),
           projectName: projectInput.value.trim(),
         }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags([value], currentTags);
         currentCategories = normalized.categories;
@@ -2423,9 +2411,6 @@ function initializeAutocomplete() {
           userName: manualCollaboratorInput.value.trim(),
           projectName: manualProjectInput.value.trim(),
         }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, manualEditingSessionId ? findSessionById(manualEditingSessionId)?.dbTimeEntryId ?? null : null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags(
           [value],
@@ -2458,9 +2443,6 @@ function initializeAutocomplete() {
           userName: "",
           projectName: "",
         }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags([value], plannedCurrentTags);
         plannedCurrentCategories = normalized.categories;
@@ -2530,9 +2512,6 @@ function initializeAutocomplete() {
       createLabel: (value) => `Ajouter "${value}" comme nouvelle catégorie`,
       createValue: (value) =>
         createCategoryReference(value, { userName: getCurrentCollaborator() || "", projectName: "" }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const el = document.querySelector("#rpr-category");
         if (el) el.value = normalizeCategorySelection(value).category || value;
@@ -2791,17 +2770,6 @@ function buildAutocompleteItems(config, query) {
     });
   }
 
-  // Falls back to "request from admin" when the user can't create directly.
-  // Used today for categories so the team keeps a canonical taxonomy.
-  const allowRequest = typeof config.allowRequest === "function" ? config.allowRequest() : config.allowRequest;
-  if (allowRequest && !allowCreate && normalizedQuery && !exactMatch) {
-    matches.push({
-      type: "request",
-      value: query,
-      label: config.requestLabel ? config.requestLabel(query) : `Demander "${query}" à l'admin`,
-    });
-  }
-
   return matches;
 }
 
@@ -2887,22 +2855,26 @@ function getImmediateAutocompleteSuggestion(query) {
 //
 // On recalcule les items depuis le config plutôt que de lire le popover : la
 // liste peut déjà être refermée au moment du blur.
+//
+// Renvoie le type de l'action déclenchée — "create" ou "request" — ou null si
+// la valeur n'en demandait aucune. Les deux ne se traitent pas pareil ensuite :
+// une création rate et laisse la valeur récupérable, une demande part vers
+// l'admin et le libellé ne doit plus servir tant qu'il n'est pas approuvé.
 function applyPendingCreationForValue(input, rawValue) {
   const config = autocompleteConfigByInput.get(input);
   const value = String(rawValue ?? "").trim();
   if (!config || !value) {
-    return false;
+    return null;
   }
   const normalizedValue = normalizeText(value);
   const pending = buildAutocompleteItems(config, value).find(
     (item) =>
-      (item.type === "create" || item.type === "request") &&
-      normalizeText(item.value) === normalizedValue,
+      item.type === "create" && normalizeText(item.value) === normalizedValue,
   );
   if (!pending) {
-    return false;
+    return null;
   }
-  // Le champ n'est plus vidé d'entrée de jeu, donc la même valeur repasse ici
+  // Une création laisse le texte dans le champ, donc la même valeur repasse ici
   // à chaque sortie : Entrée puis le blur du clic qui suit. Sans ce verrou, ça
   // fait deux insertions — la seconde ne voit pas encore la première dans le
   // catalogue et crée un doublon avec un autre CAT-.
@@ -2911,7 +2883,7 @@ function applyPendingCreationForValue(input, rawValue) {
     pendingReferenceCreationInput === input &&
     pendingReferenceCreationValue === normalizedValue
   ) {
-    return true;
+    return pending.type;
   }
   // La création part vers Supabase : tant qu'elle n'a pas répondu, la valeur
   // n'est dans aucun état lisible. Tout ce qui enregistre doit donc l'attendre
@@ -2928,7 +2900,7 @@ function applyPendingCreationForValue(input, rawValue) {
       pendingReferenceCreationValue = "";
     }
   });
-  return true;
+  return pending.type;
 }
 
 // À appeler en tête de tout chemin qui lit l'état des champs pour enregistrer.
@@ -2950,8 +2922,8 @@ async function settlePendingReferenceCreation() {
 // L'action « créer / demander » appelée par la saisie elle-même. Elle porte
 // exactement le texte tapé — la déclencher n'impose donc rien, contrairement à
 // une option qui remplacerait la saisie. C'est ce qui garde la taxonomie
-// canonique (création d'une vraie catégorie avec son ID, ou demande à l'admin)
-// au lieu de coller un libellé libre qui contournerait le circuit.
+// canonique (création d'une vraie catégorie avec son ID) au lieu de coller un
+// libellé libre sans identifiant.
 function getPendingCreationItem(query) {
   const normalizedQuery = normalizeText(query ?? "");
   if (!normalizedQuery) {
@@ -2959,8 +2931,7 @@ function getPendingCreationItem(query) {
   }
   return autocompleteState.items.find(
     (item) =>
-      (item.type === "create" || item.type === "request") &&
-      normalizeText(item.value) === normalizedQuery,
+      item.type === "create" && normalizeText(item.value) === normalizedQuery,
   ) ?? null;
 }
 
@@ -3066,14 +3037,6 @@ async function applyAutocompleteItem(item, config) {
     if (!nextValue) {
       return;
     }
-  }
-
-  // "request" items don't apply the typed value — they open a request
-  // dialog and leave the input untouched until the admin decides.
-  if (item.type === "request" && config.requestValue) {
-    hideAutocomplete();
-    await config.requestValue(item.value);
-    return;
   }
 
   config.applyValue(nextValue);
@@ -3447,7 +3410,7 @@ function scheduleAutocompleteHide() {
 
 function getInitialView() {
   const hash = window.location.hash.replace("#", "");
-  return ["reprendre", "agenda", "cadre", "manager", "resources", "users", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
+  return ["reprendre", "agenda", "cadre", "manager", "resources", "journal", "guide", "profil"].includes(hash) ? hash : "guide";
 }
 
 
@@ -4293,28 +4256,6 @@ function setPlannedDialogStatus(message = "", tone = "error") {
 function extractFirstUrl(rawValue = "") {
   const match = String(rawValue ?? "").match(/https?:\/\/[^\s)]+/i);
   return match ? match[0] : "";
-}
-
-function setUsersAdminDraftStatus(message = "", tone = "error") {
-  if (!usersAdminDraft) {
-    return;
-  }
-  usersAdminDraft.statusMessage = message;
-  usersAdminDraft.statusTone = tone;
-}
-
-function clearUsersAdminDraftTransientState() {
-  if (!usersAdminDraft) {
-    return;
-  }
-  usersAdminDraft.confirm_delete = false;
-  setUsersAdminDraftStatus("");
-}
-
-function failUsersAdminDraft(message, tone = "error") {
-  setUsersAdminDraftStatus(message, tone);
-  renderUsersAdmin();
-  return false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -6089,8 +6030,12 @@ async function ensureReferenceCatalogLoaded(force = false) {
   return result;
 }
 
+// Projet mono-utilisateur : il n'y a plus de rôles. Seule subsiste la
+// distinction « identifié ou non », dont dépendent la porte de connexion, le
+// périmètre des données affichées et les vues autorisées. Qui est identifié a
+// tous les droits.
 function getAccessRole() {
-  return accessProfile.role || "open";
+  return accessProfile.appUser ? "admin" : "open";
 }
 
 function getKnownUsers() {
@@ -6108,7 +6053,7 @@ function getAllowedViewsForRole(role = getAccessRole()) {
     return ["reprendre", "agenda", "cadre", "journal", "guide", "profil"];
   }
   if (role === "admin") {
-    return ["reprendre", "agenda", "cadre", "manager", "resources", "users", "journal", "guide", "profil"];
+    return ["reprendre", "agenda", "cadre", "manager", "resources", "journal", "guide", "profil"];
   }
   if (role === "manager") {
     return ["reprendre", "agenda", "cadre", "manager", "resources", "journal", "guide", "profil"];
@@ -6162,7 +6107,7 @@ function canCreateCollaboratorReference() {
 }
 
 function canCreateSharedReferenceCatalog() {
-  return false;
+  return true;
 }
 
 function canManageSharedCategoryColors() {
@@ -6170,17 +6115,10 @@ function canManageSharedCategoryColors() {
   return role === "manager" || role === "admin";
 }
 
-// Categories are canonical for the team. Only admin/manager can mint a new
-// one directly from autocomplete; everyone else who is signed in can ask
-// for one to be added through the request flow (canRequestSharedCategory).
+// Une catégorie inconnue est créée directement depuis l'autocomplétion. Le
+// circuit « demander à l'admin » n'existe plus : il n'y a qu'un utilisateur.
 function canCreateSharedCategory() {
-  const role = getAccessRole();
-  return role === "manager" || role === "admin";
-}
-
-function canRequestSharedCategory() {
-  if (canCreateSharedCategory()) return false;
-  return Boolean(accessProfile.appUser?.user_id);
+  return true;
 }
 
 function getEffectiveCollaboratorValue(rawValue = "") {
@@ -6393,13 +6331,6 @@ async function createProjectReference(rawName, defaultCategoryLabel = "") {
 async function createCategoryReference(rawLabel, options = {}) {
   const categoryLabel = normalizeCategorySelection(rawLabel).category;
   if (!categoryLabel) {
-    return null;
-  }
-  // Permission spécifique aux catégories (manager/admin), cohérente avec
-  // l'option « Ajouter une catégorie » de l'autocomplétion et le panneau
-  // d'approbation. (canCreateSharedReferenceCatalog reste false : verrou du
-  // catalogue projets, sans rapport ici.)
-  if (!canCreateSharedCategory()) {
     return null;
   }
   if (!window.supabase) {
@@ -8211,7 +8142,6 @@ function render() {
   renderManagerControls();
   renderManagerViews();
   renderResourcesViews();
-  renderUsersAdmin();
   renderGuideView();
 }
 
@@ -8238,19 +8168,6 @@ function renderAccessControlledInputs() {
 
   collaboratorInput.readOnly = hasAuthenticatedUser;
   manualCollaboratorInput.readOnly = hasAuthenticatedUser;
-}
-
-function formatRoleLabel(role) {
-  if (role === "admin") {
-    return "Admin";
-  }
-  if (role === "manager") {
-    return "Manager";
-  }
-  if (role === "cadre") {
-    return "Cargonaute";
-  }
-  return "Mode local";
 }
 
 function getUserAvatarMonogram(name) {
@@ -8283,9 +8200,6 @@ function renderAuthPanel() {
     }
     if (authUserEmail) {
       authUserEmail.textContent = accessProfile.appUser.email ?? accessProfile.session?.user?.email ?? "";
-    }
-    if (authRolePill) {
-      authRolePill.textContent = formatRoleLabel(accessProfile.role);
     }
     applyAuthAvatarVisual(accessProfile.appUser.user_name);
     return;
@@ -9193,12 +9107,6 @@ function renderTagManager() {
     }
   }
 
-  // Charge les demandes en attente pour alimenter le badge, même hors panneau Catégories.
-  if (canCreateSharedCategory() && !categoryRequestsLoaded) {
-    void loadPendingCategoryRequests();
-  }
-  updateCategoryRequestsBadge();
-
   if (journalSideMode === "categories") {
     renderCategoryManager(el, cleanupBtn);
     return;
@@ -9466,14 +9374,6 @@ async function cleanupHistoricalTags(btn) {
 function renderCategoryManager(el, cleanupBtn) {
   el.innerHTML = "";
   if (cleanupBtn) cleanupBtn.hidden = true;
-
-  // Demandes en attente (admin/manager uniquement), en tête du panneau.
-  if (canCreateSharedCategory()) {
-    if (!categoryRequestsLoaded) void loadPendingCategoryRequests();
-    if (pendingCategoryRequests.length) {
-      el.append(buildCategoryRequestsSection());
-    }
-  }
 
   const categoryCounts = new Map();
   for (const session of getSessionsWithPendingStopped()) {
@@ -13078,10 +12978,8 @@ function renderManagerViews() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SECTION: RESOURCES, GUIDE & USERS ADMIN
-// Purpose: Read-only resource lists, the onboarding guide (different copy
-//   per role), and the manager-only users admin CRUD (display ↔ editor
-//   cards, save/delete, role and team assignment).
+// SECTION: RESOURCES & GUIDE
+// Purpose: Read-only resource lists and the onboarding guide.
 // ═══════════════════════════════════════════════════════════════════════════
 
 function renderResourcesViews() {
@@ -13496,373 +13394,6 @@ function buildGuideForExistingUser(hasCalendar) {
   }));
 
   return root;
-}
-
-function renderUsersAdmin() {
-  if (!usersAdminShell) {
-    return;
-  }
-
-  usersAdminShell.innerHTML = "";
-
-  if (getAccessRole() !== "admin") {
-    usersAdminShell.append(createEmptyState("Cette vue est reservee a l'administration."));
-    return;
-  }
-
-  const rows = [...referenceCatalog.users].sort((left, right) => left.user_name.localeCompare(right.user_name, "fr"));
-  const head = document.createElement("div");
-  head.className = "users-admin-head";
-
-  const addButton = document.createElement("button");
-  addButton.type = "button";
-  addButton.className = "btn btn-primary";
-  addButton.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11"/></svg> Ajouter`;
-  addButton.addEventListener("click", () => {
-    usersAdminEditingId = "__new__";
-    usersAdminDraft = createUsersAdminDraft();
-    renderUsersAdmin();
-  });
-
-  head.append(addButton);
-  usersAdminShell.append(head);
-
-  const list = document.createElement("div");
-  list.className = "users-admin-list";
-
-  if (usersAdminEditingId === "__new__" && usersAdminDraft) {
-    list.append(renderUsersAdminEditorCard(null, true));
-  }
-
-  if (!rows.length && usersAdminEditingId !== "__new__") {
-    list.append(createEmptyState("Aucun utilisateur actif pour le moment."));
-  } else {
-    for (const user of rows) {
-      const isEditing = usersAdminEditingId === user.user_id;
-      list.append(isEditing ? renderUsersAdminEditorCard(user, false) : renderUsersAdminDisplayCard(user));
-    }
-  }
-
-  usersAdminShell.append(list);
-}
-
-function createUsersAdminDraft(user = null) {
-  const defaultTeamName =
-    accessProfile.appUser?.team_name ||
-    accessProfile.appUser?.managed_team_name ||
-    user?.team_name ||
-    "Equipe";
-
-  return {
-    user_id: user?.user_id ?? null,
-    user_name: user?.user_name ?? "",
-    email: user?.email ?? "",
-    role: user?.role ?? "cadre",
-    team_name: user?.team_name ?? defaultTeamName,
-    managed_team_name: user?.managed_team_name ?? "",
-    confirm_delete: false,
-    statusMessage: "",
-    statusTone: "error",
-  };
-}
-
-function renderUsersAdminDisplayCard(user) {
-  const card = document.createElement("article");
-  card.className = "users-user-card users-user-row";
-
-  const identity = document.createElement("div");
-  identity.className = "users-row-identity";
-  const avatar = document.createElement("span");
-  avatar.className = "users-avatar";
-  avatar.textContent = getUserAvatarMonogram(user.user_name ?? "?");
-  const nameCopy = document.createElement("div");
-  nameCopy.className = "users-row-copy";
-  const nameEl = document.createElement("strong");
-  nameEl.textContent = user.user_name ?? "Sans nom";
-  const statusDot = document.createElement("span");
-  statusDot.className = `users-status-dot users-status-dot--${user.status === "active" ? "active" : "inactive"}`;
-  statusDot.title = user.status === "active" ? "Actif" : "Inactif";
-  nameCopy.append(nameEl, statusDot);
-  identity.append(avatar, nameCopy);
-
-  const emailEl = document.createElement("span");
-  emailEl.className = "users-row-email muted-copy";
-  emailEl.textContent = user.email || "—";
-
-  const roleBadge = document.createElement("span");
-  roleBadge.className = `pill users-role-badge users-role-badge--${user.role ?? "cadre"}`;
-  roleBadge.textContent = formatUsersRoleLabel(user.role ?? "cadre");
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.className = "btn users-edit-btn";
-  editButton.title = `Modifier ${user.user_name ?? ""}`;
-  editButton.setAttribute("aria-label", `Modifier ${user.user_name ?? ""}`);
-  editButton.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z"/></svg>`;
-  editButton.addEventListener("click", () => {
-    usersAdminEditingId = user.user_id;
-    usersAdminDraft = createUsersAdminDraft(user);
-    renderUsersAdmin();
-  });
-
-  card.append(identity, emailEl, roleBadge, editButton);
-  return card;
-}
-
-
-function renderUsersAdminEditorCard(user, isNew) {
-  const draft = usersAdminDraft ?? createUsersAdminDraft(user);
-  const card = document.createElement("article");
-  card.className = "users-user-card users-user-card--editing";
-
-  const grid = document.createElement("div");
-  grid.className = "users-edit-grid";
-
-  const nameField = createUsersAdminInputField("Personne", "text", draft.user_name, "Ex. Paulo");
-  nameField.input.addEventListener("input", (event) => {
-    usersAdminDraft.user_name = event.target.value;
-    clearUsersAdminDraftTransientState();
-  });
-
-  const emailField = createUsersAdminInputField("Email", "email", draft.email, "prenom@domaine.fr");
-  emailField.input.addEventListener("input", (event) => {
-    usersAdminDraft.email = event.target.value;
-    clearUsersAdminDraftTransientState();
-  });
-
-  const roleField = document.createElement("label");
-  roleField.className = "field";
-  const roleLabel = document.createElement("span");
-  roleLabel.textContent = "Role";
-  const roleSelect = document.createElement("select");
-  roleSelect.className = "select-input users-role-select";
-  [
-    ["cadre", "Utilisateur normal"],
-    ["manager", "Manager"],
-    ["admin", "Admin"],
-  ].forEach(([value, label]) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    roleSelect.append(option);
-  });
-  roleSelect.value = draft.role;
-  roleSelect.addEventListener("change", (event) => {
-    usersAdminDraft.role = event.target.value;
-    clearUsersAdminDraftTransientState();
-  });
-  roleField.append(roleLabel, roleSelect);
-
-  grid.append(nameField.field, emailField.field, roleField);
-
-  const status = document.createElement("p");
-  status.className = "users-edit-status";
-  status.hidden = !draft.statusMessage;
-  status.textContent = draft.statusMessage || "";
-  status.dataset.tone = draft.statusMessage ? draft.statusTone || "error" : "";
-
-  const actions = document.createElement("div");
-  actions.className = "dialog-actions users-edit-actions";
-
-  if (!isNew) {
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "btn btn-ghost-danger dialog-action-danger";
-    deleteButton.textContent = draft.confirm_delete ? "Confirmer la suppression" : "Supprimer";
-    deleteButton.addEventListener("click", async () => {
-      if (!usersAdminDraft.confirm_delete) {
-        usersAdminDraft.confirm_delete = true;
-        renderUsersAdmin();
-        return;
-      }
-      await deleteManagedUser(user);
-    });
-    actions.append(deleteButton);
-  }
-
-  const cancelButton = document.createElement("button");
-  cancelButton.type = "button";
-  cancelButton.className = "btn btn-secondary";
-  cancelButton.textContent = "Annuler";
-  cancelButton.addEventListener("click", () => {
-    usersAdminEditingId = null;
-    usersAdminDraft = null;
-    renderUsersAdmin();
-  });
-
-  const saveButton = document.createElement("button");
-  saveButton.type = "button";
-  saveButton.className = "btn btn-primary";
-  saveButton.textContent = isNew ? "Creer" : "Enregistrer";
-  saveButton.addEventListener("click", async () => {
-    await saveManagedUser(user, isNew);
-  });
-
-  actions.append(cancelButton, saveButton);
-  card.append(grid, status, actions);
-  return card;
-}
-
-function createUsersAdminInputField(labelText, type, value, placeholder = "") {
-  const field = document.createElement("label");
-  field.className = "field";
-  const label = document.createElement("span");
-  label.textContent = labelText;
-  const input = document.createElement("input");
-  input.type = type;
-  input.value = value;
-  input.placeholder = placeholder;
-  field.append(label, input);
-  return { field, input };
-}
-
-function formatUsersRoleLabel(role) {
-  return (
-    {
-      cadre: "Utilisateur normal",
-      manager: "Manager",
-      admin: "Admin",
-    }[role] ?? "Utilisateur normal"
-  );
-}
-
-function validateManagedUserDraft(draft, user = null) {
-  const userName = draft.user_name.trim();
-  const email = draft.email.trim();
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const duplicateName = referenceCatalog.users.find((item) =>
-    item.user_id !== (user?.user_id ?? null) && normalizeComparableText(item.user_name) === normalizeComparableText(userName),
-  );
-  const duplicateEmail = email
-    ? referenceCatalog.users.find((item) =>
-        item.user_id !== (user?.user_id ?? null) && normalizeText(item.email || "") === normalizeText(email),
-      )
-    : null;
-
-  if (!userName) {
-    return { ok: false, message: "Le nom de la personne est requis." };
-  }
-  if (duplicateName) {
-    return { ok: false, message: "Ce nom est déjà utilisé. Choisissez un nom unique pour éviter les collisions de profil." };
-  }
-  if (email && !emailPattern.test(email)) {
-    return { ok: false, message: "L'adresse email semble invalide." };
-  }
-  if (duplicateEmail) {
-    return { ok: false, message: "Cette adresse e-mail est déjà associée à un autre utilisateur." };
-  }
-
-  return {
-    ok: true,
-    userName,
-    email,
-  };
-}
-
-async function saveManagedUser(user, isNew) {
-  if (!usersAdminDraft) {
-    return false;
-  }
-  if (!window.supabase) {
-    return failUsersAdminDraft("La synchronisation distante est indisponible pour le moment.");
-  }
-
-  const validation = validateManagedUserDraft(usersAdminDraft, user);
-  if (!validation.ok) {
-    return failUsersAdminDraft(validation.message);
-  }
-
-  const { userName, email } = validation;
-
-  const basePayload = {
-    user_name: userName,
-    email: email || null,
-    role: usersAdminDraft.role || "cadre",
-    team_name: usersAdminDraft.team_name,
-    managed_team_name: usersAdminDraft.role === "manager" ? usersAdminDraft.team_name : null,
-    updated_at: new Date().toISOString(),
-  };
-
-  let error = null;
-  if (isNew) {
-    const nextId = await getNextPrefixedId("users", "user_id", "USR-", 3);
-    if (!nextId) {
-      return failUsersAdminDraft("Impossible de preparer le nouvel utilisateur.");
-    }
-
-    ({ error } = await window.supabase.from("users").insert([
-      {
-        user_id: nextId,
-        ...basePayload,
-        weekly_capacity_hours: 40,
-        status: "active",
-      },
-    ]));
-  } else {
-    ({ error } = await window.supabase
-      .from("users")
-      .update(basePayload)
-      .eq("user_id", user.user_id));
-  }
-
-  if (error) {
-    console.error("Users save failed:", error);
-    return failUsersAdminDraft("Impossible d'enregistrer cet utilisateur pour le moment.");
-  }
-
-  await ensureReferenceCatalogLoaded(true);
-  if (accessProfile.appUser?.user_id === user?.user_id) {
-    const refreshedCurrentUser = findKnownUserByName(userName) ?? accessProfile.appUser;
-    accessProfile = {
-      ...accessProfile,
-      role: basePayload.role,
-      appUser: refreshedCurrentUser,
-    };
-    storeLocalRescueName(refreshedCurrentUser.user_name);
-  }
-
-  usersAdminEditingId = null;
-  usersAdminDraft = null;
-  setAuthStatusMessage(isNew ? "Utilisateur cree." : "Utilisateur mis a jour.", "success", { persistMs: 2400 });
-  render();
-  return true;
-}
-
-async function deleteManagedUser(user) {
-  if (!window.supabase || !user?.user_id) {
-    return failUsersAdminDraft("La synchronisation distante est indisponible pour le moment.");
-  }
-  if (accessProfile.appUser?.user_id === user.user_id) {
-    return failUsersAdminDraft("Impossible de supprimer le profil actuellement utilise.", "warning");
-  }
-
-  let { error } = await window.supabase.from("users").delete().eq("user_id", user.user_id);
-  if (error?.code === "23503") {
-    ({ error } = await window.supabase
-      .from("users")
-      .update({ status: "inactive", updated_at: new Date().toISOString() })
-      .eq("user_id", user.user_id));
-    if (!error) {
-      await ensureReferenceCatalogLoaded(true);
-      usersAdminEditingId = null;
-      usersAdminDraft = null;
-      setAuthStatusMessage("Utilisateur retire de la liste active.", "success", { persistMs: 2400 });
-      render();
-      return true;
-    }
-  }
-
-  if (error) {
-    console.error("Users delete failed:", error);
-    return failUsersAdminDraft("Impossible de supprimer cet utilisateur pour le moment.");
-  }
-
-  await ensureReferenceCatalogLoaded(true);
-  usersAdminEditingId = null;
-  usersAdminDraft = null;
-  setAuthStatusMessage("Utilisateur supprime.", "success", { persistMs: 2400 });
-  render();
-  return true;
 }
 
 function getAnalysisExportRows() {
@@ -15123,15 +14654,17 @@ function commitTokenInput(input, config) {
     return;
   }
 
-  // Catégorie inconnue : la créer / la demander plutôt qu'en faire un libellé
-  // libre. Vaut pour toutes les sorties du champ, y compris le blur.
-  //
-  // On ne vide pas le champ ici : applyValue le fait lui-même une fois la
-  // référence créée. Le vider tout de suite jetait définitivement le texte tapé
-  // quand l'insert échouait, et laissait le champ vide pendant l'aller-retour
-  // réseau alors que rien n'était encore enregistré.
-  if (tokens.length === 1 && applyPendingCreationForValue(input, tokens[0])) {
-    return;
+  // Catégorie inconnue : la créer plutôt qu'en faire un libellé libre. Vaut
+  // pour toutes les sorties du champ, y compris le blur.
+  if (tokens.length === 1) {
+    // Appel gardé par tokens.length : la fonction a des effets de bord, elle ne
+    // doit pas partir sur une saisie multi-jetons.
+    if (applyPendingCreationForValue(input, tokens[0])) {
+      // On garde le texte : la création n'a pas encore abouti. applyValue vide
+      // le champ lui-même une fois la référence en base ; s'il échoue, c'est le
+      // seul endroit où ce que l'utilisateur a tapé survit encore.
+      return;
+    }
   }
 
   const nextValues = config.singleValue
@@ -15678,270 +15211,6 @@ function colorForLabel(label) {
 //   isn't cached). This is the last function defined; boot happens via
 //   the calls at the very bottom of the file.
 // ═══════════════════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SECTION: CATEGORY REQUEST FLOW
-// Purpose: Categories are canonical for the team. Cadre users (non-admin /
-//   non-manager) can ask for a new one through this dialog instead of
-//   minting it directly. The request lands in public.category_requests
-//   and is decided later by an admin/manager. Phase B (admin decision +
-//   notifications + deep-link to source entry) is a separate commit.
-// ═══════════════════════════════════════════════════════════════════════════
-
-const categoryRequestDialog          = document.querySelector("#category-request-dialog");
-const categoryRequestLabelInput      = document.querySelector("#category-request-label");
-const categoryRequestJustification   = document.querySelector("#category-request-justification");
-const categoryRequestError           = document.querySelector("#category-request-error");
-const categoryRequestSubmitBtn       = document.querySelector("#category-request-submit");
-const categoryRequestCancelBtn       = document.querySelector("#category-request-cancel");
-let categoryRequestState = null;
-
-function openCategoryRequestDialog(label, sourceTimeEntryId) {
-  if (!categoryRequestDialog) return;
-  const trimmed = String(label ?? "").trim();
-  if (!trimmed) return;
-  categoryRequestState = { label: trimmed, sourceTimeEntryId: sourceTimeEntryId ?? null };
-  if (categoryRequestLabelInput) categoryRequestLabelInput.value = trimmed;
-  if (categoryRequestJustification) categoryRequestJustification.value = "";
-  if (categoryRequestError) {
-    categoryRequestError.textContent = "";
-    categoryRequestError.hidden = true;
-  }
-  if (categoryRequestSubmitBtn) {
-    categoryRequestSubmitBtn.disabled = false;
-    categoryRequestSubmitBtn.textContent = "Envoyer la demande";
-  }
-  categoryRequestDialog.showModal();
-  requestAnimationFrame(() => categoryRequestJustification?.focus());
-}
-
-function closeCategoryRequestDialog() {
-  if (categoryRequestDialog?.open) categoryRequestDialog.close();
-  categoryRequestState = null;
-}
-
-async function submitCategoryRequestDraft() {
-  if (!categoryRequestState || !window.supabase) return;
-  const appUser = accessProfile.appUser;
-  if (!appUser?.user_id || !appUser?.user_name) {
-    if (categoryRequestError) {
-      categoryRequestError.textContent = "Identifie-toi pour envoyer une demande.";
-      categoryRequestError.hidden = false;
-    }
-    return;
-  }
-
-  const payload = {
-    user_id:              appUser.user_id,
-    user_name:            appUser.user_name,
-    label:                categoryRequestState.label,
-    justification:        (categoryRequestJustification?.value ?? "").trim() || null,
-    source_time_entry_id: categoryRequestState.sourceTimeEntryId,
-  };
-
-  if (categoryRequestSubmitBtn) {
-    categoryRequestSubmitBtn.disabled = true;
-    categoryRequestSubmitBtn.textContent = "Envoi…";
-  }
-
-  const { error } = await window.supabase
-    .from("category_requests")
-    .insert([payload]);
-
-  if (error) {
-    console.warn("category_requests insert failed:", error);
-    if (categoryRequestError) {
-      categoryRequestError.textContent = "Envoi impossible. Réessaie dans un instant.";
-      categoryRequestError.hidden = false;
-    }
-    if (categoryRequestSubmitBtn) {
-      categoryRequestSubmitBtn.disabled = false;
-      categoryRequestSubmitBtn.textContent = "Envoyer la demande";
-    }
-    return;
-  }
-
-  setAuthStatusMessage(`Demande envoyée pour « ${categoryRequestState.label} ».`, "success", { persistMs: 2800 });
-  closeCategoryRequestDialog();
-}
-
-categoryRequestSubmitBtn?.addEventListener("click", (event) => {
-  event.preventDefault();
-  void submitCategoryRequestDraft();
-});
-
-categoryRequestCancelBtn?.addEventListener("click", (event) => {
-  event.preventDefault();
-  closeCategoryRequestDialog();
-});
-
-categoryRequestDialog?.addEventListener("close", () => {
-  categoryRequestState = null;
-});
-
-// ─── Admin/manager : traitement des demandes de catégorie (Phase B) ──────────
-// Les cadres demandent une catégorie (openCategoryRequestDialog) ; manager et
-// admin les approuvent (crée la catégorie canonique) ou les refusent ici, dans
-// le panneau « Catégories » du Journal.
-// (l'état pendingCategoryRequests / categoryRequestsBadge est déclaré en tête de
-//  fichier car render() — appelé au boot — peut lire ces bindings.)
-
-function updateCategoryRequestsBadge() {
-  if (!categoryRequestsBadge) return;
-  const count = canCreateSharedCategory() ? pendingCategoryRequests.length : 0;
-  categoryRequestsBadge.hidden = count === 0;
-  categoryRequestsBadge.textContent = count > 0 ? String(count) : "";
-}
-
-async function loadPendingCategoryRequests({ force = false } = {}) {
-  if (!window.supabase || !canCreateSharedCategory()) {
-    // Pas le droit / pas encore connecté : on n'arme PAS le flag « chargé »,
-    // pour relancer la vraie charge dès que le rôle admin/manager est résolu.
-    pendingCategoryRequests = [];
-    updateCategoryRequestsBadge();
-    return;
-  }
-  if (categoryRequestsLoading || (categoryRequestsLoaded && !force)) return;
-  categoryRequestsLoading = true;
-  try {
-    const { data, error } = await window.supabase
-      .from("category_requests")
-      .select("request_id,user_id,user_name,label,justification,source_time_entry_id,status,created_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
-    if (error) {
-      console.warn("category_requests select failed:", error);
-      return;
-    }
-    pendingCategoryRequests = Array.isArray(data) ? data : [];
-    categoryRequestsLoaded = true;
-    updateCategoryRequestsBadge();
-    if (journalSideMode === "categories") renderTagManager();
-  } finally {
-    categoryRequestsLoading = false;
-  }
-}
-
-let approvingCategoryRequest = false;
-async function approveCategoryRequest(request) {
-  if (!request || !window.supabase) return;
-  // Verrou de ré-entrance : un double-clic sur « Approuver » lançait deux inserts
-  // avec le même prochain CAT-xxx → erreur de clé dupliquée trompeuse.
-  if (approvingCategoryRequest) return;
-  approvingCategoryRequest = true;
-  try {
-    setAuthStatusMessage(`Création de « ${request.label} »…`, "neutral");
-    // 1) Crée (ou retrouve) la catégorie canonique — réutilise la pipeline existante.
-    const createdLabel = await createCategoryReference(request.label, { userName: request.user_name });
-    if (!createdLabel) {
-      const detail = lastCategoryInsertError?.message || lastCategoryInsertError?.code || "raison inconnue";
-      setAuthStatusMessage(`Création impossible : ${detail}`, "error", { persistMs: 7000 });
-      return;
-    }
-    // 2) Marque la demande comme approuvée.
-    const { error } = await window.supabase
-      .from("category_requests")
-      .update({
-        status: "approved",
-        decided_at: new Date().toISOString(),
-        decided_by: accessProfile.appUser?.user_id ?? null,
-      })
-      .eq("request_id", request.request_id);
-    if (error) {
-      console.warn("category_requests approve update failed:", error);
-      setAuthStatusMessage(`« ${createdLabel} » créée, mais le statut de la demande n'a pas pu être mis à jour.`, "warning", { persistMs: 4500 });
-    } else {
-      setAuthStatusMessage(`« ${createdLabel} » approuvée et ajoutée au catalogue.`, "success", { persistMs: 3000 });
-    }
-    await loadPendingCategoryRequests({ force: true });
-    renderSuggestions();
-  } finally {
-    approvingCategoryRequest = false;
-  }
-}
-
-async function rejectCategoryRequest(request) {
-  if (!request || !window.supabase) return;
-  const confirmed = await requestDecision({
-    eyebrow: "Demande de catégorie",
-    title: `Refuser « ${request.label} » ?`,
-    copy: `Demandée par ${request.user_name || "?"}.`,
-    detail: "La demande sera marquée comme refusée et aucune catégorie ne sera créée.",
-    confirmLabel: "Refuser",
-    tone: "danger",
-  });
-  if (!confirmed) return;
-  const { error } = await window.supabase
-    .from("category_requests")
-    .update({
-      status: "rejected",
-      decided_at: new Date().toISOString(),
-      decided_by: accessProfile.appUser?.user_id ?? null,
-    })
-    .eq("request_id", request.request_id);
-  if (error) {
-    console.warn("category_requests reject update failed:", error);
-    setAuthStatusMessage("Refus impossible pour le moment. Réessaie.", "error", { persistMs: 3500 });
-    return;
-  }
-  setAuthStatusMessage(`Demande « ${request.label} » refusée.`, "success", { persistMs: 2800 });
-  await loadPendingCategoryRequests({ force: true });
-}
-
-function buildCategoryRequestsSection() {
-  const wrap = document.createElement("div");
-  wrap.className = "cat-requests";
-
-  const head = document.createElement("div");
-  head.className = "cat-requests-head";
-  head.textContent = `Demandes en attente · ${pendingCategoryRequests.length}`;
-  wrap.append(head);
-
-  for (const request of pendingCategoryRequests) {
-    const item = document.createElement("div");
-    item.className = "cat-request-item";
-
-    const info = document.createElement("div");
-    info.className = "cat-request-info";
-
-    const label = document.createElement("span");
-    label.className = "cat-request-label";
-    label.textContent = request.label;
-
-    const meta = document.createElement("span");
-    meta.className = "cat-request-meta";
-    meta.textContent = `par ${request.user_name || "?"}`;
-    info.append(label, meta);
-
-    if (request.justification) {
-      const justif = document.createElement("p");
-      justif.className = "cat-request-justif";
-      justif.textContent = request.justification;
-      info.append(justif);
-    }
-
-    const actions = document.createElement("div");
-    actions.className = "cat-request-actions";
-
-    const approveBtn = document.createElement("button");
-    approveBtn.type = "button";
-    approveBtn.className = "btn btn-primary btn--sm";
-    approveBtn.textContent = "Approuver";
-    approveBtn.addEventListener("click", () => void approveCategoryRequest(request));
-
-    const rejectBtn = document.createElement("button");
-    rejectBtn.type = "button";
-    rejectBtn.className = "btn btn--sm btn--danger-outline";
-    rejectBtn.textContent = "Refuser";
-    rejectBtn.addEventListener("click", () => void rejectCategoryRequest(request));
-
-    actions.append(approveBtn, rejectBtn);
-    item.append(info, actions);
-    wrap.append(item);
-  }
-
-  return wrap;
-}
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
