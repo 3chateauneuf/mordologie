@@ -111,21 +111,30 @@ const DEFAULT_KPI_CATEGORY_LABEL = "Internal / Admin";
 // Garde-fou anti-erreur : durée max d'une entrée manuelle (heures). Configurable
 // par personne dans le profil ; ce défaut sert de plafond de bon sens.
 const DEFAULT_MAX_SESSION_HOURS = 24;
-// Chrono fantôme — battement de cœur + détection d'abandon.
-// Le chrono ré-upserte active_sessions toutes les HEARTBEAT_INTERVAL_MS tant
-// qu'il tourne (updated_at devient un signal de vie fiable). À la réhydratation,
-// un chrono « en cours » sans battement depuis ABANDONED_HEARTBEAT_MS = l'onglet
-// est mort → on ne le réinstalle pas (sinon il repart à compter depuis started_at).
+// Battement de cœur du chrono. Le chrono ré-upserte active_sessions toutes les
+// HEARTBEAT_INTERVAL_MS tant qu'il tourne : `updated_at` dit quand la dernière
+// machine à l'avoir porté était encore éveillée.
+//
+// Le battement est un signal d'information, PAS un verdict de mort. Un chrono
+// démarré sur le portable puis retrouvé sur un autre poste doit s'y réinstaller
+// et continuer à compter depuis started_at : c'est le mode de travail normal
+// (on ferme le capot, on change de machine). L'absence de battement ne supprime
+// donc jamais rien — elle sert seulement à signaler « repris, sans activité
+// depuis HH:MM ». Ce qui coupe réellement un chrono, ce sont les preuves d'arrêt
+// (id présent dans time_entries, entrée terminée plus récente) et le garde-fou
+// de durée MAX_REASONABLE_ACTIVE_SESSION_MS ; le nudge « chrono long »
+// (DEFAULT_LONG_TIMER_ALERT_HOURS) rattrape l'oubli réel.
 const HEARTBEAT_INTERVAL_MS = 60 * 1000;
-const ABANDONED_HEARTBEAT_MS = 5 * 60 * 1000;
-// En dessous de cette durée récupérée, l'orphelin ne vaut pas une entrée (0 travail).
-const ABANDONED_MIN_KEEP_MS = 60 * 1000;
+// Au-delà de ce silence, on prévient l'utilisateur que le chrono repris n'a pas
+// battu récemment (message informatif, aucune donnée détruite).
+const HEARTBEAT_GAP_NOTICE_MS = 5 * 60 * 1000;
 // Alerte « chrono long » (nudge configurable par personne dans le profil).
 const DEFAULT_LONG_TIMER_ALERT_HOURS = 4;
 const LONG_TIMER_ALERT_PREFERENCE_KEY = "long_timer_alert_hours";
 const LONG_TIMER_ALERT_KEY = "mordologie-long-timer-alert-v1";
 let longTimerAlertDialogOpen = false;
-const handledAbandonedSessionIds = new Set();
+// Chronos repris avec un long silence : on ne prévient qu'une fois par session.
+const noticedHeartbeatGapSessionIds = new Set();
 // Report de l'alerte « chrono long », par id de session. Hors de l'objet session
 // car la réhydratation (toutes les 15 s) remplace activeSession par la ligne
 // remote mappée et effacerait un champ porté par la session.
@@ -4803,14 +4812,13 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     void removeStoppedSessionGhostsFromSupabase(remoteActiveSession, { refreshAfterSuccess: false });
   }
 
-  if (remoteActiveSession && !remoteActiveIsStale && !isAbandonedActiveSession(remoteActiveSession) && !isGhostActiveSessionCandidate(remoteActiveSession, Array.from(mergedSessions.values()))) {
+  // Un chrono distant se réinstalle ici même si son dernier battement est vieux :
+  // la machine qui l'a démarré dort peut-être (capot fermé), le travail continue.
+  // Seules les preuves d'arrêt ci-dessus (stale / ghost) le coupent.
+  if (remoteActiveSession && !remoteActiveIsStale && !isGhostActiveSessionCandidate(remoteActiveSession, Array.from(mergedSessions.values()))) {
     activeSession = remoteActiveSession;
   } else if (
     previousActiveSession &&
-    // Chrono abandonné (onglet mort, aucun battement depuis ABANDONED_HEARTBEAT_MS)
-    // : ne pas le réinstaller, sinon il repart à compter depuis started_at. Traité
-    // plus bas (nettoyage + proposition de récupération).
-    !isAbandonedActiveSession(previousActiveSession) &&
     // On conserve le chrono en cours de l'utilisateur courant même s'il est
     // server-backed. `active_sessions` est en cohérence éventuelle : une lecture
     // peut momentanément ne pas renvoyer la ligne qu'on vient d'upserter (lag de
@@ -4837,19 +4845,13 @@ function hydrateRemoteState(historyRows, activeRows, { historyAuthoritative = tr
     activeSession = null;
   }
 
-  // Chrono abandonné : détecté ci-dessus (exclu des deux branches). On le nettoie
-  // et on propose de récupérer la durée réelle, une seule fois par session.
-  if (!activeSession) {
-    const abandonedCandidate =
-      (remoteActiveSession && isAbandonedActiveSession(remoteActiveSession) && remoteActiveSession) ||
-      (previousActiveSession &&
-        normalizeText(previousActiveSession.collaborator) === normalizeText(currentUserName) &&
-        isAbandonedActiveSession(previousActiveSession) &&
-        previousActiveSession) ||
-      null;
-    if (abandonedCandidate) {
-      void handleAbandonedActiveSession(abandonedCandidate);
-    }
+  // Chrono récupéré après un silence (l'autre poste dormait) : on le signale, et
+  // cette machine reprend le battement tout de suite pour redevenir le porteur.
+  // Au-delà du plafond de durée, on le fige d'abord sur son dernier battement
+  // (adoptActiveSessionHeartbeat laisse alors la main : un chrono en pause ne bat pas).
+  if (activeSession) {
+    clampOverlongResumedSession(activeSession);
+    adoptActiveSessionHeartbeat(activeSession);
   }
 
   persistSessions();
@@ -7946,14 +7948,81 @@ function getSessionLastHeartbeatMs(session) {
   return Math.max(beat, startMs);
 }
 
-// Un chrono « en cours » (non mis en pause) dont le dernier battement remonte à
-// plus de ABANDONED_HEARTBEAT_MS = l'onglet propriétaire est mort. À ne pas
-// réinstaller : sinon il repart à compter depuis started_at (le fantôme).
-function isAbandonedActiveSession(session) {
+// Silence depuis le dernier battement connu. Purement informatif : un long
+// silence veut dire « la machine porteuse dormait », pas « ce chrono est mort ».
+function getHeartbeatGapMs(session) {
+  if (!session || session.pausedAt) {
+    return 0;
+  }
+  return Math.max(0, Date.now() - getSessionLastHeartbeatMs(session));
+}
+
+// Garde-fou de durée à la reprise. Un chrono retrouvé si vieux qu'il dépasse
+// MAX_REASONABLE_ACTIVE_SESSION_MS ne doit pas repartir tel quel : il compterait
+// les jours pendant lesquels aucune machine ne le portait, et finirait par
+// enregistrer une durée absurde. On ne le supprime pas pour autant — on le fige
+// sur son dernier battement, exactement comme une pause manuelle
+// (cf. togglePauseSession) : le compteur s'arrête, rien n'est perdu, et la
+// reprise ne comptera pas le sommeil (le trou part dans pausedDurationMs).
+// L'utilisateur voit le chrono et tranche : « Reprendre » ou arrêter.
+function clampOverlongResumedSession(session) {
   if (!session || session.pausedAt) {
     return false;
   }
-  return Date.now() - getSessionLastHeartbeatMs(session) > ABANDONED_HEARTBEAT_MS;
+  if (!isStaleActiveSessionCandidate(session)) {
+    return false;
+  }
+
+  // getSessionLastHeartbeatMs borne à start : la durée figée n'est jamais négative.
+  const lastBeat = getSessionLastHeartbeatMs(session);
+  session.pausedAt = new Date(lastBeat).toISOString();
+  stopTimerLoop();
+  persistActiveSession();
+  void upsertActiveSessionToSupabase(session);
+
+  const label = session.project || "(sans sujet)";
+  const lastBeatLabel = new Date(lastBeat).toLocaleString("fr-FR", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+  setAuthStatusMessage(
+    `Chrono « ${label} » mis en pause sur sa dernière activité (${lastBeatLabel}) : il tournait depuis trop longtemps. Reprends-le ou arrête-le.`,
+    "warning",
+    { persistMs: 8000 },
+  );
+  return true;
+}
+
+// Cette machine devient le porteur du chrono : elle reprend le battement sans
+// attendre le prochain tick, pour qu'un autre poste le voie vivant tout de suite.
+// Si le silence était long, on le dit — sans rien détruire ni rien demander.
+function adoptActiveSessionHeartbeat(session) {
+  if (!session || session.pausedAt) {
+    return;
+  }
+  const gapMs = getHeartbeatGapMs(session);
+  if (gapMs <= HEARTBEAT_GAP_NOTICE_MS) {
+    return;
+  }
+
+  const sessionKey = normalizeText(session.dbActiveSessionId ?? session.id ?? "");
+  const lastBeatLabel = new Date(getSessionLastHeartbeatMs(session))
+    .toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const label = session.project || "(sans sujet)";
+
+  if (!sessionKey || !noticedHeartbeatGapSessionIds.has(sessionKey)) {
+    if (sessionKey) {
+      noticedHeartbeatGapSessionIds.add(sessionKey);
+    }
+    setAuthStatusMessage(
+      `Chrono « ${label} » repris ici (aucune activité depuis ${lastBeatLabel}). Il continue de tourner.`,
+      "success",
+      { persistMs: 5000 },
+    );
+  }
+
+  session.lastHeartbeatAt = Date.now();
+  persistActiveSession();
+  void upsertActiveSessionToSupabase(session);
 }
 
 // Battement : ré-upserte la session active au plus une fois par
@@ -8014,66 +8083,12 @@ async function maybeAlertLongRunningTimer() {
   }
 }
 
-// Chrono abandonné détecté à la réhydratation : on nettoie la ligne orpheline et
-// on propose de récupérer la durée réelle (jusqu'au dernier battement). En
-// dessous de ABANDONED_MIN_KEEP_MS de travail, on l'ignore silencieusement.
-async function handleAbandonedActiveSession(session) {
-  if (!session) {
-    return;
-  }
-  const sessionKey = normalizeText(session.dbActiveSessionId ?? session.id ?? "");
-  if (sessionKey && handledAbandonedSessionIds.has(sessionKey)) {
-    return;
-  }
-  if (sessionKey) {
-    handledAbandonedSessionIds.add(sessionKey);
-  }
-  // La ligne orpheline part quoi qu'il arrive : plus de fantôme au prochain load.
-  void removeStoppedSessionGhostsFromSupabase(session, { refreshAfterSuccess: false });
-
-  const lastBeat = getSessionLastHeartbeatMs(session);
-  const startMs = new Date(session.start ?? 0).getTime() || lastBeat;
-  const durationMs = Math.max(0, lastBeat - startMs);
-  const label = session.project || "(sans sujet)";
-
-  if (durationMs < ABANDONED_MIN_KEEP_MS) {
-    setAuthStatusMessage(
-      `Un chrono resté ouvert (« ${label} », sans activité) a été ignoré.`,
-      "warning",
-      { persistMs: 4200 },
-    );
-    return;
-  }
-
-  const mins = Math.round(durationMs / 60000);
-  const endLabel = new Date(lastBeat).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-  const keep = await requestDecision({
-    eyebrow: "Chrono resté ouvert",
-    title: `« ${label} » n'a pas été arrêté`,
-    copy: `Ce chrono tournait encore alors que l'app était fermée. Dernière activité vers ${endLabel}.`,
-    detail: `Enregistrer la durée réelle (~${mins} min), ou l'ignorer ?`,
-    confirmLabel: `Enregistrer ~${mins} min`,
-  });
-  if (!keep) {
-    setAuthStatusMessage(`Chrono resté ouvert (« ${label} ») ignoré.`, "warning", { persistMs: 3200 });
-    return;
-  }
-
-  const recovered = {
-    ...session,
-    end: new Date(lastBeat).toISOString(),
-    durationMs,
-    pausedAt: null,
-    isServerActive: false,
-    dbActiveSessionId: null,
-    dbTimeEntryId: null,
-  };
-  const payload = await buildTimeEntryPayloadFromSession(recovered, "timer");
-  if (payload) {
-    await createTimeEntry(payload, { updateExisting: false });
-    setAuthStatusMessage(`Chrono « ${label} » clôturé (~${mins} min).`, "success", { persistMs: 3600 });
-  }
-}
+// Note : il n'y a plus de « chrono abandonné ». Un chrono sans battement récent
+// est repris par la machine courante (adoptActiveSessionHeartbeat) au lieu d'être
+// supprimé du serveur puis proposé à la récupération — cette bascule perdait le
+// temps dès que la boîte de dialogue était fermée (Escape / croix / dialogue
+// concurrent), et rendait impossible de démarrer un chrono ici pour le retrouver
+// vivant là-bas. L'oubli réel reste couvert par maybeAlertLongRunningTimer.
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SECTION: TIMER & LIVE RENDER
