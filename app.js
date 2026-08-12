@@ -291,7 +291,6 @@ const authUserName = document.querySelector("#auth-user-name");
 const authUserEmail = document.querySelector("#auth-user-email");
 const authUserAvatar = document.querySelector("#auth-user-avatar");
 const authAvatarInput = document.querySelector("#auth-avatar-input");
-const authRolePill = document.querySelector("#auth-role-pill");
 const authSignoutButton = document.querySelector("#auth-signout-button");
 // Écran de connexion (Supabase Auth, email + mot de passe) — la porte d'accès.
 const loginGate = document.querySelector("#login-gate");
@@ -416,12 +415,7 @@ const journalFilterResetButton = document.querySelector("#journal-filter-reset")
 const journalSideSwitch = document.querySelector("#journal-side-switch");
 const tagManagerSearchInput = document.querySelector("#tag-manager-search");
 const tagManagerSortSwitch  = document.querySelector("#tag-manager-sort");
-const categoryRequestsBadge = document.querySelector("#category-requests-badge");
 let tagManagerSortMode = "usage"; // "usage" (count desc) | "alpha" (locale asc)
-// Demandes de catégorie en attente (admin/manager) — voir section Phase B.
-let pendingCategoryRequests = [];
-let categoryRequestsLoaded = false;
-let categoryRequestsLoading = false;
 const projectMemoryList = document.querySelector("#project-memory-list");
 const sessionItemTemplate = document.querySelector("#session-item-template");
 const resourceTotal = document.querySelector("#resource-total");
@@ -2348,9 +2342,6 @@ function initializeAutocomplete() {
           userName: collaboratorInput.value.trim(),
           projectName: projectInput.value.trim(),
         }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags([value], currentTags);
         currentCategories = normalized.categories;
@@ -2414,9 +2405,6 @@ function initializeAutocomplete() {
           userName: manualCollaboratorInput.value.trim(),
           projectName: manualProjectInput.value.trim(),
         }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, manualEditingSessionId ? findSessionById(manualEditingSessionId)?.dbTimeEntryId ?? null : null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags(
           [value],
@@ -2449,9 +2437,6 @@ function initializeAutocomplete() {
           userName: "",
           projectName: "",
         }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const normalized = normalizeCategoryAndTags([value], plannedCurrentTags);
         plannedCurrentCategories = normalized.categories;
@@ -2521,9 +2506,6 @@ function initializeAutocomplete() {
       createLabel: (value) => `Ajouter "${value}" comme nouvelle catégorie`,
       createValue: (value) =>
         createCategoryReference(value, { userName: getCurrentCollaborator() || "", projectName: "" }),
-      allowRequest: () => canRequestSharedCategory(),
-      requestLabel: (value) => `Demander « ${value} » à l'admin`,
-      requestValue: (value) => openCategoryRequestDialog(value, null),
       applyValue: (value) => {
         const el = document.querySelector("#rpr-category");
         if (el) el.value = normalizeCategorySelection(value).category || value;
@@ -2782,17 +2764,6 @@ function buildAutocompleteItems(config, query) {
     });
   }
 
-  // Falls back to "request from admin" when the user can't create directly.
-  // Used today for categories so the team keeps a canonical taxonomy.
-  const allowRequest = typeof config.allowRequest === "function" ? config.allowRequest() : config.allowRequest;
-  if (allowRequest && !allowCreate && normalizedQuery && !exactMatch) {
-    matches.push({
-      type: "request",
-      value: query,
-      label: config.requestLabel ? config.requestLabel(query) : `Demander "${query}" à l'admin`,
-    });
-  }
-
   return matches;
 }
 
@@ -2892,8 +2863,7 @@ function applyPendingCreationForValue(input, rawValue) {
   const normalizedValue = normalizeText(value);
   const pending = buildAutocompleteItems(config, value).find(
     (item) =>
-      (item.type === "create" || item.type === "request") &&
-      normalizeText(item.value) === normalizedValue,
+      item.type === "create" && normalizeText(item.value) === normalizedValue,
   );
   if (!pending) {
     return null;
@@ -2946,8 +2916,8 @@ async function settlePendingReferenceCreation() {
 // L'action « créer / demander » appelée par la saisie elle-même. Elle porte
 // exactement le texte tapé — la déclencher n'impose donc rien, contrairement à
 // une option qui remplacerait la saisie. C'est ce qui garde la taxonomie
-// canonique (création d'une vraie catégorie avec son ID, ou demande à l'admin)
-// au lieu de coller un libellé libre qui contournerait le circuit.
+// canonique (création d'une vraie catégorie avec son ID) au lieu de coller un
+// libellé libre sans identifiant.
 function getPendingCreationItem(query) {
   const normalizedQuery = normalizeText(query ?? "");
   if (!normalizedQuery) {
@@ -2955,8 +2925,7 @@ function getPendingCreationItem(query) {
   }
   return autocompleteState.items.find(
     (item) =>
-      (item.type === "create" || item.type === "request") &&
-      normalizeText(item.value) === normalizedQuery,
+      item.type === "create" && normalizeText(item.value) === normalizedQuery,
   ) ?? null;
 }
 
@@ -3062,14 +3031,6 @@ async function applyAutocompleteItem(item, config) {
     if (!nextValue) {
       return;
     }
-  }
-
-  // "request" items don't apply the typed value — they open a request
-  // dialog and leave the input untouched until the admin decides.
-  if (item.type === "request" && config.requestValue) {
-    hideAutocomplete();
-    await config.requestValue(item.value);
-    return;
   }
 
   config.applyValue(nextValue);
@@ -6092,8 +6053,12 @@ async function ensureReferenceCatalogLoaded(force = false) {
   return result;
 }
 
+// Projet mono-utilisateur : il n'y a plus de rôles. Seule subsiste la
+// distinction « identifié ou non », dont dépendent la porte de connexion, le
+// périmètre des données affichées et les vues autorisées. Qui est identifié a
+// tous les droits.
 function getAccessRole() {
-  return accessProfile.role || "open";
+  return accessProfile.appUser ? "admin" : "open";
 }
 
 function getKnownUsers() {
@@ -6165,7 +6130,7 @@ function canCreateCollaboratorReference() {
 }
 
 function canCreateSharedReferenceCatalog() {
-  return false;
+  return true;
 }
 
 function canManageSharedCategoryColors() {
@@ -6173,17 +6138,10 @@ function canManageSharedCategoryColors() {
   return role === "manager" || role === "admin";
 }
 
-// Categories are canonical for the team. Only admin/manager can mint a new
-// one directly from autocomplete; everyone else who is signed in can ask
-// for one to be added through the request flow (canRequestSharedCategory).
+// Une catégorie inconnue est créée directement depuis l'autocomplétion. Le
+// circuit « demander à l'admin » n'existe plus : il n'y a qu'un utilisateur.
 function canCreateSharedCategory() {
-  const role = getAccessRole();
-  return role === "manager" || role === "admin";
-}
-
-function canRequestSharedCategory() {
-  if (canCreateSharedCategory()) return false;
-  return Boolean(accessProfile.appUser?.user_id);
+  return true;
 }
 
 function getEffectiveCollaboratorValue(rawValue = "") {
@@ -6396,13 +6354,6 @@ async function createProjectReference(rawName, defaultCategoryLabel = "") {
 async function createCategoryReference(rawLabel, options = {}) {
   const categoryLabel = normalizeCategorySelection(rawLabel).category;
   if (!categoryLabel) {
-    return null;
-  }
-  // Permission spécifique aux catégories (manager/admin), cohérente avec
-  // l'option « Ajouter une catégorie » de l'autocomplétion et le panneau
-  // d'approbation. (canCreateSharedReferenceCatalog reste false : verrou du
-  // catalogue projets, sans rapport ici.)
-  if (!canCreateSharedCategory()) {
     return null;
   }
   if (!window.supabase) {
@@ -8230,19 +8181,6 @@ function renderAccessControlledInputs() {
   manualCollaboratorInput.readOnly = hasAuthenticatedUser;
 }
 
-function formatRoleLabel(role) {
-  if (role === "admin") {
-    return "Admin";
-  }
-  if (role === "manager") {
-    return "Manager";
-  }
-  if (role === "cadre") {
-    return "Cargonaute";
-  }
-  return "Mode local";
-}
-
 function getUserAvatarMonogram(name) {
   const words = String(name || "")
     .trim()
@@ -8273,9 +8211,6 @@ function renderAuthPanel() {
     }
     if (authUserEmail) {
       authUserEmail.textContent = accessProfile.appUser.email ?? accessProfile.session?.user?.email ?? "";
-    }
-    if (authRolePill) {
-      authRolePill.textContent = formatRoleLabel(accessProfile.role);
     }
     applyAuthAvatarVisual(accessProfile.appUser.user_name);
     return;
@@ -9183,12 +9118,6 @@ function renderTagManager() {
     }
   }
 
-  // Charge les demandes en attente pour alimenter le badge, même hors panneau Catégories.
-  if (canCreateSharedCategory() && !categoryRequestsLoaded) {
-    void loadPendingCategoryRequests();
-  }
-  updateCategoryRequestsBadge();
-
   if (journalSideMode === "categories") {
     renderCategoryManager(el, cleanupBtn);
     return;
@@ -9456,14 +9385,6 @@ async function cleanupHistoricalTags(btn) {
 function renderCategoryManager(el, cleanupBtn) {
   el.innerHTML = "";
   if (cleanupBtn) cleanupBtn.hidden = true;
-
-  // Demandes en attente (admin/manager uniquement), en tête du panneau.
-  if (canCreateSharedCategory()) {
-    if (!categoryRequestsLoaded) void loadPendingCategoryRequests();
-    if (pendingCategoryRequests.length) {
-      el.append(buildCategoryRequestsSection());
-    }
-  }
 
   const categoryCounts = new Map();
   for (const session of getSessionsWithPendingStopped()) {
@@ -15113,21 +15034,15 @@ function commitTokenInput(input, config) {
     return;
   }
 
-  // Catégorie inconnue : la créer / la demander plutôt qu'en faire un libellé
-  // libre. Vaut pour toutes les sorties du champ, y compris le blur.
+  // Catégorie inconnue : la créer plutôt qu'en faire un libellé libre. Vaut
+  // pour toutes les sorties du champ, y compris le blur.
   if (tokens.length === 1) {
     // Appel gardé par tokens.length : la fonction a des effets de bord, elle ne
     // doit pas partir sur une saisie multi-jetons.
-    const pendingType = applyPendingCreationForValue(input, tokens[0]);
-    if (pendingType) {
-      // Dans les deux cas on garde le texte ici : ni la création ni la demande
-      // n'ont encore abouti à ce stade. Chaque circuit vide le champ lui-même
-      // quand son écriture est réellement passée — applyValue pour une
-      // création, submitCategoryRequestDraft pour une demande. Vider plus tôt
-      // forçait l'utilisateur à retaper ce qui n'avait jamais été envoyé.
-      if (pendingType === "request") {
-        categoryRequestSourceInput = input;
-      }
+    if (applyPendingCreationForValue(input, tokens[0])) {
+      // On garde le texte : la création n'a pas encore abouti. applyValue vide
+      // le champ lui-même une fois la référence en base ; s'il échoue, c'est le
+      // seul endroit où ce que l'utilisateur a tapé survit encore.
       return;
     }
   }
@@ -15676,295 +15591,6 @@ function colorForLabel(label) {
 //   isn't cached). This is the last function defined; boot happens via
 //   the calls at the very bottom of the file.
 // ═══════════════════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SECTION: CATEGORY REQUEST FLOW
-// Purpose: Categories are canonical for the team. Cadre users (non-admin /
-//   non-manager) can ask for a new one through this dialog instead of
-//   minting it directly. The request lands in public.category_requests
-//   and is decided later by an admin/manager. Phase B (admin decision +
-//   notifications + deep-link to source entry) is a separate commit.
-// ═══════════════════════════════════════════════════════════════════════════
-
-const categoryRequestDialog          = document.querySelector("#category-request-dialog");
-const categoryRequestLabelInput      = document.querySelector("#category-request-label");
-const categoryRequestJustification   = document.querySelector("#category-request-justification");
-const categoryRequestError           = document.querySelector("#category-request-error");
-const categoryRequestSubmitBtn       = document.querySelector("#category-request-submit");
-const categoryRequestCancelBtn       = document.querySelector("#category-request-cancel");
-let categoryRequestState = null;
-// Champ d'où part la demande, à vider une fois — et seulement une fois — la
-// demande réellement insérée. Ouvrir le dialogue ne suffit pas : le cadre peut
-// annuler, faire Échap, ou tomber sur une erreur d'envoi.
-let categoryRequestSourceInput = null;
-
-function openCategoryRequestDialog(label, sourceTimeEntryId) {
-  if (!categoryRequestDialog) return;
-  const trimmed = String(label ?? "").trim();
-  if (!trimmed) return;
-  categoryRequestState = { label: trimmed, sourceTimeEntryId: sourceTimeEntryId ?? null };
-  if (categoryRequestLabelInput) categoryRequestLabelInput.value = trimmed;
-  if (categoryRequestJustification) categoryRequestJustification.value = "";
-  if (categoryRequestError) {
-    categoryRequestError.textContent = "";
-    categoryRequestError.hidden = true;
-  }
-  if (categoryRequestSubmitBtn) {
-    categoryRequestSubmitBtn.disabled = false;
-    categoryRequestSubmitBtn.textContent = "Envoyer la demande";
-  }
-  categoryRequestDialog.showModal();
-  requestAnimationFrame(() => categoryRequestJustification?.focus());
-}
-
-function closeCategoryRequestDialog() {
-  if (categoryRequestDialog?.open) categoryRequestDialog.close();
-  categoryRequestState = null;
-}
-
-async function submitCategoryRequestDraft() {
-  // Photo fixe de la demande traitée par CET appel. categoryRequestState et
-  // categoryRequestSourceInput sont des variables de module : annuler pendant
-  // que l'insert est en vol puis en ouvrir une autre les réécrit, et la réponse
-  // tardive de la première viderait le champ de la seconde en annonçant le
-  // mauvais libellé. Rien de ce qui suit l'await ne doit plus les relire.
-  const request = categoryRequestState;
-  const sourceInput = categoryRequestSourceInput;
-  if (!request || !window.supabase) return;
-  const appUser = accessProfile.appUser;
-  if (!appUser?.user_id || !appUser?.user_name) {
-    if (categoryRequestError) {
-      categoryRequestError.textContent = "Identifie-toi pour envoyer une demande.";
-      categoryRequestError.hidden = false;
-    }
-    return;
-  }
-
-  const payload = {
-    user_id:              appUser.user_id,
-    user_name:            appUser.user_name,
-    label:                request.label,
-    justification:        (categoryRequestJustification?.value ?? "").trim() || null,
-    source_time_entry_id: request.sourceTimeEntryId,
-  };
-
-  if (categoryRequestSubmitBtn) {
-    categoryRequestSubmitBtn.disabled = true;
-    categoryRequestSubmitBtn.textContent = "Envoi…";
-  }
-
-  const { error } = await window.supabase
-    .from("category_requests")
-    .insert([payload]);
-
-  if (error) {
-    console.warn("category_requests insert failed:", error);
-    if (categoryRequestError) {
-      categoryRequestError.textContent = "Envoi impossible. Réessaie dans un instant.";
-      categoryRequestError.hidden = false;
-    }
-    if (categoryRequestSubmitBtn) {
-      categoryRequestSubmitBtn.disabled = false;
-      categoryRequestSubmitBtn.textContent = "Envoyer la demande";
-    }
-    return;
-  }
-
-  // L'insert est passé : le libellé part vers l'admin, il n'a plus rien à faire
-  // dans le champ. Avant closeCategoryRequestDialog, dont l'événement « close »
-  // remet la référence à zéro.
-  if (sourceInput) {
-    sourceInput.value = "";
-  }
-  setAuthStatusMessage(`Demande envoyée pour « ${request.label} ».`, "success", { persistMs: 2800 });
-  // Ne fermer que si le dialogue montre encore NOTRE demande. Après une annulation
-  // pendant l'insert, il peut déjà en afficher une autre : la fermer engloutirait
-  // une demande que le cadre n'a pas encore envoyée, et sa justification avec.
-  // L'identité de l'objet suffit — openCategoryRequestDialog en construit un neuf
-  // à chaque ouverture, et categoryRequestState repasse à null à la fermeture.
-  if (categoryRequestState === request) {
-    closeCategoryRequestDialog();
-  }
-}
-
-categoryRequestSubmitBtn?.addEventListener("click", (event) => {
-  event.preventDefault();
-  void submitCategoryRequestDraft();
-});
-
-categoryRequestCancelBtn?.addEventListener("click", (event) => {
-  event.preventDefault();
-  closeCategoryRequestDialog();
-});
-
-categoryRequestDialog?.addEventListener("close", () => {
-  categoryRequestState = null;
-  categoryRequestSourceInput = null;
-});
-
-// ─── Admin/manager : traitement des demandes de catégorie (Phase B) ──────────
-// Les cadres demandent une catégorie (openCategoryRequestDialog) ; manager et
-// admin les approuvent (crée la catégorie canonique) ou les refusent ici, dans
-// le panneau « Catégories » du Journal.
-// (l'état pendingCategoryRequests / categoryRequestsBadge est déclaré en tête de
-//  fichier car render() — appelé au boot — peut lire ces bindings.)
-
-function updateCategoryRequestsBadge() {
-  if (!categoryRequestsBadge) return;
-  const count = canCreateSharedCategory() ? pendingCategoryRequests.length : 0;
-  categoryRequestsBadge.hidden = count === 0;
-  categoryRequestsBadge.textContent = count > 0 ? String(count) : "";
-}
-
-async function loadPendingCategoryRequests({ force = false } = {}) {
-  if (!window.supabase || !canCreateSharedCategory()) {
-    // Pas le droit / pas encore connecté : on n'arme PAS le flag « chargé »,
-    // pour relancer la vraie charge dès que le rôle admin/manager est résolu.
-    pendingCategoryRequests = [];
-    updateCategoryRequestsBadge();
-    return;
-  }
-  if (categoryRequestsLoading || (categoryRequestsLoaded && !force)) return;
-  categoryRequestsLoading = true;
-  try {
-    const { data, error } = await window.supabase
-      .from("category_requests")
-      .select("request_id,user_id,user_name,label,justification,source_time_entry_id,status,created_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
-    if (error) {
-      console.warn("category_requests select failed:", error);
-      return;
-    }
-    pendingCategoryRequests = Array.isArray(data) ? data : [];
-    categoryRequestsLoaded = true;
-    updateCategoryRequestsBadge();
-    if (journalSideMode === "categories") renderTagManager();
-  } finally {
-    categoryRequestsLoading = false;
-  }
-}
-
-let approvingCategoryRequest = false;
-async function approveCategoryRequest(request) {
-  if (!request || !window.supabase) return;
-  // Verrou de ré-entrance : un double-clic sur « Approuver » lançait deux inserts
-  // avec le même prochain CAT-xxx → erreur de clé dupliquée trompeuse.
-  if (approvingCategoryRequest) return;
-  approvingCategoryRequest = true;
-  try {
-    setAuthStatusMessage(`Création de « ${request.label} »…`, "neutral");
-    // 1) Crée (ou retrouve) la catégorie canonique — réutilise la pipeline existante.
-    const createdLabel = await createCategoryReference(request.label, { userName: request.user_name });
-    if (!createdLabel) {
-      const detail = lastCategoryInsertError?.message || lastCategoryInsertError?.code || "raison inconnue";
-      setAuthStatusMessage(`Création impossible : ${detail}`, "error", { persistMs: 7000 });
-      return;
-    }
-    // 2) Marque la demande comme approuvée.
-    const { error } = await window.supabase
-      .from("category_requests")
-      .update({
-        status: "approved",
-        decided_at: new Date().toISOString(),
-        decided_by: accessProfile.appUser?.user_id ?? null,
-      })
-      .eq("request_id", request.request_id);
-    if (error) {
-      console.warn("category_requests approve update failed:", error);
-      setAuthStatusMessage(`« ${createdLabel} » créée, mais le statut de la demande n'a pas pu être mis à jour.`, "warning", { persistMs: 4500 });
-    } else {
-      setAuthStatusMessage(`« ${createdLabel} » approuvée et ajoutée au catalogue.`, "success", { persistMs: 3000 });
-    }
-    await loadPendingCategoryRequests({ force: true });
-    renderSuggestions();
-  } finally {
-    approvingCategoryRequest = false;
-  }
-}
-
-async function rejectCategoryRequest(request) {
-  if (!request || !window.supabase) return;
-  const confirmed = await requestDecision({
-    eyebrow: "Demande de catégorie",
-    title: `Refuser « ${request.label} » ?`,
-    copy: `Demandée par ${request.user_name || "?"}.`,
-    detail: "La demande sera marquée comme refusée et aucune catégorie ne sera créée.",
-    confirmLabel: "Refuser",
-    tone: "danger",
-  });
-  if (!confirmed) return;
-  const { error } = await window.supabase
-    .from("category_requests")
-    .update({
-      status: "rejected",
-      decided_at: new Date().toISOString(),
-      decided_by: accessProfile.appUser?.user_id ?? null,
-    })
-    .eq("request_id", request.request_id);
-  if (error) {
-    console.warn("category_requests reject update failed:", error);
-    setAuthStatusMessage("Refus impossible pour le moment. Réessaie.", "error", { persistMs: 3500 });
-    return;
-  }
-  setAuthStatusMessage(`Demande « ${request.label} » refusée.`, "success", { persistMs: 2800 });
-  await loadPendingCategoryRequests({ force: true });
-}
-
-function buildCategoryRequestsSection() {
-  const wrap = document.createElement("div");
-  wrap.className = "cat-requests";
-
-  const head = document.createElement("div");
-  head.className = "cat-requests-head";
-  head.textContent = `Demandes en attente · ${pendingCategoryRequests.length}`;
-  wrap.append(head);
-
-  for (const request of pendingCategoryRequests) {
-    const item = document.createElement("div");
-    item.className = "cat-request-item";
-
-    const info = document.createElement("div");
-    info.className = "cat-request-info";
-
-    const label = document.createElement("span");
-    label.className = "cat-request-label";
-    label.textContent = request.label;
-
-    const meta = document.createElement("span");
-    meta.className = "cat-request-meta";
-    meta.textContent = `par ${request.user_name || "?"}`;
-    info.append(label, meta);
-
-    if (request.justification) {
-      const justif = document.createElement("p");
-      justif.className = "cat-request-justif";
-      justif.textContent = request.justification;
-      info.append(justif);
-    }
-
-    const actions = document.createElement("div");
-    actions.className = "cat-request-actions";
-
-    const approveBtn = document.createElement("button");
-    approveBtn.type = "button";
-    approveBtn.className = "btn btn-primary btn--sm";
-    approveBtn.textContent = "Approuver";
-    approveBtn.addEventListener("click", () => void approveCategoryRequest(request));
-
-    const rejectBtn = document.createElement("button");
-    rejectBtn.type = "button";
-    rejectBtn.className = "btn btn--sm btn--danger-outline";
-    rejectBtn.textContent = "Refuser";
-    rejectBtn.addEventListener("click", () => void rejectCategoryRequest(request));
-
-    actions.append(approveBtn, rejectBtn);
-    item.append(info, actions);
-    wrap.append(item);
-  }
-
-  return wrap;
-}
 
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
