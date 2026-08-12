@@ -14,8 +14,6 @@ create table users (
   user_name text not null,
   email text unique,
   auth_user_id uuid unique,
-  role text not null
-    check (role in ('cadre', 'manager', 'admin')),
   team_name text not null,
   managed_team_name text,
   manager_user_id text references users(user_id)
