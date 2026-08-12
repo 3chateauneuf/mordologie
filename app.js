@@ -15120,17 +15120,13 @@ function commitTokenInput(input, config) {
     // doit pas partir sur une saisie multi-jetons.
     const pendingType = applyPendingCreationForValue(input, tokens[0]);
     if (pendingType) {
-      // « request » : le libellé attend l'admin. Le laisser dans le champ le
-      // ferait relire en brut par buildPlannedSessionDraft et par
-      // validated_category — l'approbation serait contournée — et chaque
-      // passage suivant sur le champ renverrait la même demande, sans qu'aucune
-      // contrainte d'unicité côté base ne les dédoublonne.
-      //
-      // « create » : on garde le texte. applyValue videra le champ une fois la
-      // référence en base ; s'il échoue, c'est le seul endroit où ce que
-      // l'utilisateur a tapé survit encore.
+      // Dans les deux cas on garde le texte ici : ni la création ni la demande
+      // n'ont encore abouti à ce stade. Chaque circuit vide le champ lui-même
+      // quand son écriture est réellement passée — applyValue pour une
+      // création, submitCategoryRequestDraft pour une demande. Vider plus tôt
+      // forçait l'utilisateur à retaper ce qui n'avait jamais été envoyé.
       if (pendingType === "request") {
-        input.value = "";
+        categoryRequestSourceInput = input;
       }
       return;
     }
@@ -15697,6 +15693,10 @@ const categoryRequestError           = document.querySelector("#category-request
 const categoryRequestSubmitBtn       = document.querySelector("#category-request-submit");
 const categoryRequestCancelBtn       = document.querySelector("#category-request-cancel");
 let categoryRequestState = null;
+// Champ d'où part la demande, à vider une fois — et seulement une fois — la
+// demande réellement insérée. Ouvrir le dialogue ne suffit pas : le cadre peut
+// annuler, faire Échap, ou tomber sur une erreur d'envoi.
+let categoryRequestSourceInput = null;
 
 function openCategoryRequestDialog(label, sourceTimeEntryId) {
   if (!categoryRequestDialog) return;
@@ -15763,6 +15763,12 @@ async function submitCategoryRequestDraft() {
     return;
   }
 
+  // L'insert est passé : le libellé part vers l'admin, il n'a plus rien à faire
+  // dans le champ. Avant closeCategoryRequestDialog, dont l'événement « close »
+  // remet la référence à zéro.
+  if (categoryRequestSourceInput) {
+    categoryRequestSourceInput.value = "";
+  }
   setAuthStatusMessage(`Demande envoyée pour « ${categoryRequestState.label} ».`, "success", { persistMs: 2800 });
   closeCategoryRequestDialog();
 }
@@ -15779,6 +15785,7 @@ categoryRequestCancelBtn?.addEventListener("click", (event) => {
 
 categoryRequestDialog?.addEventListener("close", () => {
   categoryRequestState = null;
+  categoryRequestSourceInput = null;
 });
 
 // ─── Admin/manager : traitement des demandes de catégorie (Phase B) ──────────
