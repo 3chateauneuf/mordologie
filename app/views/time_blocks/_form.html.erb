@@ -1,130 +1,101 @@
 <%= form_with model: @block, html: { class: "editor-form", data: { schedule_form: true } } do |f| %>
   <% if @block.errors.any? %>
     <div class="editor-error" role="alert">
-      <strong>Ce créneau n'a pas pu être enregistré.</strong>
+      <strong>Vérifiez les informations :</strong>
       <ul><% @block.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
     </div>
   <% end %>
 
-  <div class="editor-grid">
-    <section class="editor-section editor-section-activity" aria-labelledby="activity-heading">
-      <div class="editor-section-heading">
-        <span class="editor-step">01</span>
-        <div>
-          <h2 id="activity-heading">L'activité</h2>
-          <p>Qu'allez-vous faire ?</p>
-        </div>
-      </div>
+  <div class="editor-core">
+    <div class="editor-field editor-title-field">
+      <%= f.label :title, "Activité" %>
+      <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off", placeholder: "Que voulez-vous faire ?" %>
+    </div>
 
-      <div class="editor-field editor-title-field">
-        <%= f.label :title, "Nom de l'activité" %>
-        <%= f.text_field :title, required: true, autofocus: true, maxlength: 120, autocomplete: "off", placeholder: "Ex. Préparer la prochaine vidéo" %>
-      </div>
-
-      <fieldset class="editor-field editor-categories">
-        <legend>Catégorie</legend>
-        <div class="editor-category-grid">
-          <% TimeBlock::CATEGORIES.each do |key, data| %>
-            <label class="editor-category-choice" style="--category-color: <%= data[:color] %>">
-              <%= f.radio_button :category, key, required: true %>
-              <span class="category-choice-inner"><span class="category-color"></span><span><%= data[:label] %></span></span>
-            </label>
-          <% end %>
-        </div>
-      </fieldset>
-
-      <div class="editor-field editor-tags-field">
-        <label for="time_block_tag_list">Tags <span class="editor-optional">facultatif</span></label>
-        <div class="tag-editor" data-tags-editor>
-          <%= text_field_tag "time_block[tag_list]", @block.tag_list, id: "time_block_tag_list", class: "tag-source", maxlength: 550, autocomplete: "off", placeholder: "Ex. sin rueditas, youtube, montage", aria: { describedby: "tags-help" } %>
-          <div class="tag-editor-chips" data-tag-chips></div>
-          <input type="text" class="tag-entry" data-tag-entry placeholder="+ Ajouter un tag" aria-label="Ajouter un tag" aria-describedby="tags-help" maxlength="40" hidden>
-        </div>
-        <p class="editor-hint" id="tags-help">Pour retrouver vos activités. Tapez un tag puis Entrée.</p>
-        <% if @suggested_tags.present? %>
-          <div class="editor-tag-suggestions">
-            <span>Déjà utilisés</span>
-            <div class="tag-suggestions" aria-label="Tags déjà utilisés">
-              <% @suggested_tags.each do |tag| %>
-                <button type="button" class="tag-pill" data-suggest-tag="<%= tag %>">#<%= tag %></button>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        <p class="editor-tag-message" role="status" aria-live="polite" data-tag-message></p>
-      </div>
-    </section>
-
-    <section class="editor-section editor-section-time" aria-labelledby="time-heading">
-      <div class="editor-section-heading">
-        <span class="editor-step">02</span>
-        <div>
-          <h2 id="time-heading">Le moment</h2>
-          <p>Quand et pour combien de temps ?</p>
-        </div>
-      </div>
-
-      <div class="editor-time-fields">
-        <div class="editor-field">
-          <%= label_tag :time_block_schedule_date, "Date" %>
-          <%= date_field_tag "time_block[schedule_date]", @schedule_date, id: "time_block_schedule_date", required: true %>
-        </div>
-        <div class="editor-field">
-          <%= label_tag :time_block_start_clock, "Début" %>
-          <%= time_field_tag "time_block[start_clock]", @start_clock, id: "time_block_start_clock", required: true, step: 60 %>
-        </div>
-      </div>
-
+    <div class="editor-schedule-row">
       <div class="editor-field">
-        <%= label_tag :time_block_duration_minutes, "Durée prévue" %>
-        <div class="duration-picks" role="group" aria-label="Choisir rapidement une durée">
-          <% [[15, "15 min"], [30, "30 min"], [45, "45 min"], [60, "1 h"], [90, "1 h 30"], [120, "2 h"]].each do |minutes, label| %>
-            <button type="button" class="duration-pick" data-duration="<%= minutes %>" aria-pressed="false"><%= label %></button>
-          <% end %>
-        </div>
-        <div class="editor-custom-duration">
-          <span>Ou durée personnalisée</span>
-          <div class="editor-minutes-input">
-            <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1 %>
-            <span>min</span>
-          </div>
-        </div>
+        <%= label_tag :time_block_schedule_date, "Date" %>
+        <%= date_field_tag "time_block[schedule_date]", @schedule_date, id: "time_block_schedule_date", required: true %>
       </div>
+      <div class="editor-field">
+        <%= label_tag :time_block_start_clock, "Début" %>
+        <%= time_field_tag "time_block[start_clock]", @start_clock, id: "time_block_start_clock", required: true, step: 60 %>
+      </div>
+    </div>
 
-      <div class="editor-time-preview" aria-live="polite">
-        <div class="editor-preview-icon" aria-hidden="true">↗</div>
-        <div>
-          <span>Fin estimée</span>
+    <div class="editor-field editor-duration-field">
+      <%= label_tag :time_block_duration_minutes, "Durée" %>
+      <div class="duration-picks" role="group" aria-label="Durées rapides">
+        <% [[15, "15 min"], [30, "30 min"], [60, "1 h"], [90, "1 h 30"], [120, "2 h"]].each do |minutes, label| %>
+          <button type="button" class="duration-pick" data-duration="<%= minutes %>" aria-pressed="false"><%= label %></button>
+        <% end %>
+      </div>
+      <div class="editor-duration-bottom">
+        <div class="editor-custom-duration">
+          <span>Autre durée</span>
+          <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1, aria: { label: "Durée en minutes" } %>
+          <span>min</span>
+        </div>
+        <div class="editor-end" role="status" aria-live="polite">
+          <span>Fin</span>
           <strong data-end-preview>—</strong>
         </div>
       </div>
-    </section>
+    </div>
+
+    <fieldset class="editor-field editor-categories">
+      <legend>Catégorie</legend>
+      <div class="editor-category-grid">
+        <% TimeBlock::CATEGORIES.each do |key, data| %>
+          <label class="editor-category-choice" style="--category-color:<%= data[:color] %>">
+            <%= f.radio_button :category, key, required: true %>
+            <span class="category-choice-inner"><span class="category-color"></span><%= data[:label] %></span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+
+    <div class="editor-field editor-tags-field">
+      <label for="time_block_tag_list">Tags <span class="editor-optional">· facultatif</span></label>
+      <div class="tag-editor" data-tags-editor>
+        <%= text_field_tag "time_block[tag_list]", @block.tag_list, id: "time_block_tag_list", class: "tag-source", maxlength: 550, autocomplete: "off", placeholder: "Ex. vidéo, youtube, sin rueditas" %>
+        <div class="tag-editor-chips" data-tag-chips></div>
+        <input type="text" class="tag-entry" data-tag-entry placeholder="+ Ajouter un tag" aria-label="Ajouter un tag puis Entrée" maxlength="40" hidden>
+      </div>
+      <% if @suggested_tags.present? %>
+        <details class="editor-tag-reuse">
+          <summary>Réutiliser un tag</summary>
+          <div class="tag-suggestions">
+            <% @suggested_tags.each do |tag| %>
+              <button type="button" class="tag-pill" data-suggest-tag="<%= tag %>">#<%= tag %></button>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+      <p class="editor-tag-message" role="status" aria-live="polite" data-tag-message></p>
+    </div>
   </div>
 
   <details class="editor-details" <%= "open" if @block.notes.present? || @block.actual_minutes.present? %>>
-    <summary><span class="editor-details-symbol">＋</span><span>Notes et suivi</span><span class="editor-details-caption">Facultatif · à compléter quand vous voulez</span></summary>
+    <summary>Notes et temps réel <span>Facultatif</span></summary>
     <div class="editor-details-content">
       <div class="editor-field">
         <%= f.label :notes, "Notes" %>
-        <%= f.text_area :notes, rows: 3, placeholder: "Contexte, étapes à suivre, résultat…" %>
+        <%= f.text_area :notes, rows: 3, placeholder: "Informations utiles pour cette activité" %>
       </div>
       <div class="editor-field">
-        <%= f.label :actual_minutes, "Temps réellement utilisé" %>
+        <%= f.label :actual_minutes, "Temps réalisé" %>
         <div class="editor-actual-row">
           <%= f.number_field :actual_minutes, min: 0, placeholder: "—" %>
-          <span>minutes · à renseigner après l'activité</span>
+          <span>minutes</span>
         </div>
       </div>
     </div>
   </details>
 
-  <footer class="editor-footer">
-    <p class="editor-footer-help">Le créneau apparaîtra dans votre planning.</p>
-    <div class="editor-footer-actions">
-      <%= link_to "Annuler", root_path(week: @schedule_date), class: "editor-cancel" %>
-      <%= f.submit(@block.persisted? ? "Enregistrer les modifications" : "Ajouter au planning", class: "editor-submit") %>
-    </div>
-  </footer>
+  <div class="editor-footer">
+    <%= f.submit(@block.persisted? ? "Enregistrer" : "Créer le créneau", class: "editor-submit") %>
+  </div>
 <% end %>
 
 <script>
@@ -135,27 +106,25 @@
   const time = form.querySelector("#time_block_start_clock");
   const duration = form.querySelector("#time_block_duration_minutes");
   const endPreview = form.querySelector("[data-end-preview]");
+  const endBox = form.querySelector(".editor-end");
   const submit = form.querySelector(".editor-submit");
   const durationButtons = Array.from(form.querySelectorAll("[data-duration]"));
 
   function updateEnd() {
     const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time.value);
     const minutes = Number(duration.value);
-    const valid = date.value && match && Number.isInteger(minutes) && minutes >= 1 && minutes <= 960;
-    let endMinutes = valid ? Number(match[1]) * 60 + Number(match[2]) + minutes : 0;
+    const valid = Boolean(date.value && match && Number.isInteger(minutes) && minutes >= 1 && minutes <= 960);
+    const endMinutes = valid ? Number(match[1]) * 60 + Number(match[2]) + minutes : 0;
     const crossesMidnight = valid && endMinutes >= 1440;
-
     if (!valid) {
-      endPreview.textContent = "Vérifiez la date et la durée";
+      endPreview.textContent = "—";
     } else if (crossesMidnight) {
-      endPreview.textContent = "Réduisez la durée : fin après minuit";
+      endPreview.textContent = "Après minuit";
     } else {
-      const hh = String(Math.floor(endMinutes / 60)).padStart(2, "0");
-      const mm = String(endMinutes % 60).padStart(2, "0");
-      const parts = date.value.split("-");
-      endPreview.textContent = hh + ":" + mm + " · " + parts[2] + "/" + parts[1] + "/" + parts[0];
+      endPreview.textContent = String(Math.floor(endMinutes / 60)).padStart(2, "0") + ":" +
+        String(endMinutes % 60).padStart(2, "0");
     }
-    endPreview.closest(".editor-time-preview").classList.toggle("is-invalid", !valid || crossesMidnight);
+    endBox.classList.toggle("is-invalid", !valid || crossesMidnight);
     submit.disabled = !valid || crossesMidnight;
     durationButtons.forEach(function (button) {
       button.setAttribute("aria-pressed", String(Number(button.dataset.duration) === minutes));
@@ -172,64 +141,58 @@
     input.addEventListener("change", updateEnd);
   });
 
-  // Progressive enhancement: the original comma-separated input remains usable
-  // without JavaScript; with JS it becomes an editable set of keyboard-accessible chips.
+  // The comma-separated input is a no-JS fallback. JS progressively adds
+  // compact removable chips while still submitting the same underlying field.
   const editor = form.querySelector("[data-tags-editor]");
   const source = form.querySelector("#time_block_tag_list");
   const entry = form.querySelector("[data-tag-entry]");
   const chipArea = form.querySelector("[data-tag-chips]");
-  const tagMessage = form.querySelector("[data-tag-message]");
+  const message = form.querySelector("[data-tag-message]");
   if (editor && source && entry && chipArea) {
-    let tags = source.value.split(",").map(normalize).filter(Boolean).filter(function (t, i, all) {
-      return all.indexOf(t) === i;
-    });
-
     function normalize(text) {
       return text.trim().replace(/^#/, "").trim().toLocaleLowerCase("fr");
     }
-    function inform(text) {
-      tagMessage.textContent = text;
-    }
+    let tags = [...new Set(source.value.split(",").map(normalize).filter(Boolean))];
+    function inform(text) { message.textContent = text; }
     function draw() {
       source.value = tags.join(", ");
       chipArea.replaceChildren();
       tags.forEach(function (tag) {
         const chip = document.createElement("span");
         chip.className = "editor-tag-chip";
-        const label = document.createElement("span");
-        label.textContent = "#" + tag;
+        const text = document.createElement("span");
+        text.textContent = "#" + tag;
         const remove = document.createElement("button");
         remove.type = "button";
         remove.textContent = "×";
-        remove.setAttribute("aria-label", "Retirer le tag " + tag);
+        remove.setAttribute("aria-label", "Retirer " + tag);
         remove.addEventListener("click", function () {
           tags = tags.filter(function (item) { return item !== tag; });
           draw();
           entry.focus();
         });
-        chip.append(label, remove);
+        chip.append(text, remove);
         chipArea.appendChild(chip);
       });
-      if (tags.length <= 12) inform("");
     }
-    function add(text) {
-      const values = text.split(",").map(normalize).filter(Boolean);
-      for (const tag of values) {
-        if (tag.length > 40) { inform("Un tag ne peut pas dépasser 40 caractères."); return false; }
+    function add(value) {
+      const incoming = value.split(",").map(normalize).filter(Boolean);
+      for (const tag of incoming) {
+        if (tag.length > 40) { inform("40 caractères maximum par tag."); return false; }
         if (tags.includes(tag)) continue;
-        if (tags.length >= 12) { inform("Maximum 12 tags par activité."); return false; }
+        if (tags.length >= 12) { inform("12 tags maximum."); return false; }
         tags.push(tag);
       }
+      inform("");
       draw();
       return true;
     }
     function commitEntry() {
       if (!entry.value.trim()) return true;
-      const success = add(entry.value);
-      if (success) entry.value = "";
-      return success;
+      if (!add(entry.value)) return false;
+      entry.value = "";
+      return true;
     }
-
     editor.classList.add("is-enhanced");
     entry.hidden = false;
     draw();
@@ -240,7 +203,7 @@
       if (event.key === "Enter" || event.key === ",") {
         event.preventDefault();
         commitEntry();
-      } else if (event.key === "Backspace" && entry.value === "" && tags.length) {
+      } else if (event.key === "Backspace" && !entry.value && tags.length) {
         tags.pop();
         draw();
       }

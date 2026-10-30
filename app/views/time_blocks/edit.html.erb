@@ -1,15 +1,10 @@
 <div class="editor-shell">
   <header class="editor-page-head">
-    <div>
-      <span class="editor-eyebrow"><span class="eyebrow-dot"></span> MON PLANNING / MODIFICATION</span>
-      <h1>Modifier le créneau</h1>
-      <p>Un changement de programme ? Ajustez simplement ce qui compte.</p>
-    </div>
-    <%= link_to "← Retour au planning", root_path(week: @schedule_date), class: "editor-back" %>
+    <%= link_to "← Planning", root_path(week: @schedule_date), class: "editor-back" %>
+    <h1>Modifier le créneau</h1>
   </header>
   <%= render "form" %>
   <div class="editor-delete-zone">
-    <div><strong>Supprimer ce créneau</strong><p>Cette action ne peut pas être annulée.</p></div>
-    <%= button_to "Supprimer", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
+    <%= button_to "Supprimer ce créneau", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
   </div>
 </div>
