@@ -1,4 +1,4 @@
-<%= form_with model: @block do |f| %>
+<%= form_with model: @block, html: { data: { schedule_form: true } } do |f| %>
   <% if @block.errors.any? %>
     <div class="error-list"><strong>Vérifiez le créneau :</strong>
       <ul><% @block.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
@@ -7,10 +7,75 @@
   <div class="field"><%= f.label :title, "Activité" %><%= f.text_field :title, required: true, autofocus: true, placeholder: "Ex. Écriture du script Sin Rueditas" %></div>
   <div class="field"><%= f.label :category, "Catégorie" %><%= f.select :category, TimeBlock::CATEGORIES.map { |key, data| [data[:label], key] } %></div>
   <div class="field-row">
-    <div class="field"><%= f.label :start_at, "Début" %><%= f.datetime_local_field :start_at, required: true %></div>
-    <div class="field"><%= f.label :end_at, "Fin" %><%= f.datetime_local_field :end_at, required: true %></div>
+    <div class="field">
+      <%= label_tag :time_block_schedule_date, "Date" %>
+      <%= date_field_tag "time_block[schedule_date]", @schedule_date, id: "time_block_schedule_date", required: true %>
+    </div>
+    <div class="field">
+      <%= label_tag :time_block_start_clock, "Heure de début" %>
+      <%= time_field_tag "time_block[start_clock]", @start_clock, id: "time_block_start_clock", required: true, step: 60 %>
+    </div>
+  </div>
+  <div class="field">
+    <%= label_tag :time_block_duration_minutes, "Durée prévue" %>
+    <div class="duration-picks" role="group" aria-label="Durées rapides">
+      <% [[15, "15 min"], [30, "30 min"], [45, "45 min"], [60, "1 h"], [90, "1 h 30"], [120, "2 h"]].each do |minutes, label| %>
+        <button type="button" class="duration-pick" data-duration="<%= minutes %>"><%= label %></button>
+      <% end %>
+    </div>
+    <div class="duration-input-row">
+      <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1 %>
+      <span>minutes · modifiable</span>
+    </div>
+  </div>
+  <div class="schedule-summary" role="status" aria-live="polite">
+    <span>Fin calculée automatiquement</span>
+    <strong data-end-preview>—</strong>
   </div>
   <div class="field"><%= f.label :actual_minutes, "Temps réellement utilisé (minutes, facultatif)" %><%= f.number_field :actual_minutes, min: 0, placeholder: "À renseigner après l'activité" %></div>
   <div class="field"><%= f.label :notes, "Notes (facultatif)" %><%= f.text_area :notes, placeholder: "Contexte, intention, résultat…" %></div>
   <div class="form-actions"><%= f.submit(@block.persisted? ? "Enregistrer" : "Créer le créneau", class: "button") %><%= link_to "Annuler", root_path, class: "button secondary" %></div>
 <% end %>
+<script>
+(function () {
+  const form = document.querySelector("[data-schedule-form]");
+  if (!form) return;
+  const day = form.querySelector("#time_block_schedule_date");
+  const clock = form.querySelector("#time_block_start_clock");
+  const duration = form.querySelector("#time_block_duration_minutes");
+  const output = form.querySelector("[data-end-preview]");
+  const buttons = form.querySelectorAll("[data-duration]");
+  function update() {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(clock.value);
+    const minutes = Number(duration.value);
+    const valid = day.value && match && Number.isInteger(minutes) && minutes > 0 && minutes <= 960;
+    if (!valid) {
+      output.textContent = "Vérifiez la date, l'heure et la durée";
+    } else {
+      const endMinutes = Number(match[1]) * 60 + Number(match[2]) + minutes;
+      if (endMinutes >= 1440) {
+        output.textContent = "Au-delà de minuit : réduisez la durée";
+      } else {
+        const hour = String(Math.floor(endMinutes / 60)).padStart(2, "0");
+        const minute = String(endMinutes % 60).padStart(2, "0");
+        const [year, month, date] = day.value.split("-");
+        output.textContent = hour + ":" + minute + " · " + date + "/" + month + "/" + year;
+      }
+    }
+    buttons.forEach(function (button) {
+      button.setAttribute("aria-pressed", String(Number(button.dataset.duration) === minutes));
+    });
+  }
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      duration.value = button.dataset.duration;
+      update();
+    });
+  });
+  [day, clock, duration].forEach(function (input) {
+    input.addEventListener("input", update);
+    input.addEventListener("change", update);
+  });
+  update();
+})();
+</script>

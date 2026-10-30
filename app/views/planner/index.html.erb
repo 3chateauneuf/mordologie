@@ -29,7 +29,7 @@
         <% (@calendar_start_hour...@calendar_end_hour).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
       </div>
       <% @days.each do |day| %>
-        <div class="day-body <%= 'today' if day == Date.current %>" style="height:<%= @calendar_height %>px" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Double-cliquez pour créer un créneau">
+        <div class="day-body <%= 'today' if day == Date.current %>" style="height:<%= @calendar_height %>px" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Glissez pour choisir une durée ou double-cliquez pour créer un créneau">
           <% @blocks_by_day.fetch(day, []).each do |block| %>
             <% local_start = block.start_at.in_time_zone %>
             <% start_minutes = ((local_start.hour - @calendar_start_hour) * 60 + local_start.min) %>
@@ -47,17 +47,89 @@
       <% end %>
     </div>
   </div>
-  <p class="help">Double-cliquez sur un espace libre pour ajouter un créneau · Cliquez sur un bloc pour le modifier. Glisser-déposer et synchronisation Google Calendar viendront ensuite.</p>
+  <p class="help">Glissez sur un espace libre pour sélectionner un horaire (par pas de 15 min), ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier.</p>
 </div>
 <script>
-  document.querySelectorAll(".day-body").forEach(function(day) {
-    day.addEventListener("dblclick", function(event) {
+(function () {
+  // Each grid hour is 66 px. Snap both clicks and selections to 15 minutes.
+  const slotPixels = 66 / 4;
+  const scheduleUrl = <%= new_time_block_path.to_json.html_safe %>;
+  let selection = null;
+
+  function slotAt(event, day) {
+    const rect = day.getBoundingClientRect();
+    const maxSlot = (Number(day.dataset.endHour) - Number(day.dataset.startHour)) * 4 - 1;
+    return Math.max(0, Math.min(maxSlot, Math.floor((event.clientY - rect.top) / slotPixels)));
+  }
+
+  function openForm(day, firstSlot, slotCount) {
+    const startMinutes = Number(day.dataset.startHour) * 60 + firstSlot * 15;
+    const hour = Math.floor(startMinutes / 60);
+    const minute = startMinutes % 60;
+    const untilMidnight = 1440 - startMinutes - 1;
+    const duration = Math.max(1, Math.min(slotCount * 15, 960, untilMidnight));
+    const url = new URL(scheduleUrl, window.location.origin);
+    url.searchParams.set("day", day.dataset.day);
+    url.searchParams.set("hour", String(hour));
+    url.searchParams.set("minute", String(minute));
+    url.searchParams.set("duration", String(duration));
+    window.location.assign(url.toString());
+  }
+
+  function clearSelection() {
+    if (selection && selection.preview) selection.preview.remove();
+    selection = null;
+  }
+
+  document.querySelectorAll(".day-body").forEach(function (day) {
+    day.addEventListener("pointerdown", function (event) {
+      if (event.pointerType !== "mouse" || event.button !== 0 || event.target.closest(".event")) return;
+      clearSelection();
+      selection = {
+        day: day,
+        first: slotAt(event, day),
+        last: slotAt(event, day),
+        originY: event.clientY,
+        dragging: false,
+        preview: document.createElement("div")
+      };
+      selection.preview.className = "selection-preview";
+    });
+
+    // A double click creates a one-hour block; dragging selects any
+    // 15-minute multiple, with exact values editable in the form.
+    day.addEventListener("dblclick", function (event) {
       if (event.target.closest(".event")) return;
-      const bounds = day.getBoundingClientRect();
-      const firstHour = Number(day.dataset.startHour);
-      const lastHour = Number(day.dataset.endHour);
-      const hour = Math.min(lastHour - 1, Math.max(firstHour, firstHour + Math.floor((event.clientY - bounds.top) / 66)));
-      window.location.href = "/time_blocks/new?day=" + encodeURIComponent(day.dataset.day) + "&hour=" + hour;
+      openForm(day, slotAt(event, day), 4);
     });
   });
+
+  document.addEventListener("pointermove", function (event) {
+    if (!selection || event.pointerType !== "mouse") return;
+    if (Math.abs(event.clientY - selection.originY) < 8 && !selection.dragging) return;
+    selection.dragging = true;
+    selection.last = slotAt(event, selection.day);
+    const first = Math.min(selection.first, selection.last);
+    const last = Math.max(selection.first, selection.last);
+    selection.preview.style.top = String(first * slotPixels) + "px";
+    selection.preview.style.height = String((last - first + 1) * slotPixels) + "px";
+    selection.day.appendChild(selection.preview);
+  });
+
+  document.addEventListener("pointerup", function (event) {
+    if (!selection) return;
+    const current = selection;
+    if (current.dragging) {
+      event.preventDefault();
+      const first = Math.min(current.first, current.last);
+      const count = Math.max(current.first, current.last) - first + 1;
+      clearSelection();
+      openForm(current.day, first, count);
+    } else {
+      clearSelection();
+    }
+  });
+  document.addEventListener("pointercancel", clearSelection);
+  window.addEventListener("blur", clearSelection);
+})();
 </script>
