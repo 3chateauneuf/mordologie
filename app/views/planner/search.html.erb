@@ -1,0 +1,54 @@
+<div class="page-head">
+  <div>
+    <h1>Rechercher une activité</h1>
+    <p>Retrouvez vos créneaux par nom, notes ou tags, quelle que soit la semaine.</p>
+  </div>
+  <%= link_to "← Retour au planning", root_path, class: "button secondary" %>
+</div>
+<div class="search-card">
+  <%= form_with url: recherche_path, method: :get, local: true, class: "search-form" do %>
+    <div class="field">
+      <%= label_tag :q, "Mot-clé" %>
+      <%= search_field_tag :q, @query, placeholder: "Titre, notes, #tag…", maxlength: 120 %>
+    </div>
+    <div class="field">
+      <%= label_tag :tag, "Tag" %>
+      <%= select_tag :tag, options_for_select([["Tous les tags", ""]] + @available_tags.map { |t| ["##{t}", t] }, @tag) %>
+    </div>
+    <%= submit_tag "Rechercher", class: "button" %>
+    <% if @query.present? || @tag.present? %><%= link_to "Effacer", recherche_path, class: "button secondary" %><% end %>
+  <% end %>
+  <% if @available_tags.any? %>
+    <div class="tag-suggestions" style="margin-top:15px" aria-label="Accès rapide aux tags">
+      <% @available_tags.first(40).each do |tag| %>
+        <%= link_to "##{tag}", recherche_path(tag: tag), class: "tag-pill" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+<div class="page-head" style="margin-top:20px">
+  <div><h2>Activités trouvées (<%= @results.length %><%= "+" if @results.length == 100 %>)</h2><p>Résultats les plus récents en premier · maximum 100.</p></div>
+</div>
+<div class="result-list">
+  <% if @results.empty? %>
+    <div class="search-card"><p class="muted">Aucun créneau trouvé avec ces critères.</p></div>
+  <% else %>
+    <% @results.each do |block| %>
+      <div class="result">
+        <div>
+          <strong><%= block.title %></strong>
+          <small><%= l(block.start_at.in_time_zone, format: :default) %> · <%= block.duration_minutes %> min · <%= TimeBlock::CATEGORIES.fetch(block.category)[:label] %></small>
+          <% if block.notes.present? %><p class="result-notes"><%= truncate(block.notes, length: 180) %></p><% end %>
+          <% if block.tags.any? %>
+            <div class="tags-inline">
+              <% block.tags.each do |tag| %>
+                <%= link_to "##{tag}", recherche_path(tag: tag), class: "tag-pill" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        <%= link_to "Modifier", edit_time_block_path(block), class: "button secondary" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

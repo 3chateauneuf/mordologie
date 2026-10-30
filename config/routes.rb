@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   post "/session", to: "sessions#create", as: :session
   delete "/session", to: "sessions#destroy"
 
+  get "/recherche", to: "planner#search", as: :recherche
   resources :time_blocks, except: [:index, :show]
   root "planner#index"
 end

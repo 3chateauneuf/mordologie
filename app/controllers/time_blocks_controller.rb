@@ -1,5 +1,6 @@
 class TimeBlocksController < ApplicationController
   before_action :find_block, only: [:edit, :update, :destroy]
+  before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
 
   def new
     day = safe_day(params[:day]) || Date.current
@@ -21,6 +22,7 @@ class TimeBlocksController < ApplicationController
 
   def create
     @block = current_user.time_blocks.new(block_details)
+    @block.tag_list = submitted_tag_list
     if apply_schedule_params && @block.save
       redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau ajouté."
     else
@@ -34,6 +36,7 @@ class TimeBlocksController < ApplicationController
 
   def update
     @block.assign_attributes(block_details)
+    @block.tag_list = submitted_tag_list
     if apply_schedule_params && @block.save
       redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau mis à jour."
     else
@@ -57,6 +60,14 @@ class TimeBlocksController < ApplicationController
   # mass-assigned from a browser form.
   def block_details
     params.require(:time_block).permit(:title, :category, :notes, :actual_minutes)
+  end
+
+  def submitted_tag_list
+    params.require(:time_block).fetch(:tag_list, "").to_s
+  end
+
+  def load_tag_suggestions
+    @suggested_tags = current_user.time_blocks.pluck(:tags).flatten.uniq.sort.take(20)
   end
 
   def safe_day(value)

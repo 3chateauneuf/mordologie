@@ -6,6 +6,18 @@
   <% end %>
   <div class="field"><%= f.label :title, "Activité" %><%= f.text_field :title, required: true, autofocus: true, placeholder: "Ex. Écriture du script Sin Rueditas" %></div>
   <div class="field"><%= f.label :category, "Catégorie" %><%= f.select :category, TimeBlock::CATEGORIES.map { |key, data| [data[:label], key] } %></div>
+  <div class="field">
+    <%= label_tag :time_block_tag_list, "Tags" %>
+    <%= text_field_tag "time_block[tag_list]", @block.tag_list, id: "time_block_tag_list", maxlength: 550, autocomplete: "off", placeholder: "Ex. sin rueditas, vidéo, montage", aria: { describedby: "tags-help" } %>
+    <p class="field-hint" id="tags-help">Séparez les tags par des virgules. Ils seront utilisables dans la recherche, même sur d'autres semaines.</p>
+    <% if @suggested_tags.present? %>
+      <div class="tag-suggestions" aria-label="Tags déjà utilisés">
+        <% @suggested_tags.each do |tag| %>
+          <button type="button" class="tag-pill" data-suggest-tag="<%= tag %>">#<%= tag %></button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
   <div class="field-row">
     <div class="field">
       <%= label_tag :time_block_schedule_date, "Date" %>
@@ -75,6 +87,18 @@
   [day, clock, duration].forEach(function (input) {
     input.addEventListener("input", update);
     input.addEventListener("change", update);
+  });
+  const tagField = form.querySelector("#time_block_tag_list");
+  form.querySelectorAll("[data-suggest-tag]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      const existing = tagField.value.split(",").map(s => s.trim()).filter(Boolean);
+      const tag = button.dataset.suggestTag;
+      if (!existing.some(s => s.toLocaleLowerCase("fr") === tag)) {
+        existing.push(tag);
+        tagField.value = existing.join(", ");
+      }
+      tagField.focus();
+    });
   });
   update();
 })();

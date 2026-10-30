@@ -6,12 +6,26 @@ class TimeBlock < ApplicationRecord
     "pause" => { label: "Pause", color: "#956c97" }
   }.freeze
 
+  # A block can have multiple independent, searchable tags.
+  # Categories remain separate: they define the calendar's colour.
+  def tag_list
+    @tag_list.nil? ? tags.join(", ") : @tag_list
+  end
+
+  def tag_list=(value)
+    @tag_list = value.to_s
+    self.tags = @tag_list.split(",").map do |part|
+      part.strip.delete_prefix("#").strip.downcase
+    end.reject(&:blank?).uniq
+  end
+
   belongs_to :user
   validates :title, presence: true, length: { maximum: 120 }
   validates :category, inclusion: { in: CATEGORIES.keys }
   validates :start_at, :end_at, presence: true
   validates :actual_minutes, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate :valid_interval
+  validate :valid_tags
 
   def duration_minutes
     return 0 unless start_at && end_at
@@ -23,6 +37,15 @@ class TimeBlock < ApplicationRecord
   end
 
   private
+
+  def valid_tags
+    if tags.length > 12
+      errors.add(:tags, "ne peuvent pas dépasser 12 étiquettes")
+    end
+    if tags.any? { |tag| tag.length > 40 }
+      errors.add(:tags, "doivent contenir 40 caractères maximum chacune")
+    end
+  end
 
   def valid_interval
     return unless start_at && end_at
