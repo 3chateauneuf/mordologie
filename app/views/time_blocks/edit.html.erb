@@ -1,0 +1,1 @@
+<div class="form-card"><h1>Modifier le créneau</h1><p>Adapter le plan à la réalité.</p><%= render "form" %><div style="margin-top:18px;padding-top:16px;border-top:1px solid #e7ebf1"><%= button_to "Supprimer le créneau", time_block_path(@block), method: :delete, class: "button danger", form: { data: { turbo_confirm: "Supprimer ce créneau ?" } } %></div></div>

@@ -1,0 +1,8 @@
+<div class="form-card">
+  <h1>Connexion</h1><p>Retrouvez votre planning personnel.</p>
+  <%= form_with url: session_path, method: :post do |f| %>
+    <div class="field"><%= f.label :email, "Email" %><%= f.email_field :email, required: true, autocomplete: "email" %></div>
+    <div class="field"><%= f.label :password, "Mot de passe" %><%= f.password_field :password, required: true, autocomplete: "current-password" %></div>
+    <div class="form-actions"><%= f.submit "Se connecter", class: "button" %></div>
+  <% end %>
+</div>

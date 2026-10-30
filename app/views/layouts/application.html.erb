@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f9">
+  <title>Planner — Organiser le temps</title>
+  <style>
+    :root { --ink:#151c2c; --sub:#6c7688; --line:#e7ebf1; --bg:#f5f6f9; --brand:#5268ca; }
+    * {box-sizing:border-box}
+    body {margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+    a {color:inherit;text-decoration:none}
+    button,input,select,textarea {font:inherit}
+    button {cursor:pointer}
+    .topbar {height:72px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;gap:20px}
+    .brand {display:flex;align-items:center;gap:11px;font-size:21px;letter-spacing:-.8px;font-weight:800}
+    .brand-mark {display:grid;place-items:center;width:34px;height:34px;border-radius:11px;color:white;background:var(--brand);font-size:20px}
+    .nav-links {display:flex;gap:12px;align-items:center}
+    .nav-links a {color:#5e687c;padding:8px 10px;border-radius:8px}
+    .nav-links a.active {color:var(--brand);background:#eff1fe;font-weight:700}
+    .account {display:flex;gap:12px;align-items:center;font-size:12px;color:var(--sub)}
+    .account button {border:0;background:none;color:#667085}
+    main {max-width:1480px;margin:0 auto;padding:28px 30px}
+    h1 {font-size:30px;letter-spacing:-1px;line-height:1.18;margin:0}
+    h2 {font-size:16px;margin:0}
+    p {margin:0}
+    .muted {color:var(--sub)}
+    .button {display:inline-flex;align-items:center;gap:8px;justify-content:center;border:1px solid transparent;border-radius:10px;padding:11px 16px;background:var(--brand);color:white;font-weight:700;cursor:pointer}
+    .button.secondary {background:white;color:var(--ink);border-color:#dfe4eb}
+    .button.danger {background:#b74353}
+    .page-head {display:flex;align-items:center;justify-content:space-between;gap:18px;margin:4px 0 24px}
+    .page-head p {color:var(--sub);margin-top:6px}
+    .actions {display:flex;gap:8px;align-items:center}
+    .stats {display:flex;gap:12px;margin-bottom:23px}
+    .stat {border:1px solid var(--line);background:white;border-radius:15px;padding:15px 18px;min-width:185px}
+    .stat span {font-size:12px;color:var(--sub)}
+    .stat strong {display:block;font-size:23px;letter-spacing:-.5px;margin-top:2px}
+    .calendar-shell {background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 7px 30px rgba(26,39,72,.035)}
+    .calendar-header {display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+    .calendar-header strong {font-size:16px}
+    .week-nav {display:flex;gap:8px;align-items:center}
+    .week-nav a {border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:#45516a}
+    .calendar-scroll {overflow-x:auto}
+    .week-grid {display:grid;grid-template-columns:58px repeat(7,minmax(135px,1fr));min-width:1080px}
+    .day-heading {height:64px;display:grid;place-items:center;border-bottom:1px solid var(--line);border-left:1px solid var(--line);background:#fff}
+    .day-heading em {font-style:normal;font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:1px}
+    .day-heading strong {font-size:20px;font-weight:650}
+    .day-heading.today {background:#f4f5ff;color:var(--brand)}
+    .hour-header {border-bottom:1px solid var(--line)}
+    .time-rail {height:924px;position:relative;background:#fafbfc}
+    .hour {height:66px;position:relative;top:-8px;text-align:center;color:#8b94a5;font-size:11px}
+    .day-body {height:924px;position:relative;border-left:1px solid var(--line);background:repeating-linear-gradient(to bottom,#fff 0,#fff 65px,#edf0f4 65px,#edf0f4 66px);cursor:crosshair}
+    .day-body.today {background:repeating-linear-gradient(to bottom,#fafaff 0,#fafaff 65px,#e6eafd 65px,#e6eafd 66px)}
+    .event {position:absolute;left:5px;right:5px;overflow:hidden;border-radius:8px;border-left:3px solid var(--event-color);background:color-mix(in srgb,var(--event-color) 12%,white);padding:7px 8px;color:#263044;display:flex;flex-direction:column;gap:2px;transition:box-shadow .15s}
+    .event:hover {box-shadow:0 4px 16px #2222;z-index:3}
+    .event strong {font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .event small {font-size:10px;color:#536078}
+    .event .category {font-size:10px;color:var(--event-color);font-weight:800}
+    .help {font-size:12px;padding:13px 20px;color:var(--sub);border-top:1px solid var(--line)}
+    .flash {padding:12px 16px;border-radius:10px;background:#e6f5ee;color:#236b54;margin-bottom:18px}
+    .flash.alert {background:#fff0ef;color:#a33c44}
+    .form-card {max-width:580px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px;margin:28px auto;box-shadow:0 10px 30px #14213708}
+    .form-card h1 {font-size:26px;margin-bottom:7px}
+    .form-card>p {color:var(--sub);margin-bottom:24px}
+    .field {margin:17px 0}
+    .field label {display:block;font-size:12px;font-weight:750;margin-bottom:7px}
+    .field input,.field select,.field textarea {width:100%;border:1px solid #dbe1e9;background:#fff;padding:11px 12px;border-radius:9px;outline:none}
+    .field input:focus,.field textarea:focus,.field select:focus {border-color:var(--brand);box-shadow:0 0 0 3px #5268ca18}
+    .field textarea {min-height:90px}
+    .field-row {display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    .error-list {color:#ae3e4d;background:#fff2f4;border-radius:9px;padding:12px 14px;margin-bottom:12px}
+    .form-actions {display:flex;gap:9px;align-items:center;margin-top:23px}
+    .form-actions .button {min-width:120px}
+    .form-note {font-size:12px;color:var(--sub);margin-top:18px}
+    @media (max-width:720px) {
+      .topbar{padding:0 17px}.account span{display:none}
+      main{padding:23px 14px}.page-head{align-items:flex-start;flex-direction:column}
+      .page-head h1{font-size:26px}.stats{flex-wrap:wrap}.stat{flex:1;min-width:140px}
+      .calendar-header{padding:14px;flex-wrap:wrap;gap:10px}
+      .form-card{margin:15px auto;padding:20px}.field-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="<%= root_path %>" class="brand"><span class="brand-mark">P</span>Planner</a>
+    <% if current_user %>
+      <div class="nav-links"><%= link_to "Planning", root_path, class: "active" %><%= link_to "+ Créneau", new_time_block_path %></div>
+      <div class="account"><span><%= current_user.email %></span><%= button_to "Déconnexion", session_path, method: :delete %></div>
+    <% end %>
+  </header>
+  <main>
+    <% if notice %><div class="flash"><%= notice %></div><% end %>
+    <% if alert %><div class="flash alert"><%= alert %></div><% end %>
+    <%= yield %>
+  </main>
+</body>
+</html>

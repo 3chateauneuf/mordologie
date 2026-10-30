@@ -1,0 +1,16 @@
+<%= form_with model: @block do |f| %>
+  <% if @block.errors.any? %>
+    <div class="error-list"><strong>Vérifiez le créneau :</strong>
+      <ul><% @block.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+  <div class="field"><%= f.label :title, "Activité" %><%= f.text_field :title, required: true, autofocus: true, placeholder: "Ex. Écriture du script Sin Rueditas" %></div>
+  <div class="field"><%= f.label :category, "Catégorie" %><%= f.select :category, TimeBlock::CATEGORIES.map { |key, data| [data[:label], key] } %></div>
+  <div class="field-row">
+    <div class="field"><%= f.label :start_at, "Début" %><%= f.datetime_local_field :start_at, required: true %></div>
+    <div class="field"><%= f.label :end_at, "Fin" %><%= f.datetime_local_field :end_at, required: true %></div>
+  </div>
+  <div class="field"><%= f.label :actual_minutes, "Temps réellement utilisé (minutes, facultatif)" %><%= f.number_field :actual_minutes, min: 0, placeholder: "À renseigner après l'activité" %></div>
+  <div class="field"><%= f.label :notes, "Notes (facultatif)" %><%= f.text_area :notes, placeholder: "Contexte, intention, résultat…" %></div>
+  <div class="form-actions"><%= f.submit(@block.persisted? ? "Enregistrer" : "Créer le créneau", class: "button") %><%= link_to "Annuler", root_path, class: "button secondary" %></div>
+<% end %>

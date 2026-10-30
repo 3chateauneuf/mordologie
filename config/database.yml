@@ -1,0 +1,19 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+
+development:
+  <<: *default
+  database: planner_development
+
+test:
+  <<: *default
+  database: planner_test
+
+# Rails must NOT use the old Dodonews database. The app receives the existing
+# Postgres connection under PLANNER_DATABASE_URL and replaces only the
+# database path with /planner. db:prepare creates that separate database.
+production:
+  <<: *default
+  url: <%= require "uri"; uri = URI.parse(ENV.fetch("PLANNER_DATABASE_URL")); uri.path = "/planner"; uri.to_s %>
