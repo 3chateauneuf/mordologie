@@ -1,1 +1,15 @@
-<div class="form-card"><h1>Modifier le créneau</h1><p>Adapter le plan à la réalité.</p><%= render "form" %><div style="margin-top:18px;padding-top:16px;border-top:1px solid #e7ebf1"><%= button_to "Supprimer le créneau", time_block_path(@block), method: :delete, class: "button danger", form: { data: { turbo_confirm: "Supprimer ce créneau ?" } } %></div></div>
+<div class="editor-shell">
+  <header class="editor-page-head">
+    <div>
+      <span class="editor-eyebrow"><span class="eyebrow-dot"></span> MON PLANNING / MODIFICATION</span>
+      <h1>Modifier le créneau</h1>
+      <p>Un changement de programme ? Ajustez simplement ce qui compte.</p>
+    </div>
+    <%= link_to "← Retour au planning", root_path, class: "editor-back" %>
+  </header>
+  <%= render "form" %>
+  <div class="editor-delete-zone">
+    <div><strong>Supprimer ce créneau</strong><p>Cette action ne peut pas être annulée.</p></div>
+    <%= button_to "Supprimer", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
+  </div>
+</div>
