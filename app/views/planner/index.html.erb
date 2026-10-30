@@ -25,16 +25,16 @@
           <strong><%= day.day %></strong>
         </div>
       <% end %>
-      <div class="time-rail">
-        <% (7..20).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
+      <div class="time-rail" style="height:<%= @calendar_height %>px">
+        <% (@calendar_start_hour...@calendar_end_hour).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
       </div>
       <% @days.each do |day| %>
-        <div class="day-body <%= 'today' if day == Date.current %>" data-day="<%= day.iso8601 %>" title="Double-cliquez pour créer un créneau">
+        <div class="day-body <%= 'today' if day == Date.current %>" style="height:<%= @calendar_height %>px" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Double-cliquez pour créer un créneau">
           <% @blocks_by_day.fetch(day, []).each do |block| %>
             <% local_start = block.start_at.in_time_zone %>
-            <% start_minutes = ((local_start.hour - 7) * 60 + local_start.min).clamp(0, 840) %>
+            <% start_minutes = ((local_start.hour - @calendar_start_hour) * 60 + local_start.min) %>
             <% top = start_minutes * 1.1 %>
-            <% height = [[block.duration_minutes * 1.1, 34].max, [924 - top, 15].max].min %>
+            <% height = [[block.duration_minutes * 1.1, 34].max, [@calendar_height - top, 15].max].min %>
             <%= link_to edit_time_block_path(block), class: "event", style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} — Modifier" do %>
               <span class="category"><%= TimeBlock::CATEGORIES.fetch(block.category)[:label] %></span>
               <strong><%= block.title %></strong>
@@ -52,7 +52,9 @@
     day.addEventListener("dblclick", function(event) {
       if (event.target.closest(".event")) return;
       const bounds = day.getBoundingClientRect();
-      const hour = Math.min(20, Math.max(7, 7 + Math.floor((event.clientY - bounds.top) / 66)));
+      const firstHour = Number(day.dataset.startHour);
+      const lastHour = Number(day.dataset.endHour);
+      const hour = Math.min(lastHour - 1, Math.max(firstHour, firstHour + Math.floor((event.clientY - bounds.top) / 66)));
       window.location.href = "/time_blocks/new?day=" + encodeURIComponent(day.dataset.day) + "&hour=" + hour;
     });
   });

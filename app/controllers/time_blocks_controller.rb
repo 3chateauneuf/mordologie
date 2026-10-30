@@ -7,11 +7,12 @@ class TimeBlocksController < ApplicationController
     rescue Date::Error
       Date.current
     end
-    hour = params.fetch(:hour, 9).to_i.clamp(0, 22)
+    hour = params.fetch(:hour, 9).to_i.clamp(0, 23)
     start_time = Time.zone.local(day.year, day.month, day.day, hour)
+    end_time = [start_time + 1.hour, Time.zone.local(day.year, day.month, day.day, 23, 59)].min
     @block = current_user.time_blocks.new(
       start_at: start_time,
-      end_at: start_time + 1.hour,
+      end_at: end_time,
       category: "travail"
     )
   end
@@ -19,7 +20,7 @@ class TimeBlocksController < ApplicationController
   def create
     @block = current_user.time_blocks.new(block_params)
     if @block.save
-      redirect_to root_path(week: @block.start_at.to_date.iso8601), notice: "Créneau ajouté."
+      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau ajouté."
     else
       render :new, status: :unprocessable_entity
     end
@@ -30,7 +31,7 @@ class TimeBlocksController < ApplicationController
 
   def update
     if @block.update(block_params)
-      redirect_to root_path(week: @block.start_at.to_date.iso8601), notice: "Créneau mis à jour."
+      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau mis à jour."
     else
       render :edit, status: :unprocessable_entity
     end
