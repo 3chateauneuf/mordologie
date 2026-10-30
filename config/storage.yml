@@ -1,0 +1,10 @@
+# Rails Active Storage requires this file during boot, even before uploads
+# are enabled. Disk storage in production is temporary on Railway: never
+# use it for durable files without a persistent volume or an object store.
+test:
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
