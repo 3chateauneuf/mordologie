@@ -1,7 +1,7 @@
 class PlannerController < ApplicationController
   def search
-    @query = params[:q].to_s.strip.first(120)
-    @tag = params[:tag].to_s.strip.downcase.first(40)
+    @query = params[:q].to_s.strip[0, 120]
+    @tag = params[:tag].to_s.strip.downcase[0, 40]
     @available_tags = current_user.time_blocks.pluck(:tags).flatten.uniq.sort
     @tag = "" unless @available_tags.include?(@tag)
 
