@@ -34,7 +34,7 @@
             <% local_start = block.start_at.in_time_zone %>
             <% start_minutes = ((local_start.hour - 7) * 60 + local_start.min).clamp(0, 840) %>
             <% top = start_minutes * 1.1 %>
-            <% height = [block.duration_minutes * 1.1, 34].max.clamp(34, 924 - top) %>
+            <% height = [[block.duration_minutes * 1.1, 34].max, [924 - top, 15].max].min %>
             <%= link_to edit_time_block_path(block), class: "event", style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} — Modifier" do %>
               <span class="category"><%= TimeBlock::CATEGORIES.fetch(block.category)[:label] %></span>
               <strong><%= block.title %></strong>
