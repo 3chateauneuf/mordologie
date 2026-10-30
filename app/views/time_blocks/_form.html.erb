@@ -121,7 +121,7 @@
   <footer class="editor-footer">
     <p class="editor-footer-help">Le créneau apparaîtra dans votre planning.</p>
     <div class="editor-footer-actions">
-      <%= link_to "Annuler", root_path, class: "editor-cancel" %>
+      <%= link_to "Annuler", root_path(week: @schedule_date), class: "editor-cancel" %>
       <%= f.submit(@block.persisted? ? "Enregistrer les modifications" : "Ajouter au planning", class: "editor-submit") %>
     </div>
   </footer>

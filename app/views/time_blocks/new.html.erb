@@ -5,7 +5,7 @@
       <h1>Nouveau créneau</h1>
       <p>Une activité, un moment, et c'est prévu.</p>
     </div>
-    <%= link_to "← Retour au planning", root_path, class: "editor-back" %>
+    <%= link_to "← Retour au planning", root_path(week: @schedule_date), class: "editor-back" %>
   </header>
   <%= render "form" %>
 </div>
