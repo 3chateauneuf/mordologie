@@ -309,22 +309,3 @@
     min-width:35px
   }
 }
-
-/* Put the expanded calendar preference below the navigation on small screens. */
-@media (max-width:720px) {
-  .calendar-start-setting {
-    font-size: 11px;
-  }
-  .calendar-start-setting > summary {
-    padding: 8px;
-  }
-  .calendar-start-setting[open] {
-    width: 100%;
-  }
-  .calendar-start-form {
-    justify-content: flex-start;
-  }
-  .calendar-start-form label {
-    flex-basis: 100%;
-  }
-}

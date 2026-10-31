@@ -44,10 +44,19 @@ class PlannerController < ApplicationController
     @planned_minutes = @blocks.sum(&:duration_minutes)
     @actual_minutes = @blocks.sum { |block| block.actual_minutes.to_i }
 
-    # Extend the visible grid for early or late blocks rather than
-    # displaying them at the wrong hour.
-    @calendar_start_hour = ([current_user.calendar_start_hour] +
-                            @blocks.map { |block| block.start_at.in_time_zone.hour }).min
+    # The configured hour is the first visible row. Earlier activities stay
+    # accessible through an explicit "show earlier" action rather than
+    # silently overriding the user's preference.
+    preferred_start = current_user.calendar_start_hour
+    @earlier_blocks = @blocks.select do |block|
+      block.start_at.in_time_zone.hour < preferred_start
+    end
+    @show_early = params[:show_early] == "1" && @earlier_blocks.any?
+    @calendar_start_hour = if @show_early
+      @earlier_blocks.map { |block| block.start_at.in_time_zone.hour }.min
+    else
+      preferred_start
+    end
     latest_hours = @blocks.map do |block|
       finish = block.end_at.in_time_zone
       finish.hour + (finish.min.positive? || finish.sec.positive? ? 1 : 0)

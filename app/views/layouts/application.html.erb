@@ -9,11 +9,13 @@
   <link rel="stylesheet" href="/styles/time-block-editor.css">
   <link rel="stylesheet" href="/styles/mobile.css">
   <link rel="stylesheet" href="/styles/dialogs.css">
+  <link rel="stylesheet" href="/styles/calendar-preferences.css">
   <script src="/planner-dialog.js" defer></script>
   <% if controller_name == "time_blocks" %>
     <script src="/scripts/time-block-form.js" defer></script>
   <% elsif controller_name == "planner" && action_name == "index" %>
     <script src="/scripts/week-calendar.js" defer></script>
+    <script src="/scripts/calendar-preferences.js" defer></script>
   <% end %>
 </head>
 <body class="<%= controller_name == 'time_blocks' ? 'is-editor-page' : '' %> <%= controller_name == 'time_blocks' && %w[new create edit update].include?(action_name) ? 'is-dialog-page' : '' %>">

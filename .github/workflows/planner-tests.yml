@@ -40,6 +40,7 @@ jobs:
       - name: Validate browser scripts
         run: |
           node --check public/scripts/week-calendar.js
+          node --check public/scripts/calendar-preferences.js
           node --check public/scripts/time-block-form.js
           node --check public/planner-dialog.js
       - name: Enforce external view scripts and styles

@@ -60,7 +60,13 @@ un estado `SUCCESS` no equivale a una prueba de interacción en navegador.
 06:00 por defecto. `CalendarPreferencesController` valida y guarda únicamente
 en la cuenta autenticada. La agenda muestra desde esa hora y amplía el rango
 automáticamente cuando hay bloques anteriores. En móvil no se autodesplaza al
-primer bloque; se respeta el inicio de jornada.
+primer bloque; se respeta el inicio de jornada. Las actividades anteriores
+no fuerzan el comienzo del calendario: aparece un acceso explícito para mostrar
+las horas previas, y las actividades que cruzan el inicio siguen visibles.
+La selección de hora es un formulario compacto que se guarda al cambiar
+(`public/scripts/calendar-preferences.js`) y conserva un botón accesible sin JS.
+Sus estilos viven en `public/styles/calendar-preferences.css` y deben mantener
+la cabecera estable en escritorio y móvil.
 
 Para cambiar este comportamiento, actualizar modelo, migración, controlador,
 vista y pruebas de forma conjunta. No guardar esta preferencia en localStorage.

@@ -1,26 +1,36 @@
 <div class="calendar-shell" data-calendar data-new-block-url="<%= new_time_block_path %>">
   <div class="calendar-header">
     <strong><span class="desktop-calendar-label">Planning hebdomadaire</span><span class="mobile-calendar-label">Agenda</span></strong>
-    <details class="calendar-start-setting">
-      <summary>Début <%= format("%02d:00", current_user.calendar_start_hour) %></summary>
-      <%= form_with url: calendar_preferences_path, method: :patch, class: "calendar-start-form" do %>
-        <%= hidden_field_tag :week, @week_start.iso8601 %>
-        <%= hidden_field_tag :day, @selected_day.iso8601 %>
-        <%= label_tag :calendar_start_hour, "Première heure affichée" %>
-        <%= select_tag :calendar_start_hour,
-              options_for_select(User::CALENDAR_START_HOURS.map { |hour| [format("%02d:00", hour), hour] }, current_user.calendar_start_hour) %>
-        <%= button_tag "Enregistrer", type: "submit" %>
-      <% end %>
-    </details>
+    <%= form_with url: calendar_preferences_path, method: :patch, class: "calendar-start-form", data: { calendar_start_form: true } do %>
+      <%= hidden_field_tag :week, @week_start.iso8601 %>
+      <%= hidden_field_tag :day, @selected_day.iso8601 %>
+      <%= label_tag :calendar_start_hour, "Début" %>
+      <%= select_tag :calendar_start_hour,
+            options_for_select(User::CALENDAR_START_HOURS.map { |hour| [format("%02d:00", hour), hour] }, current_user.calendar_start_hour),
+            aria: { label: "Première heure affichée dans le planning" } %>
+      <%= button_tag "Appliquer", type: "submit" %>
+    <% end %>
     <div class="week-nav">
       <%= link_to "←", root_path(week: (@week_start - 7).iso8601), aria: { label: "Semaine précédente" } %>
       <%= link_to "Aujourd'hui", root_path %>
       <%= link_to "→", root_path(week: (@week_start + 7).iso8601), aria: { label: "Semaine suivante" } %>
     </div>
   </div>
+  <% if @earlier_blocks.any? %>
+    <div class="calendar-earlier-bar">
+      <span><%= pluralize(@earlier_blocks.length, "créneau") %> avant <%= format("%02d:00", current_user.calendar_start_hour) %></span>
+      <% if @show_early %>
+        <%= link_to "Revenir à #{format('%02d:00', current_user.calendar_start_hour)}",
+              root_path(week: @week_start.iso8601, day: @selected_day.iso8601) %>
+      <% else %>
+        <%= link_to "Afficher les heures précédentes",
+              root_path(week: @week_start.iso8601, day: @selected_day.iso8601, show_early: "1") %>
+      <% end %>
+    </div>
+  <% end %>
   <nav class="mobile-day-picker" aria-label="Choisir un jour de la semaine">
     <% @days.each_with_index do |day, idx| %>
-      <%= link_to root_path(week: @week_start.iso8601, day: day.iso8601),
+      <%= link_to root_path(week: @week_start.iso8601, day: day.iso8601, show_early: (@show_early ? "1" : nil)),
           class: "mobile-day #{'is-selected' if day == @selected_day}",
           aria: { current: (day == @selected_day ? "date" : nil), label: "#{%w[Lundi Mardi Mercredi Jeudi Vendredi Samedi Dimanche][idx]} #{day.day}" } do %>
         <span class="mobile-day-label"><%= %w[L M M J V S D][idx] %></span>
@@ -45,9 +55,12 @@
         <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Glissez pour choisir une durée ou double-cliquez pour créer un créneau">
           <% @blocks_by_day.fetch(day, []).each do |block| %>
             <% local_start = block.start_at.in_time_zone %>
-            <% start_minutes = ((local_start.hour - @calendar_start_hour) * 60 + local_start.min) %>
-            <% top = start_minutes * 1.1 %>
-            <% height = [[block.duration_minutes * 1.1, 34].max, [@calendar_height - top, 15].max].min %>
+            <% local_end = block.end_at.in_time_zone %>
+            <% visible_start = day.in_time_zone + @calendar_start_hour.hours %>
+            <% next if local_end <= visible_start %>
+            <% visible_minutes = ((local_end - [local_start, visible_start].max) / 60).round %>
+            <% top = (([local_start, visible_start].max - visible_start) / 60) * 1.1 %>
+            <% height = [[visible_minutes * 1.1, 34].max, [@calendar_height - top, 15].max].min %>
             <% category_label = TimeBlock::CATEGORIES.fetch(block.category)[:label] %>
             <% time_label = "#{local_start.strftime('%H:%M')} – #{block.end_at.in_time_zone.strftime('%H:%M')}" %>
             <%= link_to edit_time_block_path(block), class: "event", style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} · #{time_label} · #{category_label}#{block.tags.any? ? ' · #' + block.tags.join(' #') : ''} — Modifier" do %>

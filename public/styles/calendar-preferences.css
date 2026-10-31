@@ -1,0 +1,102 @@
+/* Calendar start preference: a stable, single-line control.
+   Changing it must never resize or reorder the calendar header. */
+.calendar-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.calendar-start-form {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.calendar-start-form label {
+  color: #65718a;
+  font-size: 12px;
+}
+
+.calendar-start-form select {
+  font: inherit;
+  color: #34435c;
+  background: #fff;
+  border: 1px solid #dfe5ef;
+  border-radius: 9px;
+  padding: 7px 9px;
+  min-height: 38px;
+  cursor: pointer;
+}
+
+.calendar-start-form button {
+  min-height: 38px;
+  border: 1px solid #dfe5ef;
+  border-radius: 9px;
+  padding: 7px 11px;
+  background: #f5f7fb;
+  color: #34435c;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.calendar-start-form.is-enhanced button {
+  display: none;
+}
+
+.calendar-start-form select:focus-visible,
+.calendar-start-form button:focus-visible {
+  outline: 3px solid #96a5ec;
+  outline-offset: 2px;
+}
+
+.calendar-earlier-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 20px;
+  background: #f8f9fc;
+  border-bottom: 1px solid var(--line);
+  color: #65718a;
+  font-size: 12px;
+}
+
+.calendar-earlier-bar a {
+  color: #445fbd;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .calendar-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px;
+  }
+
+  .calendar-start-form {
+    justify-self: end;
+  }
+
+  .calendar-start-form label {
+    font-size: 11px;
+  }
+
+  .calendar-start-form select {
+    padding: 6px 7px;
+    min-height: 38px;
+    font-size: 12px;
+  }
+
+  .calendar-header .week-nav {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .calendar-earlier-bar {
+    padding: 9px 12px;
+  }
+}
