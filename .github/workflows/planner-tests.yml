@@ -35,8 +35,18 @@ jobs:
         run: bundle install --jobs 4 --retry 3
       - name: Prepare isolated test database
         run: bundle exec rails db:prepare
-      - name: Run Rails tests
+      - name: Run Rails unit and integration tests
         run: bundle exec rails test
+      - name: Run Chrome desktop and mobile system tests
+        run: bundle exec rails test:system
+      - name: Preserve browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planner-browser-screenshots
+          path: tmp/screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Validate browser scripts
         run: |
           node --check public/scripts/week-calendar.js
