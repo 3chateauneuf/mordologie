@@ -1,0 +1,44 @@
+name: Planner — tests
+
+on:
+  push:
+    branches: [planner-rails]
+  pull_request:
+    branches: [planner-rails]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: planner_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/planner_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.8"
+      - name: Install Ruby dependencies
+        run: bundle install --jobs 4 --retry 3
+      - name: Prepare isolated test database
+        run: bundle exec rails db:prepare
+      - name: Run Rails tests
+        run: bundle exec rails test
+      - name: Validate browser scripts
+        run: |
+          node --check public/scripts/week-calendar.js
+          node --check public/scripts/time-block-form.js
+          node --check public/planner-dialog.js
