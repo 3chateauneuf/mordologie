@@ -50,6 +50,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-planner-dialog]", count: 1
     assert_select ".editor-delete-button", count: 1
+    assert_select "form[data-confirm-destroy]", count: 1
     assert_select "button[form='planner-time-block-form']", count: 1
     assert_select "script[src='/scripts/time-block-form.js']", count: 1
     assert_select "script:not([src])", count: 0

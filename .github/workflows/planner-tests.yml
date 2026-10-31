@@ -42,3 +42,9 @@ jobs:
           node --check public/scripts/week-calendar.js
           node --check public/scripts/time-block-form.js
           node --check public/planner-dialog.js
+      - name: Enforce external view scripts and styles
+        run: |
+          if grep -R -n -E '<script>|<style>|onsubmit=|onclick=' app/views; then
+            echo 'Do not place JavaScript or CSS inside Rails views.'
+            exit 1
+          fi

@@ -45,6 +45,13 @@
     updateMode();
     desktop.addEventListener("change", updateMode);
 
+    // Shared confirmation for destructive actions; no inline JS in ERB.
+    document.addEventListener("submit", function (event) {
+      const form = event.target;
+      if (!form.matches("form[data-confirm-destroy]")) return;
+      if (!window.confirm(form.dataset.confirmDestroy)) event.preventDefault();
+    }, true);
+
     dialogs.forEach(function (dialog) {
       dialog.addEventListener("click", function (event) {
         if (desktop.matches && event.target === dialog) close(dialog);

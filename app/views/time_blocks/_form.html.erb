@@ -98,7 +98,7 @@
 <footer class="editor-footer <%= 'editor-footer-edit' if @block.persisted? %>">
   <% if @block.persisted? %>
     <div class="editor-delete-zone">
-      <%= button_to "Supprimer ce créneau", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
+      <%= button_to "Supprimer ce créneau", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { data: { confirm_destroy: "Supprimer définitivement ce créneau ?" } } %>
     </div>
   <% end %>
   <button type="submit" form="planner-time-block-form" id="planner-time-block-submit" class="editor-submit"><%= @block.persisted? ? "Enregistrer" : "Créer le créneau" %></button>
