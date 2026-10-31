@@ -27,7 +27,7 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     # The selector and navigation must occupy the same compact header row.
     start_position = position(".calendar-start-form")
     navigation_position = position(".week-nav")
-    assert_in_delta start_position[:top], navigation_position[:top], 16
+    assert_in_delta start_position["top"], navigation_position["top"], 16
 
     screenshot("desktop-calendar-06h")
     select "08:00", from: "calendar_start_hour"
@@ -78,7 +78,7 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     assert_operator page_width, :<=, viewport_width + 1
 
     header = position(".calendar-header")
-    assert_operator header[:bottom] - header[:top], :<=, 115
+    assert_operator header["bottom"] - header["top"], :<=, 115
 
     screenshot("mobile-calendar-06h")
     select "07:00", from: "calendar_start_hour"

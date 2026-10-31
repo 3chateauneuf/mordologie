@@ -10,7 +10,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   def screenshot(name)
     path = Rails.root.join("tmp/screenshots/#{name}.png")
     FileUtils.mkdir_p(path.dirname)
-    save_screenshot(path)
+    page.save_screenshot(path.to_s)
   end
 
   def login
