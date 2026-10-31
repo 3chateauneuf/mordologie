@@ -3,8 +3,8 @@
   <div class="actions"><%= link_to "Rechercher", recherche_path, class: "button secondary" %><%= link_to "+ Planifier un créneau", new_time_block_path(day: Date.current.iso8601), class: "button" %></div>
 </div>
 <section class="stats" aria-label="Résumé de la semaine">
-  <div class="stat"><span>Temps planifié</span><strong><%= number_with_precision(@planned_minutes / 60.0, precision: 1) %> h</strong></div>
-  <div class="stat"><span>Temps réalisé (déclaré)</span><strong><%= number_with_precision(@actual_minutes / 60.0, precision: 1) %> h</strong></div>
+  <div class="stat"><span>Planifié</span><strong><%= planner_duration(@planned_minutes) %></strong></div>
+  <div class="stat"><span title="Temps réellement déclaré">Réalisé</span><strong><%= planner_duration(@actual_minutes) %></strong></div>
   <div class="stat"><span>Créneaux</span><strong><%= @blocks.length %></strong></div>
 </section>
 <div class="calendar-shell">
