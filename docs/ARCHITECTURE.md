@@ -70,3 +70,11 @@ la cabecera estable en escritorio y móvil.
 
 Para cambiar este comportamiento, actualizar modelo, migración, controlador,
 vista y pruebas de forma conjunta. No guardar esta preferencia en localStorage.
+
+## Validación visual de la agenda
+
+Las pruebas de sistema con Chrome usan los mismos formularios y clics que un
+usuario: hora de inicio, navegación entre semanas, diálogos y pantalla móvil.
+Guardan capturas de datos ficticios en los artefactos temporales de GitHub Actions.
+En móvil el selector semanal identifica el día; no se repite una cabecera diaria
+ni se crea una segunda barra de desplazamiento dentro del calendario.

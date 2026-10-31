@@ -70,7 +70,10 @@ class PlannerCalendarTest < ApplicationSystemTestCase
 
     assert_selector ".time-rail .hour:first-child", text: "06:00"
     assert_selector ".day-body.is-active-day", visible: true, count: 1
-    assert_selector ".day-heading.is-active-day", visible: true, count: 1
+    assert_no_selector ".day-heading", visible: true
+    assert_equal "visible", page.evaluate_script(
+      "getComputedStyle(document.querySelector('.calendar-scroll')).overflowY"
+    )
     assert_selector ".calendar-start-form select", visible: true, count: 1
 
     page_width = page.evaluate_script("document.documentElement.scrollWidth")

@@ -203,43 +203,25 @@
     background:#5268ca
   }
   .calendar-scroll {
-    overflow-x:hidden;
-    overflow-y:auto;
-    max-height:min(60dvh,540px);
-    overscroll-behavior:contain
+    /* The page scrolls; a second scrollbar inside the calendar is unnecessary. */
+    overflow:visible;
+    max-height:none
   }
   .week-grid {
     min-width:0;
     grid-template-columns:50px minmax(0,1fr)
   }
-  .day-heading:not(.is-active-day),.day-body:not(.is-active-day) {
+  /* The weekly day picker already names the selected date. */
+  .hour-header,.day-heading,.day-body:not(.is-active-day) {
     display:none
   }
-  .hour-header {
-    grid-column:1;
-    position:sticky;
-    top:0;
-    z-index:6;
-    background:#fff
-  }
-  .day-heading {
-    grid-column:2;
-    height:48px;
-    position:sticky;
-    top:0;
-    z-index:6
-  }
-  .day-heading em {
-    font-size:10px
-  }
-  .day-heading strong {
-    font-size:16px
-  }
   .time-rail {
-    grid-column:1
+    grid-column:1;
+    grid-row:1
   }
   .day-body {
-    grid-column:2
+    grid-column:2;
+    grid-row:1
   }
   .event {
     left:5px;
