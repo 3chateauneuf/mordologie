@@ -16,4 +16,4 @@ test:
 # database path with /planner. db:prepare creates that separate database.
 production:
   <<: *default
-  url: <%= require "uri"; uri = URI.parse(ENV.fetch("PLANNER_DATABASE_URL")); uri.path = "/planner"; uri.to_s %>
+  url: <%= if ENV["PLANNER_DATABASE_URL"].to_s.empty? then nil else require "uri"; uri = URI.parse(ENV.fetch("PLANNER_DATABASE_URL")); uri.path = "/planner"; uri.to_s end %>
