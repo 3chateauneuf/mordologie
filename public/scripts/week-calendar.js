@@ -1,13 +1,6 @@
 (function () {
-  // On small screens show one selected day and position the scroll near
-  // its earliest event rather than forcing a long scroll from midnight.
-  const mobileCalendar = document.querySelector(".calendar-scroll");
-  const activeDay = document.querySelector(".day-body.is-active-day");
-  if (mobileCalendar && activeDay && window.matchMedia("(max-width:720px)").matches) {
-    const first = Number(activeDay.dataset.firstEventHour);
-    const startHour = Number(activeDay.dataset.startHour);
-    mobileCalendar.scrollTop = Math.max(0, (Math.max(first, startHour) - startHour) * 66 - 28);
-  }
+  // Keep the user's chosen beginning of day visible on mobile too.
+  // Scrolling stays under the person's control, even when there are later events.
 
   // Each grid hour is 66 px. Snap both clicks and selections to 15 minutes.
   const slotPixels = 66 / 4;

@@ -570,3 +570,74 @@ a.tag-pill:hover,button.tag-pill:hover {
     grid-template-columns:1fr
   }
 }
+
+/* Calendar preference is deliberately compact until opened. */
+.calendar-start-setting {
+  color: #56647c;
+  font-size: 12px;
+}
+.calendar-start-setting > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #fff;
+  white-space: nowrap;
+}
+.calendar-start-setting > summary::-webkit-details-marker {
+  display: none;
+}
+.calendar-start-setting > summary::after {
+  content: "⌄";
+  padding-left: 7px;
+  color: #7a88a1;
+}
+.calendar-start-setting > summary:hover {
+  background: #f6f8fd;
+}
+.calendar-start-setting > summary:focus-visible {
+  outline: 3px solid #96a5ec;
+  outline-offset: 2px;
+}
+.calendar-start-setting[open] {
+  flex: 0 0 100%;
+  order: 3;
+}
+.calendar-start-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  align-items: center;
+  margin-top: 10px;
+}
+.calendar-start-form label {
+  color: #4e5b70;
+  font-size: 12px;
+}
+.calendar-start-form select {
+  min-height: 40px;
+  border: 1px solid #dbe1ea;
+  border-radius: 9px;
+  padding: 7px 10px;
+  background: #fff;
+  color: #263247;
+}
+.calendar-start-form button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 9px;
+  padding: 7px 14px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.calendar-start-form button:hover {
+  background: #4058b7;
+}
+.calendar-start-form button:focus-visible,
+.calendar-start-form select:focus-visible {
+  outline: 3px solid #96a5ec;
+  outline-offset: 2px;
+}

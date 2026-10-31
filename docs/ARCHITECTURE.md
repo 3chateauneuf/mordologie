@@ -53,3 +53,14 @@ un estado `SUCCESS` no equivale a una prueba de interacción en navegador.
 3. ¿El flujo funciona en escritorio, móvil, teclado y con el usuario actual?
 4. ¿Hay una prueba o un procedimiento de verificación reproducible?
 5. ¿He confirmado el despliegue sin afirmar pruebas que no ejecuté?
+
+## Inicio de jornada configurable
+
+`users.calendar_start_hour` guarda la preferencia horaria (00–23), con
+06:00 por defecto. `CalendarPreferencesController` valida y guarda únicamente
+en la cuenta autenticada. La agenda muestra desde esa hora y amplía el rango
+automáticamente cuando hay bloques anteriores. En móvil no se autodesplaza al
+primer bloque; se respeta el inicio de jornada.
+
+Para cambiar este comportamiento, actualizar modelo, migración, controlador,
+vista y pruebas de forma conjunta. No guardar esta preferencia en localStorage.

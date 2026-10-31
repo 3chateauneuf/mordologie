@@ -1,6 +1,17 @@
 <div class="calendar-shell" data-calendar data-new-block-url="<%= new_time_block_path %>">
   <div class="calendar-header">
     <strong><span class="desktop-calendar-label">Planning hebdomadaire</span><span class="mobile-calendar-label">Agenda</span></strong>
+    <details class="calendar-start-setting">
+      <summary>Début <%= format("%02d:00", current_user.calendar_start_hour) %></summary>
+      <%= form_with url: calendar_preferences_path, method: :patch, class: "calendar-start-form" do %>
+        <%= hidden_field_tag :week, @week_start.iso8601 %>
+        <%= hidden_field_tag :day, @selected_day.iso8601 %>
+        <%= label_tag :calendar_start_hour, "Première heure affichée" %>
+        <%= select_tag :calendar_start_hour,
+              options_for_select(User::CALENDAR_START_HOURS.map { |hour| [format("%02d:00", hour), hour] }, current_user.calendar_start_hour) %>
+        <%= button_tag "Enregistrer", type: "submit" %>
+      <% end %>
+    </details>
     <div class="week-nav">
       <%= link_to "←", root_path(week: (@week_start - 7).iso8601), aria: { label: "Semaine précédente" } %>
       <%= link_to "Aujourd'hui", root_path %>

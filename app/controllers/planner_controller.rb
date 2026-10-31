@@ -46,12 +46,13 @@ class PlannerController < ApplicationController
 
     # Extend the visible grid for early or late blocks rather than
     # displaying them at the wrong hour.
-    @calendar_start_hour = ([7] + @blocks.map { |block| block.start_at.in_time_zone.hour }).min
+    @calendar_start_hour = ([current_user.calendar_start_hour] +
+                            @blocks.map { |block| block.start_at.in_time_zone.hour }).min
     latest_hours = @blocks.map do |block|
       finish = block.end_at.in_time_zone
       finish.hour + (finish.min.positive? || finish.sec.positive? ? 1 : 0)
     end
-    @calendar_end_hour = ([21] + latest_hours).max
+    @calendar_end_hour = ([21, @calendar_start_hour + 1] + latest_hours).max
     @calendar_height = (@calendar_end_hour - @calendar_start_hour) * 66
   end
 end
