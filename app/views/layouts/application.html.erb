@@ -224,7 +224,7 @@
 
 
     /* Mobile app shell and focused one-day agenda */
-    .mobile-menu,.mobile-day-picker,.mobile-calendar-label {display:none}
+    .mobile-menu,.mobile-day-picker,.mobile-calendar-label,.mobile-help {display:none}
     @media (max-width:720px) {
       .topbar {height:58px;padding:0 14px;gap:8px}
       .topbar .nav-links,.topbar .account {display:none!important}
@@ -275,6 +275,8 @@
       .day-body {grid-column:2}
       .event {left:5px;right:6px}
       .help {padding:10px 12px;font-size:11px;line-height:1.45}
+      .desktop-help {display:none}
+      .mobile-help {display:inline}
     }
     @media (max-width:480px) {
       .editor-schedule-row {grid-template-columns:1fr;gap:0}

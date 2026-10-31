@@ -58,7 +58,7 @@
       <% end %>
     </div>
   </div>
-  <p class="help">Glissez sur un espace libre pour sélectionner un horaire (par pas de 15 min), ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier.</p>
+  <p class="help"><span class="desktop-help">Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier.</span><span class="mobile-help">Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier.</span></p>
 </div>
 <script>
 (function () {
@@ -76,6 +76,7 @@
   const slotPixels = 66 / 4;
   const scheduleUrl = <%= new_time_block_path.to_json.html_safe %>;
   let selection = null;
+  let touchPoint = null;
 
   function slotAt(event, day) {
     const rect = day.getBoundingClientRect();
@@ -104,6 +105,10 @@
 
   document.querySelectorAll(".day-body").forEach(function (day) {
     day.addEventListener("pointerdown", function (event) {
+      if (event.pointerType === "touch" && !event.target.closest(".event")) {
+        touchPoint = { id: event.pointerId, day: day, slot: slotAt(event, day), y: event.clientY, x: event.clientX };
+        return;
+      }
       if (event.pointerType !== "mouse" || event.button !== 0 || event.target.closest(".event")) return;
       clearSelection();
       selection = {
@@ -126,6 +131,10 @@
   });
 
   document.addEventListener("pointermove", function (event) {
+    if (touchPoint && event.pointerId === touchPoint.id &&
+        (Math.abs(event.clientY - touchPoint.y) > 12 || Math.abs(event.clientX - touchPoint.x) > 12)) {
+      touchPoint = null; // Scrolling isn't a tap.
+    }
     if (!selection || event.pointerType !== "mouse") return;
     if (Math.abs(event.clientY - selection.originY) < 8 && !selection.dragging) return;
     selection.dragging = true;
@@ -138,6 +147,12 @@
   });
 
   document.addEventListener("pointerup", function (event) {
+    if (touchPoint && event.pointerId === touchPoint.id) {
+      const tapped = touchPoint;
+      touchPoint = null;
+      openForm(tapped.day, tapped.slot, 4);
+      return;
+    }
     if (!selection) return;
     const current = selection;
     if (current.dragging) {
@@ -150,7 +165,10 @@
       clearSelection();
     }
   });
-  document.addEventListener("pointercancel", clearSelection);
+  document.addEventListener("pointercancel", function () {
+    touchPoint = null;
+    clearSelection();
+  });
   window.addEventListener("blur", clearSelection);
 })();
 </script>
