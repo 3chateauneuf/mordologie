@@ -9,18 +9,29 @@
 </section>
 <div class="calendar-shell">
   <div class="calendar-header">
-    <strong>Planning hebdomadaire</strong>
+    <strong><span class="desktop-calendar-label">Planning hebdomadaire</span><span class="mobile-calendar-label">Agenda</span></strong>
     <div class="week-nav">
       <%= link_to "←", root_path(week: (@week_start - 7).iso8601), aria: { label: "Semaine précédente" } %>
       <%= link_to "Aujourd'hui", root_path %>
       <%= link_to "→", root_path(week: (@week_start + 7).iso8601), aria: { label: "Semaine suivante" } %>
     </div>
   </div>
+  <nav class="mobile-day-picker" aria-label="Choisir un jour de la semaine">
+    <% @days.each_with_index do |day, idx| %>
+      <%= link_to root_path(week: @week_start.iso8601, day: day.iso8601),
+          class: "mobile-day #{'is-selected' if day == @selected_day}",
+          aria: { current: (day == @selected_day ? "date" : nil), label: "#{%w[Lundi Mardi Mercredi Jeudi Vendredi Samedi Dimanche][idx]} #{day.day}" } do %>
+        <span class="mobile-day-label"><%= %w[L M M J V S D][idx] %></span>
+        <strong><%= day.day %></strong>
+        <% if @blocks_by_day.fetch(day, []).any? %><span class="mobile-day-dot" aria-hidden="true"></span><% end %>
+      <% end %>
+    <% end %>
+  </nav>
   <div class="calendar-scroll">
     <div class="week-grid">
       <div class="hour-header"></div>
       <% @days.each_with_index do |day, idx| %>
-        <div class="day-heading <%= 'today' if day == Date.current %>">
+        <div class="day-heading <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>">
           <em><%= %w[Lun Mar Mer Jeu Ven Sam Dim][idx] %></em>
           <strong><%= day.day %></strong>
         </div>
@@ -29,7 +40,7 @@
         <% (@calendar_start_hour...@calendar_end_hour).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
       </div>
       <% @days.each do |day| %>
-        <div class="day-body <%= 'today' if day == Date.current %>" style="height:<%= @calendar_height %>px" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Glissez pour choisir une durée ou double-cliquez pour créer un créneau">
+        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Glissez pour choisir une durée ou double-cliquez pour créer un créneau">
           <% @blocks_by_day.fetch(day, []).each do |block| %>
             <% local_start = block.start_at.in_time_zone %>
             <% start_minutes = ((local_start.hour - @calendar_start_hour) * 60 + local_start.min) %>
@@ -51,6 +62,16 @@
 </div>
 <script>
 (function () {
+  // On small screens show one selected day and position the scroll near
+  // its earliest event rather than forcing a long scroll from midnight.
+  const mobileCalendar = document.querySelector(".calendar-scroll");
+  const activeDay = document.querySelector(".day-body.is-active-day");
+  if (mobileCalendar && activeDay && window.matchMedia("(max-width:720px)").matches) {
+    const first = Number(activeDay.dataset.firstEventHour);
+    const startHour = Number(activeDay.dataset.startHour);
+    mobileCalendar.scrollTop = Math.max(0, (Math.max(first, startHour) - startHour) * 66 - 28);
+  }
+
   // Each grid hour is 66 px. Snap both clicks and selections to 15 minutes.
   const slotPixels = 66 / 4;
   const scheduleUrl = <%= new_time_block_path.to_json.html_safe %>;

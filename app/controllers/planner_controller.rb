@@ -25,6 +25,18 @@ class PlannerController < ApplicationController
     end
     @week_start = requested.beginning_of_week(:monday)
     @days = (0..6).map { |offset| @week_start + offset }
+    requested_day = begin
+      Date.iso8601(params.fetch(:day, "").to_s)
+    rescue Date::Error, ArgumentError
+      nil
+    end
+    @selected_day = if @days.include?(requested_day)
+      requested_day
+    elsif @days.include?(Date.current)
+      Date.current
+    else
+      @week_start
+    end
     @blocks = current_user.time_blocks
       .where(start_at: @week_start.in_time_zone...(@week_start + 7).in_time_zone)
       .order(:start_at).to_a

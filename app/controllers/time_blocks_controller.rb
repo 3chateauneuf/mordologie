@@ -24,7 +24,7 @@ class TimeBlocksController < ApplicationController
     @block = current_user.time_blocks.new(block_details)
     @block.tag_list = submitted_tag_list
     if apply_schedule_params && @block.save
-      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau ajouté."
+      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601, day: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau ajouté."
     else
       render :new, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class TimeBlocksController < ApplicationController
     @block.assign_attributes(block_details)
     @block.tag_list = submitted_tag_list
     if apply_schedule_params && @block.save
-      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau mis à jour."
+      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601, day: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau mis à jour."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -47,7 +47,7 @@ class TimeBlocksController < ApplicationController
   def destroy
     week = @block.start_at.in_time_zone.to_date.iso8601
     @block.destroy!
-    redirect_to root_path(week: week), notice: "Créneau supprimé."
+    redirect_to root_path(week: week, day: week), notice: "Créneau supprimé."
   end
 
   private
