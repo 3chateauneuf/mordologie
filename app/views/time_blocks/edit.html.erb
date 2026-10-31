@@ -1,10 +1,13 @@
-<div class="editor-shell">
-  <header class="editor-page-head">
-    <%= link_to "← Planning", root_path(week: @schedule_date), class: "editor-back" %>
-    <h1>Modifier le créneau</h1>
-  </header>
-  <%= render "form" %>
-  <div class="editor-delete-zone">
-    <%= button_to "Supprimer ce créneau", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
-  </div>
+<div class="planner-dialog-overlay" data-planner-dialog data-dismiss-url="<%= root_path(week: @schedule_date, day: @schedule_date) %>">
+  <section class="planner-dialog-panel editor-shell" data-planner-dialog-panel role="dialog" aria-labelledby="planner-dialog-title">
+    <header class="editor-page-head">
+      <%= link_to "← Planning", root_path(week: @schedule_date, day: @schedule_date), class: "editor-back planner-dialog-mobile-back" %>
+      <h1 id="planner-dialog-title">Modifier le créneau</h1>
+      <%= link_to "×", root_path(week: @schedule_date, day: @schedule_date), class: "planner-dialog-close", aria: { label: "Fermer le dialogue" }, title: "Fermer (Échap)" %>
+    </header>
+    <%= render "form" %>
+    <div class="editor-delete-zone">
+      <%= button_to "Supprimer ce créneau", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
+    </div>
+  </section>
 </div>

@@ -1,36 +1,10 @@
-<div class="new-entry-overlay" data-new-entry-overlay data-dismiss-url="<%= root_path(week: @schedule_date, day: @schedule_date) %>">
-  <section class="new-entry-dialog editor-shell" role="dialog" aria-modal="true" aria-labelledby="new-entry-title">
+<div class="planner-dialog-overlay" data-planner-dialog data-dismiss-url="<%= root_path(week: @schedule_date, day: @schedule_date) %>">
+  <section class="planner-dialog-panel editor-shell" data-planner-dialog-panel role="dialog" aria-labelledby="planner-dialog-title">
     <header class="editor-page-head">
-      <%= link_to "← Planning", root_path(week: @schedule_date, day: @schedule_date), class: "editor-back new-entry-mobile-back" %>
-      <h1 id="new-entry-title">Nouveau créneau</h1>
-      <%= link_to "×", root_path(week: @schedule_date, day: @schedule_date), class: "new-entry-close", aria: { label: "Fermer et retourner au planning" }, title: "Fermer (Échap)" %>
+      <%= link_to "← Planning", root_path(week: @schedule_date, day: @schedule_date), class: "editor-back planner-dialog-mobile-back" %>
+      <h1 id="planner-dialog-title">Nouveau créneau</h1>
+      <%= link_to "×", root_path(week: @schedule_date, day: @schedule_date), class: "planner-dialog-close", aria: { label: "Fermer le dialogue" }, title: "Fermer (Échap)" %>
     </header>
     <%= render "form" %>
   </section>
 </div>
-<script>
-(function () {
-  const overlay = document.querySelector("[data-new-entry-overlay]");
-  if (!overlay) return;
-
-  // On desktop this route behaves like a dismissible modal.
-  // On touch-size screens it stays a conventional full-page editor.
-  const desktop = window.matchMedia("(min-width: 721px)");
-  function closeEditor() {
-    window.location.assign(overlay.dataset.dismissUrl);
-  }
-
-  document.addEventListener("keydown", function (event) {
-    if (desktop.matches && event.key === "Escape" && !event.defaultPrevented) {
-      event.preventDefault();
-      closeEditor();
-    }
-  });
-
-  overlay.addEventListener("click", function (event) {
-    if (desktop.matches && event.target === overlay) {
-      closeEditor();
-    }
-  });
-})();
-</script>
