@@ -1,0 +1,75 @@
+    /* Mobile app shell and focused one-day agenda */
+    .mobile-menu,.mobile-day-picker,.mobile-calendar-label,.mobile-help {display:none}
+    @media (max-width:720px) {
+      .topbar {height:58px;padding:0 14px;gap:8px}
+      .topbar .nav-links,.topbar .account {display:none!important}
+      .topbar .brand {font-size:19px;letter-spacing:-.55px}
+      .topbar .brand-mark {width:33px;height:33px;border-radius:10px}
+      .mobile-menu {display:block;position:relative;margin-left:auto;z-index:30}
+      .mobile-menu>summary {display:grid;place-items:center;list-style:none;min-width:44px;min-height:44px;border-radius:10px;border:1px solid #e1e6ef;background:#fff;color:#33415c;font-size:20px;cursor:pointer}
+      .mobile-menu>summary::-webkit-details-marker {display:none}
+      .mobile-menu>summary:focus-visible {outline:3px solid #a8b6f1;outline-offset:2px}
+      .mobile-menu-panel {position:absolute;right:0;top:calc(100% + 7px);min-width:190px;background:white;border-radius:13px;box-shadow:0 12px 35px #1c2b4650;border:1px solid #e1e6ef;padding:7px;display:grid;gap:2px}
+      .mobile-menu-panel a,.mobile-menu-panel form button {display:block;width:100%;border:0;background:white;text-align:left;color:#35435b;padding:12px;border-radius:8px;font-size:13px;font-weight:600}
+      .mobile-menu-panel a:hover,.mobile-menu-panel form button:hover {background:#f2f4fd}
+      .mobile-menu-panel form {margin:0}
+      main {padding:17px 12px}
+      .page-head {gap:11px;margin:0 0 14px;align-items:stretch;flex-direction:column}
+      .page-head h1 {font-size:25px;line-height:1.2}
+      .page-head p {display:none}
+      .week-number {font-size:11px;padding:5px 8px;border-radius:7px}
+      .page-head .actions {width:100%;gap:0}
+      .page-head .actions .button.secondary {display:none}
+      .page-head .actions .button:not(.secondary) {width:100%;justify-content:center;min-height:43px;font-size:13px}
+      .stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:13px}
+      .stat {min-width:0;padding:11px 9px;border-radius:11px}
+      .stat span {display:block;min-height:26px;font-size:10px;line-height:1.25}
+      .stat strong {font-size:18px;line-height:1.25;margin-top:4px}
+      .calendar-shell {border-radius:13px}
+      .calendar-header {padding:11px 12px;gap:8px}
+      .calendar-header strong {font-size:14px}
+      .desktop-calendar-label {display:none}
+      .mobile-calendar-label {display:inline}
+      .week-nav {gap:5px}
+      .week-nav a {min-height:39px;min-width:39px;display:grid;place-items:center;padding:5px 8px;font-size:12px}
+      .mobile-day-picker {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;padding:10px 8px 11px;background:#fff;border-bottom:1px solid #e9edf3}
+      .mobile-day {min-width:0;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:10px;color:#66748b;font-size:12px}
+      .mobile-day-label {font-size:10px;font-weight:650}
+      .mobile-day strong {font-size:17px;font-weight:700}
+      .mobile-day.is-selected {background:#edf0fe;color:#485ec3}
+      .mobile-day:focus-visible {outline:2px solid #6578d6;outline-offset:1px}
+      .mobile-day-dot {width:4px;height:4px;border-radius:50%;background:#5268ca}
+      .calendar-scroll {overflow-x:hidden;overflow-y:auto;max-height:min(60dvh,540px);overscroll-behavior:contain}
+      .week-grid {min-width:0;grid-template-columns:50px minmax(0,1fr)}
+      .day-heading:not(.is-active-day),.day-body:not(.is-active-day) {display:none}
+      .hour-header {grid-column:1;position:sticky;top:0;z-index:6;background:#fff}
+      .day-heading {grid-column:2;height:48px;position:sticky;top:0;z-index:6}
+      .day-heading em {font-size:10px}
+      .day-heading strong {font-size:16px}
+      .time-rail {grid-column:1}
+      .day-body {grid-column:2}
+      .event {left:5px;right:6px}
+      .help {padding:10px 12px;font-size:11px;line-height:1.45}
+      .desktop-help {display:none}
+      .mobile-help {display:inline}
+    }
+    @media (max-width:480px) {
+      .editor-schedule-row {grid-template-columns:1fr;gap:0}
+      .editor-schedule-row .editor-field {margin-bottom:12px}
+      .editor-field input[type="date"],.editor-field input[type="time"] {width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-size:16px}
+      .editor-field input[type="text"],.editor-field input[type="number"],.editor-field textarea {font-size:16px}
+      .editor-category-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+      .editor-footer {padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+      .editor-submit {min-height:48px}
+    }
+    @media (max-width:340px) {
+      .stats {gap:5px}
+      .stat {padding:8px 6px}
+      .stat span {font-size:9px}
+      .stat strong {font-size:16px}
+      .mobile-day-picker {gap:1px;padding-inline:5px}
+      .mobile-day strong {font-size:15px}
+      .week-nav a {min-width:35px}
+    }
+
+

@@ -1,0 +1,53 @@
+<div class="calendar-shell" data-calendar data-new-block-url="<%= new_time_block_path %>">
+  <div class="calendar-header">
+    <strong><span class="desktop-calendar-label">Planning hebdomadaire</span><span class="mobile-calendar-label">Agenda</span></strong>
+    <div class="week-nav">
+      <%= link_to "←", root_path(week: (@week_start - 7).iso8601), aria: { label: "Semaine précédente" } %>
+      <%= link_to "Aujourd'hui", root_path %>
+      <%= link_to "→", root_path(week: (@week_start + 7).iso8601), aria: { label: "Semaine suivante" } %>
+    </div>
+  </div>
+  <nav class="mobile-day-picker" aria-label="Choisir un jour de la semaine">
+    <% @days.each_with_index do |day, idx| %>
+      <%= link_to root_path(week: @week_start.iso8601, day: day.iso8601),
+          class: "mobile-day #{'is-selected' if day == @selected_day}",
+          aria: { current: (day == @selected_day ? "date" : nil), label: "#{%w[Lundi Mardi Mercredi Jeudi Vendredi Samedi Dimanche][idx]} #{day.day}" } do %>
+        <span class="mobile-day-label"><%= %w[L M M J V S D][idx] %></span>
+        <strong><%= day.day %></strong>
+        <% if @blocks_by_day.fetch(day, []).any? %><span class="mobile-day-dot" aria-hidden="true"></span><% end %>
+      <% end %>
+    <% end %>
+  </nav>
+  <div class="calendar-scroll">
+    <div class="week-grid">
+      <div class="hour-header"></div>
+      <% @days.each_with_index do |day, idx| %>
+        <div class="day-heading <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>">
+          <em><%= %w[Lun Mar Mer Jeu Ven Sam Dim][idx] %></em>
+          <strong><%= day.day %></strong>
+        </div>
+      <% end %>
+      <div class="time-rail" style="height:<%= @calendar_height %>px">
+        <% (@calendar_start_hour...@calendar_end_hour).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
+      </div>
+      <% @days.each do |day| %>
+        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Glissez pour choisir une durée ou double-cliquez pour créer un créneau">
+          <% @blocks_by_day.fetch(day, []).each do |block| %>
+            <% local_start = block.start_at.in_time_zone %>
+            <% start_minutes = ((local_start.hour - @calendar_start_hour) * 60 + local_start.min) %>
+            <% top = start_minutes * 1.1 %>
+            <% height = [[block.duration_minutes * 1.1, 34].max, [@calendar_height - top, 15].max].min %>
+            <% category_label = TimeBlock::CATEGORIES.fetch(block.category)[:label] %>
+            <% time_label = "#{local_start.strftime('%H:%M')} – #{block.end_at.in_time_zone.strftime('%H:%M')}" %>
+            <%= link_to edit_time_block_path(block), class: "event", style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} · #{time_label} · #{category_label}#{block.tags.any? ? ' · #' + block.tags.join(' #') : ''} — Modifier" do %>
+              <strong><%= block.title %></strong>
+              <% if height >= 55 %><small><%= time_label %></small><% end %>
+              <% if height >= 82 %><span class="category"><%= category_label %></span><% end %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <p class="help"><span class="desktop-help">Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier.</span><span class="mobile-help">Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier.</span></p>
+</div>

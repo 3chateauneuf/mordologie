@@ -25,3 +25,8 @@ Ouvrir `/setup` pour créer le premier compte. Le formulaire devient indisponibl
 
 ## Historique
 Le code Mordologie reste intact sur la branche `main`. Ce prototype utilise la branche `planner-rails`, qui contient une nouvelle arborescence Rails.
+
+## Architecture et maintenance
+
+Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour le découpage des vues,
+des styles, du JavaScript et les règles de maintenance obligatoires.

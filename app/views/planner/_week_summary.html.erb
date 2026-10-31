@@ -1,0 +1,5 @@
+<section class="stats" aria-label="Résumé de la semaine">
+  <div class="stat"><span>Planifié</span><strong><%= planner_duration(@planned_minutes) %></strong></div>
+  <div class="stat"><span title="Temps réellement déclaré">Réalisé</span><strong><%= planner_duration(@actual_minutes) %></strong></div>
+  <div class="stat"><span>Créneaux</span><strong><%= @blocks.length %></strong></div>
+</section>

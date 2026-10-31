@@ -1,0 +1,35 @@
+    /* Shared action row: delete stays independent from the save form. */
+    .editor-footer {gap:12px;align-items:center}
+    .editor-footer-edit {justify-content:space-between}
+    .editor-footer-edit .editor-delete-zone {margin:0;padding:0;text-align:left}
+    .editor-footer-edit .editor-delete-zone form {margin:0}
+    .editor-footer-edit .editor-delete-button {min-height:44px;padding:8px 4px}
+    @media (max-width:480px) {
+      .editor-footer-edit {display:flex;flex-direction:row;gap:12px}
+      .editor-footer-edit .editor-submit {width:auto;flex:1;min-width:0;padding:0 13px}
+      .editor-footer-edit .editor-delete-zone {flex:0 0 auto;margin:0;padding:0}
+      .editor-footer-edit .editor-delete-button {font-size:11px}
+    }
+
+    /* Shared dialog behavior: use data-planner-dialog on every future modal */
+    .planner-dialog-close {display:none}
+    @media (min-width:721px) {
+      body.is-dialog-page {overflow:hidden}
+      .planner-dialog-overlay {position:fixed;inset:0;z-index:70;display:flex;align-items:flex-start;justify-content:center;overflow:auto;overscroll-behavior:contain;padding:28px 20px;background:rgba(18,27,46,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+      .planner-dialog-panel.editor-shell {width:min(100%,620px);max-width:620px;margin:auto;background:#fff;border:1px solid #e2e7f0;border-radius:18px;box-shadow:0 26px 76px rgba(9,18,43,.26);overflow:hidden}
+      .planner-dialog-panel .editor-page-head {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0;padding:18px 25px;border-bottom:1px solid #e9edf4}
+      .planner-dialog-panel .editor-page-head h1 {font-size:22px;margin:0}
+      .planner-dialog-panel .editor-form {border:0;border-radius:0;box-shadow:none}
+      .planner-dialog-mobile-back {display:none}
+      .planner-dialog-close {display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;color:#68758d;background:#f5f7fb;font-size:27px;font-weight:350;line-height:1}
+      .planner-dialog-close:hover {color:#23314e;background:#e9edf5}
+      .planner-dialog-close:focus-visible {outline:3px solid #a2b0ec;outline-offset:2px}
+      .planner-dialog-panel .editor-delete-zone {padding:0 21px 8px}
+    }
+    @media (max-width:720px) {
+      .planner-dialog-overlay {display:block}
+      .planner-dialog-panel.editor-shell {width:100%;max-width:100%;margin:0 auto}
+      .planner-dialog-mobile-back {display:inline-flex}
+    }
+
+    
