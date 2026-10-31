@@ -298,6 +298,19 @@
     }
 
 
+    /* Shared action row: delete stays independent from the save form. */
+    .editor-footer {gap:12px;align-items:center}
+    .editor-footer-edit {justify-content:space-between}
+    .editor-footer-edit .editor-delete-zone {margin:0;padding:0;text-align:left}
+    .editor-footer-edit .editor-delete-zone form {margin:0}
+    .editor-footer-edit .editor-delete-button {min-height:44px;padding:8px 4px}
+    @media (max-width:480px) {
+      .editor-footer-edit {display:flex;flex-direction:row;gap:12px}
+      .editor-footer-edit .editor-submit {width:auto;flex:1;min-width:0;padding:0 13px}
+      .editor-footer-edit .editor-delete-zone {flex:0 0 auto;margin:0;padding:0}
+      .editor-footer-edit .editor-delete-button {font-size:11px}
+    }
+
     /* Shared dialog behavior: use data-planner-dialog on every future modal */
     .planner-dialog-close {display:none}
     @media (min-width:721px) {

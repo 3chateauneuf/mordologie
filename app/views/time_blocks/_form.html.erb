@@ -1,4 +1,4 @@
-<%= form_with model: @block, html: { class: "editor-form", data: { schedule_form: true } } do |f| %>
+<%= form_with model: @block, html: { id: "planner-time-block-form", class: "editor-form", data: { schedule_form: true } } do |f| %>
   <% if @block.errors.any? %>
     <div class="editor-error" role="alert">
       <strong>Vérifiez les informations :</strong>
@@ -93,10 +93,16 @@
     </div>
   </details>
 
-  <div class="editor-footer">
-    <%= f.submit(@block.persisted? ? "Enregistrer" : "Créer le créneau", class: "editor-submit") %>
-  </div>
 <% end %>
+
+<footer class="editor-footer <%= 'editor-footer-edit' if @block.persisted? %>">
+  <% if @block.persisted? %>
+    <div class="editor-delete-zone">
+      <%= button_to "Supprimer ce créneau", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
+    </div>
+  <% end %>
+  <button type="submit" form="planner-time-block-form" id="planner-time-block-submit" class="editor-submit"><%= @block.persisted? ? "Enregistrer" : "Créer le créneau" %></button>
+</footer>
 
 <script>
 (function () {
@@ -107,7 +113,7 @@
   const duration = form.querySelector("#time_block_duration_minutes");
   const endPreview = form.querySelector("[data-end-preview]");
   const endBox = form.querySelector(".editor-end");
-  const submit = form.querySelector(".editor-submit");
+  const submit = document.getElementById("planner-time-block-submit");
   const durationButtons = Array.from(form.querySelectorAll("[data-duration]"));
 
   function updateEnd() {

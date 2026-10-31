@@ -6,8 +6,5 @@
       <%= link_to "×", root_path(week: @schedule_date, day: @schedule_date), class: "planner-dialog-close", aria: { label: "Fermer le dialogue" }, title: "Fermer (Échap)" %>
     </header>
     <%= render "form" %>
-    <div class="editor-delete-zone">
-      <%= button_to "Supprimer ce créneau", time_block_path(@block), method: :delete, class: "editor-delete-button", form: { onsubmit: "return window.confirm('Supprimer définitivement ce créneau ?')" } %>
-    </div>
   </section>
 </div>
