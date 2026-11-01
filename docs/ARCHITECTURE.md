@@ -137,3 +137,17 @@ invalida el token y produce HTTP 422 en producción. Esta regla está protegida
 por una prueba real de navegador con allow_forgery_protection activado.
 Las pruebas cubren el ida y vuelta, la reutilización del registro,
 la seguridad entre cuentas y los duplicados.
+
+## Reprogramar un bloque dentro del calendario
+
+Arrastrar un bloque de hora o día mantiene su ID, duración, categoría,
+notas, etiquetas, tiempo real y vínculo con el pendiente original.
+TimeBlocks::Rescheduler valida fechas y cuartos de hora, bloquea la fila y
+guarda el nuevo intervalo. Los solapamientos se permiten y se anuncian.
+Un intervalo que pase de medianoche se rechaza sin modificar el anterior.
+
+calendar-block-move.js únicamente interpreta el gesto y muestra una
+previsualización. _reschedule_forms.html.erb genera un formulario Rails
+con un token CSRF propio por bloque, sin cambiar jamás su destino en JS.
+Se comprueba el movimiento en la misma jornada y entre días en Chrome
+con CSRF activado, además de límites, aislamiento entre usuarios y datos.
