@@ -1,5 +1,5 @@
 class TimeBlocksController < ApplicationController
-  before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox]
+  before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule]
   before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
   before_action :load_planning_task, only: [:new, :create]
 
@@ -63,6 +63,25 @@ class TimeBlocksController < ApplicationController
 
     notice = linked_task ? "Activité remise en attente." : "Créneau supprimé."
     redirect_to root_path(week: day, day: day), notice: notice
+  end
+
+  def reschedule
+    previous_day = @block.start_at.in_time_zone.to_date.iso8601
+    result = TimeBlocks::Rescheduler.new(
+      block: @block,
+      date: params[:schedule_date],
+      clock: params[:start_clock]
+    ).call
+
+    unless result.success?
+      return redirect_to root_path(week: previous_day, day: previous_day),
+                         alert: result.error
+    end
+
+    selected_day = result.block.start_at.in_time_zone.to_date.iso8601
+    notice = "Créneau déplacé."
+    notice += " Attention : ce créneau chevauche une autre activité." if result.overlap
+    redirect_to root_path(week: selected_day, day: selected_day), notice: notice
   end
 
   def return_to_inbox

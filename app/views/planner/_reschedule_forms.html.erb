@@ -1,0 +1,10 @@
+<%# Each action has a server-generated token bound to its URL.
+    JavaScript changes only the schedule fields, never form.action. %>
+<% @blocks.each do |block| %>
+  <%= form_with url: reschedule_time_block_path(block), method: :post,
+        class: "calendar-reschedule-form",
+        data: { reschedule_block_id: block.id } do %>
+    <%= hidden_field_tag :schedule_date, nil %>
+    <%= hidden_field_tag :start_clock, nil %>
+  <% end %>
+<% end %>
