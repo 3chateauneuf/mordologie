@@ -4,6 +4,24 @@
   let gripOffset = 0;
   let preview = null;
   let previewDay = null;
+  // The preview and the final drop must use identical quarter-hour maths.
+  function startAt(event, day) {
+    const rect = day.getBoundingClientRect();
+    const first = Number(day.dataset.startHour) * 60;
+    const slots = (Number(day.dataset.endHour) * 60 - first) / 15;
+    const slotHeight = rect.height / slots;
+    const index = Math.max(0, Math.min(slots - 1,
+      Math.floor((event.clientY - rect.top - gripOffset) / slotHeight)));
+    const minutes = first + index * 15;
+    return {
+      minutes,
+      clock: String(Math.floor(minutes / 60)).padStart(2, "0") +
+        ":" + String(minutes % 60).padStart(2, "0"),
+      top: index * slotHeight,
+      heightPerMinute: slotHeight / 15
+    };
+  }
+
   function clearPreview() {
     preview?.remove();
     previewDay?.classList.remove("calendar-move-target");
