@@ -78,3 +78,21 @@ usuario: hora de inicio, navegación entre semanas, diálogos y pantalla móvil.
 Guardan capturas de datos ficticios en los artefactos temporales de GitHub Actions.
 En móvil el selector semanal identifica el día; no se repite una cabecera diaria
 ni se crea una segunda barra de desplazamiento dentro del calendario.
+
+## Bandeja de pendientes
+
+`PlanningTask` es la intención persistente sin fecha obligatoria. Guarda título,
+categoría, duración estimada y notas. `scheduled_block_id` es opcional y único:
+una tarea pendiente no tiene bloque; una tarea programada referencia exactamente
+un `TimeBlock`. El bloqueo transaccional evita programar la misma tarea en dos
+pestañas simultáneamente. Los bloques preexistentes siguen independientes.
+
+Al retirar un bloque vinculado, se copian los cambios realizados al pendiente y
+se elimina solo la reserva horaria. Los pendientes pertenecen estrictamente al
+usuario autenticado. El formulario normal de bloques sigue siendo la fuente de
+confirmación de fecha y duración, incluido tras arrastrar desde el panel.
+
+No agregar un segundo campo `status` para duplicar lo que ya expresa la relación.
+La bandeja queda en `_pending_tasks.html.erb`, sus estilos en
+`public/styles/pending-tasks.css` y el gesto drag-and-drop en el script de
+agenda. Los gestos táctiles utilizan el enlace explícito para planificar.

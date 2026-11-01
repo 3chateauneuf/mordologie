@@ -8,6 +8,8 @@
       <summary>+ Ajouter</summary>
       <div class="pending-add-body">
         <%= form_with model: PlanningTask.new, url: planning_tasks_path, class: "pending-form" do |f| %>
+          <%= hidden_field_tag :week, @week_start.iso8601 %>
+          <%= hidden_field_tag :day, @selected_day.iso8601 %>
           <%= f.label :title, "Activité" %>
           <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off",
                 placeholder: "Qu'avez-vous à faire ?" %>
@@ -43,6 +45,7 @@
                   planning_task_id: task.id), class: "pending-plan",
                   aria: { label: "Planifier #{task.title}" } %>
             <%= button_to "×", planning_task_path(task), method: :delete,
+                  params: { week: @week_start.iso8601, day: @selected_day.iso8601 },
                   class: "pending-remove", form: {
                     data: { confirm_destroy: "Supprimer définitivement cette tâche ?" }
                   }, title: "Supprimer la tâche",
