@@ -104,9 +104,9 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     @block.update!(actual_minutes: 80)
     get edit_time_block_path(@block)
     assert_response :success
-    assert_select ".editor-legacy-duration", text: /80 min/
-    assert_select "#time_block_actual_start_clock[value='']", count: 1
-    assert_select "#time_block_actual_end_clock[value='']", count: 1
+    assert_select ".editor-legacy-duration", text: /1 h 20/
+    assert_select "#time_block_actual_start_clock", count: 1
+    assert_select "#time_block_actual_end_clock", count: 1
 
     patch time_block_path(@block), params: block_params(
       actual_start_clock: "", actual_end_clock: ""
