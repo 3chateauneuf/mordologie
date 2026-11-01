@@ -29,18 +29,19 @@ class PlannerCalendarMoveTest < ApplicationSystemTestCase
                                   visible: :all)[:value], :present?
 
       original = @block.start_at
+      before_second_move = @block.start_at
       find(".event[data-calendar-block-id='#{@block.id}']").drag_to(
-        find(".day-body[data-day='2026-11-02']")
+        find(".day-body[data-day='2026-11-03']")
       )
       assert_no_selector ".planner-dialog-panel"
       # Wait for the browser to render the changed time before reading the DB.
       assert_no_selector ".event[data-calendar-start-clock='09:00']",
                          text: "Préparer un dossier"
-      assert_selector ".day-body[data-day='2026-11-02'] .event",
+      assert_selector ".day-body[data-day='2026-11-03'] .event",
                       text: "Préparer un dossier"
       assert_equal @block.id, @block.reload.id
       assert_not_equal original, @block.start_at
-      assert_equal Date.iso8601("2026-11-02"), @block.start_at.in_time_zone.to_date
+      assert_equal Date.iso8601("2026-11-03"), @block.start_at.in_time_zone.to_date
       assert_equal 0, @block.start_at.in_time_zone.min % 15
 
       find(".event[data-calendar-block-id='#{@block.id}']").drag_to(
@@ -50,6 +51,7 @@ class PlannerCalendarMoveTest < ApplicationSystemTestCase
       assert_selector ".day-body[data-day='2026-11-03'] .event",
                       text: "Préparer un dossier"
       assert_equal Date.iso8601("2026-11-03"), @block.reload.start_at.in_time_zone.to_date
+      assert_not_equal before_second_move, @block.start_at
       assert_equal 60, @block.duration_minutes
       assert_equal "À conserver", @block.notes
       assert_equal ["important"], @block.tags
