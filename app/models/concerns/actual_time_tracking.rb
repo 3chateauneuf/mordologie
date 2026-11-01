@@ -31,9 +31,12 @@ module ActualTimeTracking
     if start_minutes && end_minutes && end_minutes > start_minutes
       self.actual_minutes = end_minutes - start_minutes
     elsif actual_start_clock.blank? && actual_end_clock.blank? &&
-          (will_save_change_to_actual_start_clock? || will_save_change_to_actual_end_clock?)
-      # Clearing a previously recorded pair clears the derived duration.
-      # Legacy durations without clock times are left untouched.
+          (attribute_in_database("actual_start_clock").present? ||
+           attribute_in_database("actual_end_clock").present?)
+      # Only erase a derived duration when previously stored clock times
+      # have actually been cleared. HTML forms submit empty strings even for
+      # older records whose database columns were NULL; those legacy
+      # minute totals must survive unchanged.
       self.actual_minutes = nil
     end
   end
