@@ -33,6 +33,11 @@ class PlannerCalendarMoveTest < ApplicationSystemTestCase
         find(".day-body[data-day='2026-11-02']")
       )
       assert_no_selector ".planner-dialog-panel"
+      # Wait for the browser to render the changed time before reading the DB.
+      assert_no_selector ".event[data-calendar-start-clock='09:00']",
+                         text: "Préparer un dossier"
+      assert_selector ".day-body[data-day='2026-11-02'] .event",
+                      text: "Préparer un dossier"
       assert_equal @block.id, @block.reload.id
       assert_not_equal original, @block.start_at
       assert_equal Date.iso8601("2026-11-02"), @block.start_at.in_time_zone.to_date
