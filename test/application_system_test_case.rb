@@ -5,6 +5,12 @@ require "selenium-webdriver"
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   driven_by :selenium, using: :headless_chrome, screen_size: [1440, 900]
 
+  setup do
+    # Capybara can reuse a Chrome session between tests. Always restore
+    # a desktop viewport before each test; mobile tests resize explicitly.
+    page.driver.browser.manage.window.resize_to(1440, 900)
+  end
+
   # Real browser tests use an isolated PostgreSQL database in CI.
   # Capture screenshots of fixtures only; never point these tests at production.
   def screenshot(name)
