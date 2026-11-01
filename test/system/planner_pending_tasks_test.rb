@@ -46,4 +46,22 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
     end
     assert_no_selector ".pending-task", text: "Rédiger une proposition"
   end
+  test "desktop dragging a pending task opens its scheduling form without saving" do
+    task = @user.planning_tasks.create!(
+      title: "Préparer le montage",
+      category: "travail",
+      estimated_minutes: 30
+    )
+
+    visit root_path(week: "2026-11-02", day: "2026-11-02")
+    find(".pending-task[data-pending-task-id='#{task.id}']").drag_to(
+      find(".day-body.is-active-day")
+    )
+
+    assert_selector ".planner-dialog-panel", text: "Nouveau créneau"
+    assert_field "Activité", with: "Préparer le montage"
+    assert_field "time_block_duration_minutes", with: "30"
+    assert_equal 0, @user.time_blocks.count
+    assert_nil task.reload.scheduled_block_id
+  end
 end

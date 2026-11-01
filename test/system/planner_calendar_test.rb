@@ -75,6 +75,7 @@ class PlannerCalendarTest < ApplicationSystemTestCase
       "getComputedStyle(document.querySelector('.calendar-scroll')).overflowY"
     )
     assert_selector ".calendar-start-form select", visible: true, count: 1
+    assert_operator position(".pending-panel")["top"], :<, position(".calendar-shell")["top"]
 
     page_width = page.evaluate_script("document.documentElement.scrollWidth")
     viewport_width = page.evaluate_script("window.innerWidth")

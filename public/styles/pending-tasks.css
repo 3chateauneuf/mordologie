@@ -236,7 +236,17 @@
   }
 
   .pending-panel {
+    order: -1;
     margin-top: 0;
+    padding: 13px 14px;
+  }
+
+  .pending-panel-header {
+    margin-bottom: 9px;
+  }
+
+  .planner-workspace {
+    gap: 12px;
   }
 
   .pending-hint {
