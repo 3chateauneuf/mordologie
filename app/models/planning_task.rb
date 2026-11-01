@@ -12,6 +12,10 @@ class PlanningTask < ApplicationRecord
   validates :estimated_minutes, numericality: {
     only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: 960
   }
+  validates :actual_minutes, numericality: {
+    only_integer: true, greater_than_or_equal_to: 0
+  }, allow_nil: true
+  validate :valid_tags
   validate :scheduled_block_belongs_to_user
 
   def scheduled?
@@ -25,11 +29,20 @@ class PlanningTask < ApplicationRecord
       title: block.title,
       category: block.category,
       estimated_minutes: block.duration_minutes,
-      notes: block.notes
+      notes: block.notes,
+      tags: block.tags,
+      actual_minutes: block.actual_minutes
     )
   end
 
   private
+
+  def valid_tags
+    errors.add(:tags, "ne peuvent pas dépasser 12 étiquettes") if tags.length > 12
+    if tags.any? { |tag| tag.length > 40 }
+      errors.add(:tags, "doivent contenir 40 caractères maximum chacune")
+    end
+  end
 
   def scheduled_block_belongs_to_user
     return unless scheduled_block

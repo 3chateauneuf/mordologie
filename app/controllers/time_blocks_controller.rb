@@ -1,5 +1,5 @@
 class TimeBlocksController < ApplicationController
-  before_action :find_block, only: [:edit, :update, :destroy]
+  before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox]
   before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
   before_action :load_planning_task, only: [:new, :create]
 
@@ -18,7 +18,9 @@ class TimeBlocksController < ApplicationController
       end_at: start_time + duration.minutes,
       category: @planning_task&.category || "travail",
       title: @planning_task&.title,
-      notes: @planning_task&.notes
+      notes: @planning_task&.notes,
+      tags: @planning_task&.tags || [],
+      actual_minutes: @planning_task&.actual_minutes
     )
     load_schedule_from_block
   end
@@ -50,18 +52,28 @@ class TimeBlocksController < ApplicationController
   end
 
   def destroy
-    week = @block.start_at.in_time_zone.to_date.iso8601
+    day = @block.start_at.in_time_zone.to_date.iso8601
     linked_task = @block.planning_task
 
-    TimeBlock.transaction do
-      # The task remains the durable source of intent when its calendar
-      # reservation is removed. Copy any edits back before unlinking.
-      linked_task&.update_from_block!(@block)
+    if linked_task
+      PlanningTasks::ReturnToInbox.new(block: @block).call
+    else
       @block.destroy!
     end
 
     notice = linked_task ? "Activité remise en attente." : "Créneau supprimé."
-    redirect_to root_path(week: week, day: week), notice: notice
+    redirect_to root_path(week: day, day: day), notice: notice
+  end
+
+  def return_to_inbox
+    block_day = @block.start_at.in_time_zone.to_date
+    selected_day = safe_day(params[:day]) || block_day
+    selected_week = safe_day(params[:week]) || block_day
+
+    PlanningTasks::ReturnToInbox.new(block: @block).call
+
+    redirect_to root_path(week: selected_week.iso8601, day: selected_day.iso8601),
+                notice: "Activité remise en attente."
   end
 
   private

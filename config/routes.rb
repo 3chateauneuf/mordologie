@@ -12,6 +12,8 @@ Rails.application.routes.draw do
   resources :planning_tasks, only: [:create, :destroy] do
     post :schedule, on: :member
   end
-  resources :time_blocks, except: [:index, :show]
+  resources :time_blocks, except: [:index, :show] do
+    post :return_to_inbox, on: :member
+  end
   root "planner#index"
 end

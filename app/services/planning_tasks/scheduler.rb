@@ -45,6 +45,8 @@ module PlanningTasks
         title: @task.title,
         category: @task.category,
         notes: @task.notes,
+        tags: @task.tags,
+        actual_minutes: @task.actual_minutes,
         start_at: starts_at,
         end_at: ends_at
       )

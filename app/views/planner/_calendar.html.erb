@@ -63,7 +63,9 @@
             <% height = [[visible_minutes * 1.1, 34].max, [@calendar_height - top, 15].max].min %>
             <% category_label = TimeBlock::CATEGORIES.fetch(block.category)[:label] %>
             <% time_label = "#{local_start.strftime('%H:%M')} – #{block.end_at.in_time_zone.strftime('%H:%M')}" %>
-            <%= link_to edit_time_block_path(block), class: "event", style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} · #{time_label} · #{category_label}#{block.tags.any? ? ' · #' + block.tags.join(' #') : ''} — Modifier" do %>
+            <%= link_to edit_time_block_path(block), class: "event", draggable: true,
+                  data: { calendar_block_id: block.id,
+                          return_to_inbox_url: return_to_inbox_time_block_path(block) }, style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} · #{time_label} · #{category_label}#{block.tags.any? ? ' · #' + block.tags.join(' #') : ''} — Modifier" do %>
               <strong><%= block.title %></strong>
               <% if height >= 55 %><small><%= time_label %></small><% end %>
               <% if height >= 82 %><span class="category"><%= category_label %></span><% end %>
