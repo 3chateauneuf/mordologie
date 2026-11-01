@@ -64,7 +64,8 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
         duration_minutes: "30",
         tag_list: "montage",
         notes: "Terminé",
-        actual_minutes: "42"
+        actual_start_clock: "10:00",
+        actual_end_clock: "10:42"
       }
     }
     assert_redirected_to root_path(week: "2026-11-02", day: "2026-11-02")
@@ -72,6 +73,8 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal "Monter un épisode", block.title
     assert_equal 30, block.duration_minutes
     assert_equal 42, block.actual_minutes
+    assert_equal "10:00", block.actual_start_clock
+    assert_equal "10:42", block.actual_end_clock
     assert_equal ["montage"], block.tags
 
     assert_difference("TimeBlock.count", -1) do
