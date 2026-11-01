@@ -28,21 +28,11 @@ class PlannerCalendarMoveTest < ApplicationSystemTestCase
       assert_predicate form.find("input[name='authenticity_token']",
                                   visible: :all)[:value], :present?
 
-      page.execute_script(<<~JS)
-        window.dragTrace = [];
-        ["dragstart", "dragover", "drop", "dragend"].forEach(function (name) {
-          document.addEventListener(name, function (event) {
-            window.dragTrace.push([name, String(event.target.className),
-              event.clientY, event.defaultPrevented]);
-          }, true);
-        });
-      JS
       original = @block.start_at
       before_second_move = @block.start_at
       find(".event[data-calendar-block-id='#{@block.id}']").drag_to(
         find(".day-body[data-day='2026-11-03']")
       )
-      warn "DRAG TRACE: #{page.evaluate_script('window.dragTrace').inspect}"
       assert_no_selector ".planner-dialog-panel"
       # Wait for the browser to render the changed time before reading the DB.
       assert_no_selector ".event[data-calendar-start-clock='09:00']",
