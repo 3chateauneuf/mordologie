@@ -30,13 +30,11 @@ module ActualTimeTracking
 
     if start_minutes && end_minutes && end_minutes > start_minutes
       self.actual_minutes = end_minutes - start_minutes
-    elsif actual_start_clock.blank? && actual_end_clock.blank? &&
-          (attribute_in_database("actual_start_clock").present? ||
-           attribute_in_database("actual_end_clock").present?)
-      # Only erase a derived duration when previously stored clock times
-      # have actually been cleared. HTML forms submit empty strings even for
-      # older records whose database columns were NULL; those legacy
-      # minute totals must survive unchanged.
+    elsif attribute_in_database("actual_start_clock").present? ||
+          attribute_in_database("actual_end_clock").present?
+      # An existing computed duration is no longer reliable when its pair
+      # becomes incomplete or is cleared. An untouched legacy total,
+      # recorded without clocks, remains intact.
       self.actual_minutes = nil
     end
   end
@@ -46,19 +44,17 @@ module ActualTimeTracking
     last = actual_end_clock
     return if first.blank? && last.blank?
 
-    if first.blank? || last.blank?
-      errors.add(:base, "Indiquez le début et la fin réels, ou laissez les deux vides.")
-      return
+    # A partial entry can be saved now and completed later.
+    # It has no calculable duration until both clocks are present.
+    if first.present? && clock_minutes(first).nil?
+      errors.add(:actual_start_clock, "doit être au format HH:MM")
     end
-
-    start_minutes = clock_minutes(first)
-    end_minutes = clock_minutes(last)
-    unless start_minutes && end_minutes
-      errors.add(:base, "Les heures réelles doivent être au format HH:MM.")
-      return
+    if last.present? && clock_minutes(last).nil?
+      errors.add(:actual_end_clock, "doit être au format HH:MM")
     end
+    return if errors.any? || first.blank? || last.blank?
 
-    if end_minutes <= start_minutes
+    if clock_minutes(last) <= clock_minutes(first)
       errors.add(:base, "La fin réelle doit être après le début réel, le même jour.")
     end
   end

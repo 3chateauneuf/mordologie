@@ -173,8 +173,10 @@ un pendiente vinculado.
 Los registros nuevos aceptan `actual_start_clock` y `actual_end_clock`
 (HH:MM). `ActualTimeTracking` valida ambas horas en el servidor y deriva
 `actual_minutes`, sin mezclarlo con el intervalo previsto del calendario.
-Las dos horas deben estar presentes y la hora final ha de ser posterior
-dentro del mismo día. Se puede guardar una actividad sin horas reales.
+Se puede guardar solo el inicio (o solo el fin) y completar la otra hora
+más adelante; la duración permanece pendiente hasta disponer del par. Si ambas
+se introducen, la final debe ser posterior dentro del mismo día. También se
+puede guardar una actividad sin horas reales.
 
 Los minutos reales históricos sin relojes se preservan íntegramente y se
 indican como registros anteriores; no se inventan horas retrospectivamente.

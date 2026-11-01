@@ -35,7 +35,8 @@
     if (!start.value && !end.value) {
       preview.textContent = "Durée réelle : —";
     } else if (!start.value || !end.value) {
-      error = "Indiquez les deux heures réelles.";
+      // Saving just the beginning is useful during an ongoing activity.
+      preview.textContent = "Durée réelle : — (en attente des deux heures)";
     } else if (first === null || last === null) {
       error = "Indiquez des heures valides.";
     } else if (last <= first) {

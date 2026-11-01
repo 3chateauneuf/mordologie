@@ -59,17 +59,25 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_nil block.actual_end_clock.presence
   end
 
-  test "one missing real clock is rejected and existing data remains intact" do
+  test "one real clock may be saved and completed later without calculating early" do
     patch time_block_path(@block), params: block_params(
       actual_start_clock: "14:11", actual_end_clock: ""
     )
-    assert_response :unprocessable_entity
-    assert_select ".editor-error", text: /début et la fin réels/
-
+    assert_response :redirect
     @block.reload
+    assert_equal "14:11", @block.actual_start_clock
+    assert_nil @block.actual_end_clock.presence
     assert_nil @block.actual_minutes
-    assert_nil @block.actual_start_clock
-    assert_nil @block.actual_end_clock
+
+    get edit_time_block_path(@block)
+    assert_response :success
+    assert_select "#time_block_actual_start_clock[value='14:11']", count: 1
+
+    patch time_block_path(@block), params: block_params(
+      actual_start_clock: "14:11", actual_end_clock: "17:38"
+    )
+    assert_response :redirect
+    assert_equal 207, @block.reload.actual_minutes
   end
 
   test "an end before start or an invalid clock is rejected" do
