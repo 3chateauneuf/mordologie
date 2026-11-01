@@ -33,7 +33,7 @@
       </div>
       <div class="editor-duration-bottom">
         <div class="editor-custom-duration">
-          <span>Autre durée</span>
+          <span>Durée prévue</span>
           <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1, aria: { label: "Durée en minutes" } %>
           <span>min</span>
         </div>
@@ -77,20 +77,36 @@
     </div>
   </div>
 
-  <details class="editor-details" <%= "open" if @block.notes.present? || @block.actual_minutes.present? %>>
+  <details class="editor-details" <%= "open" if @block.notes.present? || @block.actual_minutes.present? || @block.actual_start_clock.present? %>>
     <summary>Notes et temps réel <span>Facultatif</span></summary>
     <div class="editor-details-content">
       <div class="editor-field">
         <%= f.label :notes, "Notes" %>
         <%= f.text_area :notes, rows: 3, placeholder: "Informations utiles pour cette activité" %>
       </div>
-      <div class="editor-field">
-        <%= f.label :actual_minutes, "Temps réalisé" %>
-        <div class="editor-actual-row">
-          <%= f.number_field :actual_minutes, min: 0, placeholder: "—" %>
-          <span>minutes</span>
+      <fieldset class="editor-field editor-real-time" data-actual-time>
+        <legend>Horaires réels</legend>
+        <div class="editor-actual-times">
+          <div>
+            <%= f.label :actual_start_clock, "Début réel" %>
+            <%= f.time_field :actual_start_clock, step: 60 %>
+          </div>
+          <div>
+            <%= f.label :actual_end_clock, "Fin réelle" %>
+            <%= f.time_field :actual_end_clock, step: 60 %>
+          </div>
         </div>
-      </div>
+        <p class="editor-actual-result" data-actual-preview aria-live="polite">
+          <% if @block.actual_start_clock.present? && @block.actual_end_clock.present? && @block.actual_minutes.present? %>
+            Durée réelle : <%= planner_duration(@block.actual_minutes) %>
+          <% else %>
+            Durée réelle : —
+          <% end %>
+        </p>
+        <% if @block.actual_minutes.present? && @block.actual_start_clock.blank? && @block.actual_end_clock.blank? %>
+          <p class="editor-legacy-duration">Ancienne durée enregistrée : <%= planner_duration(@block.actual_minutes) %>. Saisissez les deux heures pour la remplacer.</p>
+        <% end %>
+      </fieldset>
     </div>
   </details>
 

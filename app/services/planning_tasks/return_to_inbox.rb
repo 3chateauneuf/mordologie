@@ -21,7 +21,9 @@ module PlanningTasks
             estimated_minutes: @block.duration_minutes,
             notes: @block.notes,
             tags: @block.tags,
-            actual_minutes: @block.actual_minutes
+            actual_minutes: @block.actual_minutes,
+            actual_start_clock: @block.actual_start_clock,
+            actual_end_clock: @block.actual_end_clock
           )
         end
 

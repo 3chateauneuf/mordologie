@@ -2,6 +2,7 @@
 # scheduled_block_id is optional: nil means it belongs to the pending inbox.
 # A unique database index prevents scheduling the same task twice.
 class PlanningTask < ApplicationRecord
+  include ActualTimeTracking
   belongs_to :user
   belongs_to :scheduled_block, class_name: "TimeBlock", optional: true
 
@@ -12,9 +13,6 @@ class PlanningTask < ApplicationRecord
   validates :estimated_minutes, numericality: {
     only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: 960
   }
-  validates :actual_minutes, numericality: {
-    only_integer: true, greater_than_or_equal_to: 0
-  }, allow_nil: true
   validate :valid_tags
   validate :scheduled_block_belongs_to_user
 
@@ -31,7 +29,9 @@ class PlanningTask < ApplicationRecord
       estimated_minutes: block.duration_minutes,
       notes: block.notes,
       tags: block.tags,
-      actual_minutes: block.actual_minutes
+      actual_minutes: block.actual_minutes,
+      actual_start_clock: block.actual_start_clock,
+      actual_end_clock: block.actual_end_clock
     )
   end
 

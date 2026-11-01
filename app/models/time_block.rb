@@ -1,4 +1,5 @@
 class TimeBlock < ApplicationRecord
+  include ActualTimeTracking
   CATEGORIES = {
     "travail" => { label: "Travail", color: "#5268ca" },
     "reunion" => { label: "Réunion", color: "#a47b38" },
@@ -24,7 +25,6 @@ class TimeBlock < ApplicationRecord
   validates :title, presence: true, length: { maximum: 120 }
   validates :category, inclusion: { in: CATEGORIES.keys }
   validates :start_at, :end_at, presence: true
-  validates :actual_minutes, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validate :valid_interval
   validate :valid_tags
 

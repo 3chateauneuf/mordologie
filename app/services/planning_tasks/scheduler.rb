@@ -47,6 +47,8 @@ module PlanningTasks
         notes: @task.notes,
         tags: @task.tags,
         actual_minutes: @task.actual_minutes,
+        actual_start_clock: @task.actual_start_clock,
+        actual_end_clock: @task.actual_end_clock,
         start_at: starts_at,
         end_at: ends_at
       )

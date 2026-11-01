@@ -20,7 +20,9 @@ class TimeBlocksController < ApplicationController
       title: @planning_task&.title,
       notes: @planning_task&.notes,
       tags: @planning_task&.tags || [],
-      actual_minutes: @planning_task&.actual_minutes
+      actual_minutes: @planning_task&.actual_minutes,
+      actual_start_clock: @planning_task&.actual_start_clock,
+      actual_end_clock: @planning_task&.actual_end_clock
     )
     load_schedule_from_block
   end
@@ -123,7 +125,8 @@ class TimeBlocksController < ApplicationController
   # Start/end timestamps are always calculated on the server, never
   # mass-assigned from a browser form.
   def block_details
-    params.require(:time_block).permit(:title, :category, :notes, :actual_minutes)
+    params.require(:time_block).permit(:title, :category, :notes,
+                                       :actual_start_clock, :actual_end_clock)
   end
 
   def submitted_tag_list
