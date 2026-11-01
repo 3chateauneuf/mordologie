@@ -25,7 +25,7 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
     end
     assert_selector ".planner-dialog-panel", text: "Nouveau créneau"
     assert_field "Activité", with: "Rédiger une proposition"
-    assert_field "Durée en minutes", with: "45"
+    assert_field "time_block_duration_minutes", with: "45"
 
     click_button "Créer le créneau"
     assert_selector ".day-body .event", text: "Rédiger une proposition"
@@ -38,5 +38,12 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
     end
     assert_selector ".pending-task", text: "Rédiger une proposition"
     assert_no_selector ".day-body .event", text: "Rédiger une proposition"
+
+    within ".pending-task", text: "Rédiger une proposition" do
+      accept_confirm do
+        find(".pending-remove").click
+      end
+    end
+    assert_no_selector ".pending-task", text: "Rédiger une proposition"
   end
 end

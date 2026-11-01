@@ -96,3 +96,9 @@ No agregar un segundo campo `status` para duplicar lo que ya expresa la relació
 La bandeja queda en `_pending_tasks.html.erb`, sus estilos en
 `public/styles/pending-tasks.css` y el gesto drag-and-drop en el script de
 agenda. Los gestos táctiles utilizan el enlace explícito para planificar.
+
+## Confirmación destructiva compartida
+
+`public/scripts/confirm-destroy.js` gestiona las confirmaciones para todos
+los `form[data-confirm-destroy]`, tanto en el diálogo de edición como en la
+bandeja principal. `planner-dialog.js` gestiona únicamente los diálogos.

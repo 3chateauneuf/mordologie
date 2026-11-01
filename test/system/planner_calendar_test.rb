@@ -46,7 +46,7 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     visit root_path(week: "2026-11-02", day: "2026-11-02")
     click_link "+ Planifier un créneau"
     assert_selector "[data-planner-dialog-panel]", text: "Nouveau créneau"
-    page.find("body").send_keys(:escape)
+    page.find("#time_block_title").send_keys(:escape)
     assert_current_path root_path(week: "2026-11-02", day: "2026-11-02")
 
     click_link "Afficher les heures précédentes"
