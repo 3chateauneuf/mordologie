@@ -1,0 +1,67 @@
+/* Actual clock entry is distinct from the planned calendar duration. */
+.editor-details-content {
+  grid-template-columns: minmax(0, 1fr) minmax(235px, 1.12fr);
+}
+
+.editor-real-time {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+
+.editor-real-time legend {
+  padding: 0;
+  margin-bottom: 7px;
+  color: #354054;
+  font-size: 12px;
+  font-weight: 740;
+}
+
+.editor-actual-times {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.editor-actual-times label {
+  display: block;
+  margin-bottom: 6px;
+  color: #59667b;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.editor-actual-times input[type="time"] {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 5px;
+  font-size: 13px;
+}
+
+.editor-actual-result {
+  margin: 9px 0 0;
+  color: #4059b8;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.editor-actual-result.is-invalid {
+  color: #aa3b50;
+}
+
+.editor-legacy-duration {
+  margin: 7px 0 0;
+  color: #6b778d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.editor-legacy-duration[hidden] {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .editor-details-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

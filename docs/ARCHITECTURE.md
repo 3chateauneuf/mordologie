@@ -167,3 +167,23 @@ eliminando solo ese pendiente.
 No reutilizar DELETE para devolver a espera. La interfaz y los tests deben
 distinguir siempre ambos recorridos, incluidos los bloques que ya tienen
 un pendiente vinculado.
+
+## Registro de horas reales sin cálculo manual
+
+Los registros nuevos aceptan `actual_start_clock` y `actual_end_clock`
+(HH:MM). `ActualTimeTracking` valida ambas horas en el servidor y deriva
+`actual_minutes`, sin mezclarlo con el intervalo previsto del calendario.
+Las dos horas deben estar presentes y la hora final ha de ser posterior
+dentro del mismo día. Se puede guardar una actividad sin horas reales.
+
+Los minutos reales históricos sin relojes se preservan íntegramente y se
+indican como registros anteriores; no se inventan horas retrospectivamente.
+Al escribir nuevas horas, el valor anterior se sustituye por el cálculo
+verificado. Al borrar un par existente, su duración derivada se elimina.
+Los datos reales (ambas horas y el total) se conservan al mover entre agenda
+y bandeja de espera y viceversa. La migración es aditiva y sin pérdida.
+
+El formulario Rails transmite solo las horas (no minutos calculados).
+El módulo `public/scripts/real-time-fields.js` previsualiza el cálculo
+para el usuario, pero el servidor tiene la última palabra. Sus estilos
+están aislados en `public/styles/real-time-fields.css`.
