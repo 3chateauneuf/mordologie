@@ -21,7 +21,7 @@
               <%= f.select :category, TimeBlock::CATEGORIES.map { |key, value| [value[:label], key] } %>
             </div>
           </div>
-          <%= f.submit "Ajouter aux pendants", class: "pending-add-submit" %>
+          <%= f.submit "Ajouter", class: "pending-add-submit" %>
         <% end %>
       </div>
     </details>

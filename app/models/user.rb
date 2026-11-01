@@ -3,6 +3,7 @@ class User < ApplicationRecord
   CALENDAR_START_HOURS = (0..23).freeze
 
   has_secure_password
+  has_many :planning_tasks, dependent: :destroy
   has_many :time_blocks, dependent: :destroy
 
   before_validation do

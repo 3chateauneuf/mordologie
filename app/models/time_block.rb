@@ -20,6 +20,7 @@ class TimeBlock < ApplicationRecord
   end
 
   belongs_to :user
+  has_one :planning_task, foreign_key: :scheduled_block_id, dependent: :nullify
   validates :title, presence: true, length: { maximum: 120 }
   validates :category, inclusion: { in: CATEGORIES.keys }
   validates :start_at, :end_at, presence: true

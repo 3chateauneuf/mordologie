@@ -9,6 +9,7 @@ Rails.application.routes.draw do
 
   get "/recherche", to: "planner#search", as: :recherche
   patch "/preferences/planning", to: "calendar_preferences#update", as: :calendar_preferences
+  resources :planning_tasks, only: [:create, :destroy]
   resources :time_blocks, except: [:index, :show]
   root "planner#index"
 end
