@@ -129,6 +129,11 @@ título, categoría, duración y notas. El Scheduler repone esos datos cuando
 se programa de nuevo. La eliminación explícita sigue siendo distinta de
 devolver a espera.
 
-El módulo calendar-to-inbox.js gestiona solo el gesto inverso y utiliza un
-formulario HTML protegido por Rails. Las pruebas cubren el ida y vuelta,
-la reutilización del registro, la seguridad entre cuentas y los duplicados.
+El módulo calendar-to-inbox.js gestiona solo el gesto inverso. Cada bloque
+tiene su propio formulario generado por Rails en _return_to_inbox_forms.html.erb.
+JavaScript selecciona ese formulario por ID y lo envía sin modificar su acción.
+Rails puede vincular el token CSRF al método y a la URL; modificar form.action
+invalida el token y produce HTTP 422 en producción. Esta regla está protegida
+por una prueba real de navegador con allow_forgery_protection activado.
+Las pruebas cubren el ida y vuelta, la reutilización del registro,
+la seguridad entre cuentas y los duplicados.

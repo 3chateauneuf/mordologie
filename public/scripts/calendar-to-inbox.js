@@ -1,12 +1,11 @@
 // Reverse drag: a calendar block can return to the unscheduled inbox.
 //
-// The card contains its server-generated endpoint. A normal Rails form
-// submits the change with CSRF protection; the browser never deletes a block
-// until the pointer is released over the inbox.
+// Every block has a Rails-generated form bound to its exact POST endpoint.
+// Never reassign an existing form's action: per-form CSRF tokens become invalid.
+// The browser doesn't move any data until the pointer is released over the inbox.
 (function () {
   const inbox = document.querySelector(".pending-panel");
-  const form = inbox?.querySelector("[data-return-to-inbox-form]");
-  if (!inbox || !form) return;
+  if (!inbox) return;
 
   let draggedBlock = null;
 
@@ -44,10 +43,15 @@
     if (!draggedBlock) return;
 
     event.preventDefault();
-    const route = draggedBlock.dataset.returnToInboxUrl;
-    if (!route) return;
+    const blockId = draggedBlock.dataset.calendarBlockId;
+    const form = document.querySelector(
+      '.return-to-inbox-form[data-return-block-id="' + blockId + '"]'
+    );
+    if (!form) {
+      resetDropTarget();
+      return;
+    }
 
-    form.action = route;
     resetDropTarget();
     draggedBlock = null;
     form.requestSubmit();

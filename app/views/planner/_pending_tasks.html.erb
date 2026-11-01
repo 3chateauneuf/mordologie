@@ -63,11 +63,6 @@
       <% end %>
     </ol>
   <% end %>
-  <%= form_with url: root_path, method: :post, class: "return-to-inbox-form",
-        data: { return_to_inbox_form: true } do %>
-    <%= hidden_field_tag :week, @week_start.iso8601 %>
-    <%= hidden_field_tag :day, @selected_day.iso8601 %>
-  <% end %>
   <p class="pending-drop-instruction" aria-hidden="true">Déposez ici pour remettre en attente</p>
   <p class="pending-hint">Glissez une tâche sur une heure pour la planifier directement. « Planifier » permet de personnaliser.</p>
 </aside>

@@ -1,0 +1,10 @@
+<%# Each block has a Rails-generated action and CSRF token for that exact URL.
+    Never change form.action in JavaScript: Rails may use per-form CSRF tokens. %>
+<% @blocks.each do |block| %>
+  <%= form_with url: return_to_inbox_time_block_path(block), method: :post,
+        class: "return-to-inbox-form",
+        data: { return_block_id: block.id } do %>
+    <%= hidden_field_tag :week, @week_start.iso8601 %>
+    <%= hidden_field_tag :day, @selected_day.iso8601 %>
+  <% end %>
+<% end %>

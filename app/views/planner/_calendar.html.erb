@@ -64,8 +64,7 @@
             <% category_label = TimeBlock::CATEGORIES.fetch(block.category)[:label] %>
             <% time_label = "#{local_start.strftime('%H:%M')} – #{block.end_at.in_time_zone.strftime('%H:%M')}" %>
             <%= link_to edit_time_block_path(block), class: "event", draggable: true,
-                  data: { calendar_block_id: block.id,
-                          return_to_inbox_url: return_to_inbox_time_block_path(block) }, style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} · #{time_label} · #{category_label}#{block.tags.any? ? ' · #' + block.tags.join(' #') : ''} — Modifier" do %>
+                  data: { calendar_block_id: block.id }, style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} · #{time_label} · #{category_label}#{block.tags.any? ? ' · #' + block.tags.join(' #') : ''} — Modifier" do %>
               <strong><%= block.title %></strong>
               <% if height >= 55 %><small><%= time_label %></small><% end %>
               <% if height >= 82 %><span class="category"><%= category_label %></span><% end %>
@@ -75,5 +74,6 @@
       <% end %>
     </div>
   </div>
+  <%= render "return_to_inbox_forms" %>
   <p class="help"><span class="desktop-help">Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier.</span><span class="mobile-help">Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier.</span></p>
 </div>

@@ -46,6 +46,40 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
     end
     assert_no_selector ".pending-task", text: "Rédiger une proposition"
   end
+  test "return drag succeeds with CSRF protection enabled, as in production" do
+    block = @user.time_blocks.create!(
+      title: "Tâche protégée", category: "travail",
+      start_at: Time.zone.local(2026, 11, 2, 10, 0),
+      end_at: Time.zone.local(2026, 11, 2, 10, 45)
+    )
+
+    previous_protection = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+
+    begin
+      visit root_path(week: "2026-11-02", day: "2026-11-02")
+
+      # An action-specific form must already exist with a security token.
+      form = find(
+        ".return-to-inbox-form[data-return-block-id='#{block.id}']",
+        visible: :all
+      )
+      assert_equal return_to_inbox_time_block_path(block), URI(form[:action]).path
+      token = form.find("input[name='authenticity_token']", visible: :all)
+      assert token[:value].present?
+
+      find(".event[data-calendar-block-id='#{block.id}']").drag_to(
+        find(".pending-panel")
+      )
+
+      assert_no_selector ".event", text: "Tâche protégée"
+      assert_selector ".pending-task", text: "Tâche protégée"
+      assert_not TimeBlock.exists?(block.id)
+    ensure
+      ActionController::Base.allow_forgery_protection = previous_protection
+    end
+  end
+
   test "dragging an independent block to standby creates a pending task" do
     block = @user.time_blocks.create!(
       title: "Réviser la semaine", category: "travail",
