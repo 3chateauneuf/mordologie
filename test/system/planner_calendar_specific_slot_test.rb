@@ -18,7 +18,7 @@ class PlannerCalendarSpecificSlotTest < ApplicationSystemTestCase
   test "dropping on a visible quarter-hour slot reschedules the block" do
     visit root_path(week: "2026-11-02", day: "2026-11-02")
     page.execute_script(<<~JS)
-      const day = document.querySelector(".day-body[data-day='2026-11-03']");
+      const day = document.querySelector(".day-body[data-day='2026-11-02']");
       const marker = document.createElement("div");
       marker.className = "test-calendar-drop-slot";
       marker.style.cssText =
@@ -30,9 +30,9 @@ class PlannerCalendarSpecificSlotTest < ApplicationSystemTestCase
       find(".test-calendar-drop-slot")
     )
 
-    assert_selector ".day-body[data-day='2026-11-03'] .event",
+    assert_selector ".day-body[data-day='2026-11-02'] .event",
                     text: "Déplacer le bloc"
-    assert_equal "2026-11-03 12:00",
+    assert_equal "2026-11-02 12:00",
       @block.reload.start_at.in_time_zone.strftime("%F %H:%M")
     assert_equal 60, @block.duration_minutes
   end
