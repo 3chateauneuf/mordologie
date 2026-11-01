@@ -33,9 +33,7 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
 
     click_link "Rédiger une proposition"
     assert_selector ".planner-dialog-panel", text: "Modifier le créneau"
-    accept_confirm do
-      click_button "Remettre en attente"
-    end
+    click_button "Remettre en attente"
     assert_selector ".pending-task", text: "Rédiger une proposition"
     assert_no_selector ".day-body .event", text: "Rédiger une proposition"
 

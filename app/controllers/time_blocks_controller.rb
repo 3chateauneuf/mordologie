@@ -51,18 +51,14 @@ class TimeBlocksController < ApplicationController
     end
   end
 
+  # DELETE always means permanent deletion, including any linked task.
+  # Returning to the inbox has its own explicit action and endpoint.
   def destroy
     day = @block.start_at.in_time_zone.to_date.iso8601
-    linked_task = @block.planning_task
+    TimeBlocks::DeletePermanently.new(block: @block).call
 
-    if linked_task
-      PlanningTasks::ReturnToInbox.new(block: @block).call
-    else
-      @block.destroy!
-    end
-
-    notice = linked_task ? "Activité remise en attente." : "Créneau supprimé."
-    redirect_to root_path(week: day, day: day), notice: notice
+    redirect_to root_path(week: day, day: day),
+                notice: "Activité supprimée définitivement."
   end
 
   def reschedule

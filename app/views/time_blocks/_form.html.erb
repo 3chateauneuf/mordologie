@@ -96,16 +96,14 @@
 
 <% end %>
 
-<footer class="editor-footer <%= 'editor-footer-edit' if @block.persisted? %> <%= 'editor-footer-has-standby' if @block.persisted? && !@block.planning_task %>">
+<footer class="editor-footer <%= 'editor-footer-edit editor-footer-with-actions' if @block.persisted? %>">
   <% if @block.persisted? %>
     <div class="editor-delete-zone">
-      <% unless @block.planning_task %>
-        <%= button_to "Mettre en attente", return_to_inbox_time_block_path(@block),
-              method: :post, class: "editor-standby-button" %>
-      <% end %>
-      <%= button_to (@block.planning_task ? "Remettre en attente" : "Supprimer ce créneau"),
-            time_block_path(@block), method: :delete, class: "editor-delete-button",
-            form: { data: { confirm_destroy: (@block.planning_task ? "Retirer ce créneau du planning et remettre la tâche en attente ?" : "Supprimer définitivement ce créneau ?") } } %>
+      <%= button_to "Remettre en attente", return_to_inbox_time_block_path(@block),
+            method: :post, class: "editor-standby-button" %>
+      <%= button_to "Supprimer définitivement", time_block_path(@block),
+            method: :delete, class: "editor-delete-button",
+            form: { data: { confirm_destroy: "Supprimer définitivement cette activité et son éventuel rappel en attente ? Cette action est irréversible." } } %>
     </div>
   <% end %>
   <button type="submit" form="planner-time-block-form" id="planner-time-block-submit" class="editor-submit"><%= @block.persisted? ? "Enregistrer" : "Créer le créneau" %></button>

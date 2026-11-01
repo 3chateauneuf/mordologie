@@ -131,14 +131,19 @@
   }
 }
 
-
-/* Accessible fallback for returning a standalone block to the inbox.
-   Save stays the primary action; delete remains explicitly destructive. */
-.editor-footer-has-standby .editor-delete-zone {
+/* The editor always offers both reversible standby and permanent deletion.
+   These are secondary actions, distinct from the primary Save button. */
+.editor-footer-with-actions .editor-delete-zone {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 0;
+}
+
+.editor-footer-with-actions .editor-delete-zone form {
+  margin: 0;
 }
 
 .editor-standby-button {
@@ -158,24 +163,25 @@
   color: #283c9d;
 }
 
-.editor-standby-button:focus-visible {
+.editor-standby-button:focus-visible,
+.editor-delete-button:focus-visible {
   outline: 3px solid #a2b0ec;
   outline-offset: 2px;
 }
 
 @media (max-width: 480px) {
-  .editor-footer-has-standby {
+  .editor-footer-with-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 2px 12px;
   }
 
-  .editor-footer-has-standby .editor-submit {
+  .editor-footer-with-actions .editor-submit {
     order: -1;
     flex: 0 0 100%;
   }
 
-  .editor-footer-has-standby .editor-delete-zone {
+  .editor-footer-with-actions .editor-delete-zone {
     flex: 1 1 100%;
     display: flex;
     justify-content: space-between;
@@ -183,7 +189,12 @@
     padding: 0;
   }
 
-  body.is-editor-page:has(.editor-footer-has-standby) main {
+  .editor-footer-with-actions .editor-standby-button,
+  .editor-footer-with-actions .editor-delete-button {
+    font-size: 11px;
+  }
+
+  body.is-editor-page:has(.editor-footer-with-actions) main {
     padding-bottom: 154px;
   }
 }

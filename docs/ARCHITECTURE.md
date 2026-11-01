@@ -151,3 +151,19 @@ previsualización. _reschedule_forms.html.erb genera un formulario Rails
 con un token CSRF propio por bloque, sin cambiar jamás su destino en JS.
 Se comprueba el movimiento en la misma jornada y entre días en Chrome
 con CSRF activado, además de límites, aislamiento entre usuarios y datos.
+
+
+## Diferenciar devolver a espera y eliminar definitivamente
+
+En el editor de cualquier bloque programado existen dos operaciones distintas:
+«Remettre en attente» utiliza POST `return_to_inbox` y conserva la
+`PlanningTask` (o la crea si el bloque era independiente).
+«Supprimer définitivement» utiliza DELETE `time_blocks/:id` después de
+una confirmación explícita. `TimeBlocks::DeletePermanently` elimina
+transaccionalmente el bloque y cualquier `PlanningTask` vinculada; no deja
+un pendiente huérfano. La supresión desde el panel de pendientes continúa
+eliminando solo ese pendiente.
+
+No reutilizar DELETE para devolver a espera. La interfaz y los tests deben
+distinguir siempre ambos recorridos, incluidos los bloques que ya tienen
+un pendiente vinculado.
