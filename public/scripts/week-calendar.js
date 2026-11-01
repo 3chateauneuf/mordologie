@@ -16,7 +16,7 @@
     return Math.max(0, Math.min(maxSlot, Math.floor((event.clientY - rect.top) / slotPixels)));
   }
 
-  function openForm(day, firstSlot, slotCount, taskId = null) {
+  function openForm(day, firstSlot, slotCount) {
     const startMinutes = Number(day.dataset.startHour) * 60 + firstSlot * 15;
     const hour = Math.floor(startMinutes / 60);
     const minute = startMinutes % 60;
@@ -26,11 +26,7 @@
     url.searchParams.set("day", day.dataset.day);
     url.searchParams.set("hour", String(hour));
     url.searchParams.set("minute", String(minute));
-    if (taskId) {
-      url.searchParams.set("planning_task_id", taskId);
-    } else {
-      url.searchParams.set("duration", String(duration));
-    }
+    url.searchParams.set("duration", String(duration));
     window.location.assign(url.toString());
   }
 
@@ -39,43 +35,7 @@
     selection = null;
   }
 
-  // Desktop affordance: a pending item can be dropped on an available time
-  // to open the normal form with its details. Nothing is saved until confirmed.
-  let draggedTaskId = null;
-  document.querySelectorAll("[data-pending-task-id]").forEach(function (task) {
-    task.addEventListener("dragstart", function (event) {
-      draggedTaskId = task.dataset.pendingTaskId;
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", draggedTaskId);
-      task.classList.add("is-dragging");
-    });
-    task.addEventListener("dragend", function () {
-      draggedTaskId = null;
-      task.classList.remove("is-dragging");
-      document.querySelectorAll(".pending-drop-target").forEach(function (day) {
-        day.classList.remove("pending-drop-target");
-      });
-    });
-  });
-
   document.querySelectorAll(".day-body").forEach(function (day) {
-    day.addEventListener("dragover", function (event) {
-      if (!draggedTaskId) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-      day.classList.add("pending-drop-target");
-    });
-    day.addEventListener("dragleave", function (event) {
-      if (!day.contains(event.relatedTarget)) day.classList.remove("pending-drop-target");
-    });
-    day.addEventListener("drop", function (event) {
-      const taskId = event.dataTransfer.getData("text/plain") || draggedTaskId;
-      day.classList.remove("pending-drop-target");
-      if (!taskId) return;
-      event.preventDefault();
-      openForm(day, slotAt(event, day), 4, taskId);
-    });
-
     day.addEventListener("pointerdown", function (event) {
       if (event.pointerType === "touch" && !event.target.closest(".event")) {
         touchPoint = { id: event.pointerId, day: day, slot: slotAt(event, day), y: event.clientY, x: event.clientX };

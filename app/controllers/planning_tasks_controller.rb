@@ -1,5 +1,5 @@
 class PlanningTasksController < ApplicationController
-  before_action :load_task, only: :destroy
+  before_action :load_task, only: [:destroy, :schedule]
 
   def create
     @task = current_user.planning_tasks.new(task_params)
@@ -9,6 +9,25 @@ class PlanningTasksController < ApplicationController
     else
       redirect_to return_to_calendar, alert: @task.errors.full_messages.to_sentence
     end
+  end
+
+  # Dragging onto a calendar slot directly schedules the task.
+  # The server, not the browser, chooses its trusted title and duration.
+  def schedule
+    result = PlanningTasks::Scheduler.new(
+      task: @task,
+      date: params[:schedule_date],
+      clock: params[:start_clock]
+    ).call
+
+    unless result.success?
+      return redirect_to return_to_calendar, alert: result.error
+    end
+
+    day = result.block.start_at.in_time_zone.to_date.iso8601
+    message = "Activité planifiée."
+    message += " Attention : ce créneau chevauche une autre activité." if result.overlap
+    redirect_to root_path(week: day, day: day), notice: message
   end
 
   def destroy

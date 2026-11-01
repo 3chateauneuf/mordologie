@@ -35,6 +35,7 @@
     <ol class="pending-list">
       <% @pending_tasks.each do |task| %>
         <li class="pending-task" draggable="true" data-pending-task-id="<%= task.id %>"
+            data-pending-minutes="<%= task.estimated_minutes %>"
             style="--task-color:<%= TimeBlock::CATEGORIES.fetch(task.category)[:color] %>">
           <div class="pending-task-main">
             <strong><%= task.title %></strong>
@@ -51,9 +52,16 @@
                   }, title: "Supprimer la tâche",
                   aria: { label: "Supprimer #{task.title}" } %>
           </div>
+          <%= form_with url: schedule_planning_task_path(task), method: :post,
+                class: "pending-schedule-form", data: { schedule_task_form: true } do %>
+            <%= hidden_field_tag :schedule_date, nil %>
+            <%= hidden_field_tag :start_clock, nil %>
+            <%= hidden_field_tag :week, @week_start.iso8601 %>
+            <%= hidden_field_tag :day, @selected_day.iso8601 %>
+          <% end %>
         </li>
       <% end %>
     </ol>
   <% end %>
-  <p class="pending-hint">Sur ordinateur, glissez une tâche sur une heure libre pour la planifier.</p>
+  <p class="pending-hint">Glissez une tâche sur une heure pour la planifier directement. « Planifier » permet de personnaliser.</p>
 </aside>

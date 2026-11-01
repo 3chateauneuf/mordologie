@@ -89,13 +89,18 @@ pestañas simultáneamente. Los bloques preexistentes siguen independientes.
 
 Al retirar un bloque vinculado, se copian los cambios realizados al pendiente y
 se elimina solo la reserva horaria. Los pendientes pertenecen estrictamente al
-usuario autenticado. El formulario normal de bloques sigue siendo la fuente de
-confirmación de fecha y duración, incluido tras arrastrar desde el panel.
+usuario autenticado. El enlace «Planifier» abre el formulario de bloques si se necesita personalizar.
+Arrastrar desde el panel ejecuta directamente `PlanningTasks::Scheduler` usando
+la duración estimada ya guardada: muestra una previsualización de la hora y
+envía un POST normal protegido por CSRF, sin diálogo adicional. La validación
+es del servidor; si el horario excede la medianoche, no se crea ningún bloque.
+Los solapamientos se permiten y se anuncian al usuario.
 
 No agregar un segundo campo `status` para duplicar lo que ya expresa la relación.
 La bandeja queda en `_pending_tasks.html.erb`, sus estilos en
-`public/styles/pending-tasks.css` y el gesto drag-and-drop en el script de
-agenda. Los gestos táctiles utilizan el enlace explícito para planificar.
+`public/styles/pending-tasks.css` y el gesto drag-and-drop en `public/scripts/pending-calendar-drag.js`.
+`public/scripts/week-calendar.js` controla únicamente la creación de nuevos
+bloques desde un espacio vacío de la agenda. Los gestos táctiles utilizan el enlace explícito para planificar.
 
 ## Confirmación destructiva compartida
 
