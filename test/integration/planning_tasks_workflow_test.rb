@@ -336,6 +336,11 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       start_at: Time.zone.local(2026, 11, 2, 12, 0),
       end_at: Time.zone.local(2026, 11, 2, 12, 30)
     )
+    get edit_time_block_path(block)
+    assert_response :success
+    assert_select ".editor-standby-button", text: "Mettre en attente", count: 1
+    assert_select ".editor-delete-button", text: "Supprimer ce créneau", count: 1
+
     assert_no_difference("@user.planning_tasks.count") do
       assert_difference("@user.time_blocks.count", -1) do
         delete time_block_path(block)

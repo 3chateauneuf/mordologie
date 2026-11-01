@@ -130,3 +130,60 @@
     display:inline-flex
   }
 }
+
+
+/* Accessible fallback for returning a standalone block to the inbox.
+   Save stays the primary action; delete remains explicitly destructive. */
+.editor-footer-has-standby .editor-delete-zone {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.editor-standby-button {
+  min-height: 44px;
+  padding: 8px 2px;
+  border: 0;
+  background: transparent;
+  color: #4059ba;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.editor-standby-button:hover {
+  color: #283c9d;
+}
+
+.editor-standby-button:focus-visible {
+  outline: 3px solid #a2b0ec;
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .editor-footer-has-standby {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+  }
+
+  .editor-footer-has-standby .editor-submit {
+    order: -1;
+    flex: 0 0 100%;
+  }
+
+  .editor-footer-has-standby .editor-delete-zone {
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0;
+  }
+
+  body.is-editor-page:has(.editor-footer-has-standby) main {
+    padding-bottom: 154px;
+  }
+}

@@ -96,9 +96,13 @@
 
 <% end %>
 
-<footer class="editor-footer <%= 'editor-footer-edit' if @block.persisted? %>">
+<footer class="editor-footer <%= 'editor-footer-edit' if @block.persisted? %> <%= 'editor-footer-has-standby' if @block.persisted? && !@block.planning_task %>">
   <% if @block.persisted? %>
     <div class="editor-delete-zone">
+      <% unless @block.planning_task %>
+        <%= button_to "Mettre en attente", return_to_inbox_time_block_path(@block),
+              method: :post, class: "editor-standby-button" %>
+      <% end %>
       <%= button_to (@block.planning_task ? "Remettre en attente" : "Supprimer ce créneau"),
             time_block_path(@block), method: :delete, class: "editor-delete-button",
             form: { data: { confirm_destroy: (@block.planning_task ? "Retirer ce créneau du planning et remettre la tâche en attente ?" : "Supprimer définitivement ce créneau ?") } } %>
