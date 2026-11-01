@@ -1,0 +1,56 @@
+<aside class="pending-panel" aria-labelledby="pending-tasks-heading">
+  <div class="pending-panel-header">
+    <div class="pending-panel-title">
+      <h2 id="pending-tasks-heading">À planifier</h2>
+      <span class="pending-count"><%= @pending_tasks.size %></span>
+    </div>
+    <details class="pending-add" data-pending-add>
+      <summary>+ Ajouter</summary>
+      <div class="pending-add-body">
+        <%= form_with model: PlanningTask.new, url: planning_tasks_path, class: "pending-form" do |f| %>
+          <%= f.label :title, "Activité" %>
+          <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off",
+                placeholder: "Qu'avez-vous à faire ?" %>
+          <div class="pending-form-fields">
+            <div>
+              <%= f.label :estimated_minutes, "Durée estimée (min)" %>
+              <%= f.number_field :estimated_minutes, value: 60, min: 1, max: 960, required: true %>
+            </div>
+            <div>
+              <%= f.label :category, "Catégorie" %>
+              <%= f.select :category, TimeBlock::CATEGORIES.map { |key, value| [value[:label], key] } %>
+            </div>
+          </div>
+          <%= f.submit "Ajouter aux pendants", class: "pending-add-submit" %>
+        <% end %>
+      </div>
+    </details>
+  </div>
+
+  <% if @pending_tasks.empty? %>
+    <p class="pending-empty">Rien en attente. Ajoutez une activité sans lui donner de date.</p>
+  <% else %>
+    <ol class="pending-list">
+      <% @pending_tasks.each do |task| %>
+        <li class="pending-task" draggable="true" data-pending-task-id="<%= task.id %>"
+            style="--task-color:<%= TimeBlock::CATEGORIES.fetch(task.category)[:color] %>">
+          <div class="pending-task-main">
+            <strong><%= task.title %></strong>
+            <span><%= TimeBlock::CATEGORIES.fetch(task.category)[:label] %> · <%= planner_duration(task.estimated_minutes) %></span>
+          </div>
+          <div class="pending-task-actions">
+            <%= link_to "Planifier", new_time_block_path(day: @selected_day.iso8601,
+                  planning_task_id: task.id), class: "pending-plan",
+                  aria: { label: "Planifier #{task.title}" } %>
+            <%= button_to "×", planning_task_path(task), method: :delete,
+                  class: "pending-remove", form: {
+                    data: { confirm_destroy: "Supprimer définitivement cette tâche ?" }
+                  }, title: "Supprimer la tâche",
+                  aria: { label: "Supprimer #{task.title}" } %>
+          </div>
+        </li>
+      <% end %>
+    </ol>
+  <% end %>
+  <p class="pending-hint">Sur ordinateur, glissez une tâche sur une heure libre pour la planifier.</p>
+</aside>
