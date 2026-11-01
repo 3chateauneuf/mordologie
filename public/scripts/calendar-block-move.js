@@ -41,6 +41,8 @@
       gripOffset = Math.max(0, Math.min(distance, durationPixels - 1));
       block.classList.add("is-calendar-dragging");
       event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("application/x-planner-calendar-block",
+        block.dataset.calendarBlockId);
     });
     block.addEventListener("dragend", () => {
       block.classList.remove("is-calendar-dragging");
@@ -62,15 +64,12 @@
       if (!dragged) return;
       event.preventDefault();
       const block = dragged;
+      const clock = startAt(event, day).clock;
+      clearPreview();
       dragged = null;
-      const rect = day.getBoundingClientRect();
-      const first = Number(day.dataset.startHour) * 60;
-      const slots = (Number(day.dataset.endHour) * 60 - first) / 15;
-      const slot = Math.max(0, Math.min(slots - 1,
-        Math.floor((event.clientY - rect.top - gripOffset) / (rect.height / slots))));
-      const minutes = first + slot * 15;
-      const clock = String(Math.floor(minutes / 60)).padStart(2, "0") +
-        ":" + String(minutes % 60).padStart(2, "0");
+      block.classList.remove("is-calendar-dragging");
+      if (day.dataset.day === block.dataset.calendarStartDate &&
+          clock === block.dataset.calendarStartClock) return;
       const form = document.querySelector(
         '.calendar-reschedule-form[data-reschedule-block-id="' +
         block.dataset.calendarBlockId + '"]');
