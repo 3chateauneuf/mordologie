@@ -116,3 +116,19 @@ El gesto del panel de pendientes se prueba de extremo a extremo en Chrome:
 separadas para validación, doble programación, pertenencia al usuario y
 solapamientos no bloqueantes. No sustituir estos resultados con pruebas que
 solo comprueben que se abre una ventana.
+
+## Arrastrar del calendario a standby
+
+La devolución usa POST /time_blocks/:id/return_to_inbox con autenticación y
+protección CSRF. El servicio PlanningTasks::ReturnToInbox gestiona la
+transacción: reutiliza la tarea vinculada o crea una para un bloque nacido
+directamente en la agenda. Solo después elimina el bloque.
+
+Una migración aditiva conserva etiquetas y minutos realizados, además del
+título, categoría, duración y notas. El Scheduler repone esos datos cuando
+se programa de nuevo. La eliminación explícita sigue siendo distinta de
+devolver a espera.
+
+El módulo calendar-to-inbox.js gestiona solo el gesto inverso y utiliza un
+formulario HTML protegido por Rails. Las pruebas cubren el ida y vuelta,
+la reutilización del registro, la seguridad entre cuentas y los duplicados.

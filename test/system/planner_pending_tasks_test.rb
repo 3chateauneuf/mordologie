@@ -46,6 +46,58 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
     end
     assert_no_selector ".pending-task", text: "Rédiger une proposition"
   end
+  test "dragging an independent block to standby creates a pending task" do
+    block = @user.time_blocks.create!(
+      title: "Réviser la semaine", category: "travail",
+      notes: "Penser au client", tags: ["projet"],
+      start_at: Time.zone.local(2026, 11, 2, 10, 0),
+      end_at: Time.zone.local(2026, 11, 2, 10, 45)
+    )
+
+    visit root_path(week: "2026-11-02", day: "2026-11-02")
+    find(".event[data-calendar-block-id='#{block.id}']").drag_to(
+      find(".pending-panel")
+    )
+
+    assert_no_selector ".planner-dialog-panel"
+    assert_no_selector ".event", text: "Réviser la semaine"
+    assert_selector ".pending-task", text: "Réviser la semaine"
+    task = @user.planning_tasks.last
+    assert_equal 45, task.estimated_minutes
+    assert_equal ["projet"], task.tags
+    assert_nil task.scheduled_block_id
+    assert_not TimeBlock.exists?(block.id)
+
+    find(".pending-task[data-pending-task-id='#{task.id}']").drag_to(
+      find(".day-body.is-active-day")
+    )
+    assert_selector ".event", text: "Réviser la semaine"
+    assert_no_selector ".pending-task", text: "Réviser la semaine"
+    assert_equal task.id, @user.planning_tasks.last.id
+    assert_equal ["projet"], task.reload.scheduled_block.tags
+  end
+
+  test "dragging a linked reservation to standby never duplicates its task" do
+    task = @user.planning_tasks.create!(
+      title: "Montage", category: "travail", estimated_minutes: 60
+    )
+    visit root_path(week: "2026-11-02", day: "2026-11-02")
+
+    find(".pending-task[data-pending-task-id='#{task.id}']").drag_to(
+      find(".day-body.is-active-day")
+    )
+    assert_selector ".event", text: "Montage"
+    block = task.reload.scheduled_block
+
+    find(".event[data-calendar-block-id='#{block.id}']").drag_to(
+      find(".pending-panel")
+    )
+    assert_no_selector ".event", text: "Montage"
+    assert_selector ".pending-task[data-pending-task-id='#{task.id}']"
+    assert_equal 1, @user.planning_tasks.where(id: task.id).count
+    assert_nil task.reload.scheduled_block_id
+  end
+
   test "desktop dragging places a pending task immediately at its dropped time" do
     task = @user.planning_tasks.create!(
       title: "Préparer le montage",

@@ -228,6 +228,121 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal "10:00", previous.end_at.in_time_zone.strftime("%H:%M")
   end
 
+  test "dragging a standalone calendar block to the inbox preserves its details" do
+    block = @user.time_blocks.create!(
+      title: "Étudier le projet", category: "reunion",
+      notes: "Appeler le client", tags: ["client", "budget"],
+      actual_minutes: 12,
+      start_at: Time.zone.local(2026, 11, 2, 9, 0),
+      end_at: Time.zone.local(2026, 11, 2, 10, 15)
+    )
+
+    assert_difference("@user.planning_tasks.count", 1) do
+      assert_difference("@user.time_blocks.count", -1) do
+        post return_to_inbox_time_block_path(block), params: {
+          week: "2026-11-02", day: "2026-11-03"
+        }
+      end
+    end
+
+    assert_redirected_to root_path(week: "2026-11-02", day: "2026-11-03")
+    task = @user.planning_tasks.last
+    assert_nil task.scheduled_block_id
+    assert_equal "Étudier le projet", task.title
+    assert_equal "reunion", task.category
+    assert_equal 75, task.estimated_minutes
+    assert_equal "Appeler le client", task.notes
+    assert_equal ["client", "budget"], task.tags
+    assert_equal 12, task.actual_minutes
+
+    get root_path(week: "2026-11-02")
+    assert_select ".pending-task[data-pending-task-id='#{task.id}']", count: 1
+    assert_select ".day-body .event", text: /Étudier le projet/, count: 0
+
+    assert_difference("@user.time_blocks.count", 1) do
+      post schedule_planning_task_path(task), params: {
+        schedule_date: "2026-11-03", start_clock: "08:15"
+      }
+    end
+    scheduled = task.reload.scheduled_block
+    assert_equal 75, scheduled.duration_minutes
+    assert_equal ["client", "budget"], scheduled.tags
+    assert_equal 12, scheduled.actual_minutes
+    assert_equal "Appeler le client", scheduled.notes
+  end
+
+  test "returning a linked block reuses the same pending task" do
+    task = @user.planning_tasks.create!(
+      title: "Livraison", category: "travail", estimated_minutes: 30
+    )
+    post schedule_planning_task_path(task), params: {
+      schedule_date: "2026-11-02", start_clock: "11:00"
+    }
+    block = task.reload.scheduled_block
+    block.update!(
+      title: "Livraison finalisée", notes: "Vérifié",
+      tags: ["important"], actual_minutes: 24
+    )
+
+    assert_no_difference("@user.planning_tasks.count") do
+      assert_difference("@user.time_blocks.count", -1) do
+        post return_to_inbox_time_block_path(block), params: {
+          week: "2026-11-02", day: "2026-11-02"
+        }
+      end
+    end
+
+    task.reload
+    assert_nil task.scheduled_block_id
+    assert_equal "Livraison finalisée", task.title
+    assert_equal ["important"], task.tags
+    assert_equal 24, task.actual_minutes
+    assert_equal "Vérifié", task.notes
+  end
+
+  test "return rejects foreign blocks and duplicate submissions" do
+    another = User.create!(
+      email: "inbox-isolation@example.test",
+      password: "test-password-1234",
+      password_confirmation: "test-password-1234"
+    )
+    private_block = another.time_blocks.create!(
+      title: "Privé", category: "personnel",
+      start_at: Time.zone.local(2026, 11, 2, 9, 0),
+      end_at: Time.zone.local(2026, 11, 2, 9, 30)
+    )
+    assert_no_difference("PlanningTask.count") do
+      post return_to_inbox_time_block_path(private_block)
+      assert_response :not_found
+    end
+    assert_predicate private_block.reload, :persisted?
+
+    mine = @user.time_blocks.create!(
+      title: "Calendrier", category: "travail",
+      start_at: Time.zone.local(2026, 11, 2, 9, 0),
+      end_at: Time.zone.local(2026, 11, 2, 10, 0)
+    )
+    post return_to_inbox_time_block_path(mine)
+    assert_response :redirect
+    assert_no_difference("@user.planning_tasks.count") do
+      post return_to_inbox_time_block_path(mine)
+      assert_response :not_found
+    end
+  end
+
+  test "explicitly deleting a standalone block does not create a pending task" do
+    block = @user.time_blocks.create!(
+      title: "Supprimer", category: "travail",
+      start_at: Time.zone.local(2026, 11, 2, 12, 0),
+      end_at: Time.zone.local(2026, 11, 2, 12, 30)
+    )
+    assert_no_difference("@user.planning_tasks.count") do
+      assert_difference("@user.time_blocks.count", -1) do
+        delete time_block_path(block)
+      end
+    end
+  end
+
   test "a task belonging to another account cannot be scheduled" do
     other = User.create!(
       email: "other-pending-owner@example.test",
