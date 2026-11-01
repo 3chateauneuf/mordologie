@@ -43,7 +43,7 @@ class PlannerDeleteActionTest < ApplicationSystemTestCase
         click_button "Supprimer définitivement"
       end
 
-      assert_selector ".notice", text: /supprimée définitivement/
+      assert_selector ".flash", text: /supprimée définitivement/
       assert_not TimeBlock.exists?(@block.id)
       assert_not PlanningTask.exists?(@task.id)
     ensure
