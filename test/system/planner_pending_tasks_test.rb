@@ -46,7 +46,7 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
     end
     assert_no_selector ".pending-task", text: "Rédiger une proposition"
   end
-  test "desktop dragging a pending task opens its scheduling form without saving" do
+  test "desktop dragging places a pending task immediately at its dropped time" do
     task = @user.planning_tasks.create!(
       title: "Préparer le montage",
       category: "travail",
@@ -58,10 +58,13 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
       find(".day-body.is-active-day")
     )
 
-    assert_selector ".planner-dialog-panel", text: "Nouveau créneau"
-    assert_field "Activité", with: "Préparer le montage"
-    assert_field "time_block_duration_minutes", with: "30"
-    assert_equal 0, @user.time_blocks.count
-    assert_nil task.reload.scheduled_block_id
+    assert_no_selector ".planner-dialog-panel"
+    assert_selector ".day-body .event", text: "Préparer le montage"
+    assert_no_selector ".pending-task", text: "Préparer le montage"
+
+    block = task.reload.scheduled_block
+    assert_not_nil block
+    assert_equal 30, block.duration_minutes
+    assert_equal Date.iso8601("2026-11-02"), block.start_at.in_time_zone.to_date
   end
 end

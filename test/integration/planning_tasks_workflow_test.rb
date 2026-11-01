@@ -143,6 +143,91 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "direct drop schedules the saved task immediately, without a create dialog" do
+    task = @user.planning_tasks.create!(
+      title: "Préparer une proposition", category: "personnel",
+      estimated_minutes: 45, notes: "Version client"
+    )
+
+    assert_difference("@user.time_blocks.count", 1) do
+      post schedule_planning_task_path(task), params: {
+        schedule_date: "2026-11-02", start_clock: "10:15",
+        week: "2026-11-02", day: "2026-11-02"
+      }
+    end
+
+    assert_redirected_to root_path(week: "2026-11-02", day: "2026-11-02")
+    block = task.reload.scheduled_block
+    assert_equal "Préparer une proposition", block.title
+    assert_equal "personnel", block.category
+    assert_equal "Version client", block.notes
+    assert_equal "10:15", block.start_at.in_time_zone.strftime("%H:%M")
+    assert_equal "11:00", block.end_at.in_time_zone.strftime("%H:%M")
+    assert_equal 45, block.duration_minutes
+
+    get root_path(week: "2026-11-02")
+    assert_select ".day-body .event", text: /Préparer une proposition/
+    assert_select ".pending-task[data-pending-task-id='#{task.id}']", count: 0
+  end
+
+  test "dropping a second time does not create another block" do
+    task = @user.planning_tasks.create!(
+      title: "Un seul bloc", category: "travail", estimated_minutes: 30
+    )
+    attrs = { schedule_date: "2026-11-02", start_clock: "08:30" }
+    post schedule_planning_task_path(task), params: attrs
+    first = task.reload.scheduled_block_id
+    assert_not_nil first
+
+    assert_no_difference("@user.time_blocks.count") do
+      post schedule_planning_task_path(task), params: attrs.merge(start_clock: "09:00")
+    end
+    assert_equal first, task.reload.scheduled_block_id
+    assert_redirected_to root_path
+    assert_match(/déjà planifiée/, flash[:alert])
+  end
+
+  test "an invalid drop keeps the task pending and gives a useful explanation" do
+    task = @user.planning_tasks.create!(
+      title: "Quatre-vingt-dix minutes", category: "travail",
+      estimated_minutes: 90
+    )
+
+    [
+      { schedule_date: "2026-11-02", start_clock: "23:00" },
+      { schedule_date: "invalid", start_clock: "08:00" },
+      { schedule_date: "2026-11-02", start_clock: "08:07" }
+    ].each do |attrs|
+      assert_no_difference("@user.time_blocks.count") do
+        post schedule_planning_task_path(task), params: attrs
+      end
+      assert_redirected_to root_path
+      assert_predicate flash[:alert], :present?
+      assert_nil task.reload.scheduled_block_id
+    end
+  end
+
+  test "existing overlapping block remains unchanged and warning is shown" do
+    previous = @user.time_blocks.create!(
+      title: "Travail existant", category: "travail",
+      start_at: Time.zone.local(2026, 11, 2, 9, 0),
+      end_at: Time.zone.local(2026, 11, 2, 10, 0)
+    )
+    task = @user.planning_tasks.create!(
+      title: "Second créneau", category: "reunion", estimated_minutes: 30
+    )
+
+    assert_difference("@user.time_blocks.count", 1) do
+      post schedule_planning_task_path(task), params: {
+        schedule_date: "2026-11-02", start_clock: "09:15"
+      }
+    end
+
+    assert_match(/chevauche/, flash[:notice])
+    assert_equal "09:00", previous.reload.start_at.in_time_zone.strftime("%H:%M")
+    assert_equal "10:00", previous.end_at.in_time_zone.strftime("%H:%M")
+  end
+
   test "a task belonging to another account cannot be scheduled" do
     other = User.create!(
       email: "other-pending-owner@example.test",
@@ -154,6 +239,10 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     )
     assert_no_difference("@user.time_blocks.count") do
       get new_time_block_path(planning_task_id: task.id)
+      assert_response :not_found
+      post schedule_planning_task_path(task), params: {
+        schedule_date: "2026-11-02", start_clock: "09:00"
+      }
       assert_response :not_found
     end
   end

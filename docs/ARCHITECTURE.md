@@ -107,3 +107,12 @@ bloques desde un espacio vacío de la agenda. Los gestos táctiles utilizan el e
 `public/scripts/confirm-destroy.js` gestiona las confirmaciones para todos
 los `form[data-confirm-destroy]`, tanto en el diálogo de edición como en la
 bandeja principal. `planner-dialog.js` gestiona únicamente los diálogos.
+
+## Regresión: arrastrar debe programar, no abrir un formulario
+
+El gesto del panel de pendientes se prueba de extremo a extremo en Chrome:
+`drag_to` produce un bloque persistido con duración estimada, sin mostrar
+`planner-dialog-panel`. La API POST `schedule_planning_task` tiene pruebas
+separadas para validación, doble programación, pertenencia al usuario y
+solapamientos no bloqueantes. No sustituir estos resultados con pruebas que
+solo comprueben que se abre una ventana.
