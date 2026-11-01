@@ -44,7 +44,9 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
     fill_in "Début réel", with: "17:38"
     fill_in "Fin réelle", with: "14:11"
     assert_selector "[data-actual-preview]", text: /La fin doit être après le début/
-    assert_not page.find("#time_block_actual_end_clock").valid?
+    assert_equal false, page.evaluate_script(
+      "document.querySelector('#time_block_actual_end_clock').checkValidity()"
+    )
     assert_nil @block.reload.actual_minutes
   end
 end
