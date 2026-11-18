@@ -1,9 +1,9 @@
-<%# Shared card shown when hovering a block that has a note or tags
-    (calendar-hovercard.js fills it from the block's data-preview-*). %>
+<%# Shared card shown when hovering a block (calendar-hovercard.js fills it
+    from the block's data-preview-*; note and tags only when present). %>
 <div class="event-hovercard" data-event-hovercard hidden role="tooltip">
   <strong data-hovercard-title></strong>
   <span class="event-hovercard-times" data-hovercard-times></span>
   <span class="event-hovercard-tags" data-hovercard-tags></span>
   <p class="event-hovercard-notes" data-hovercard-notes></p>
-  <small class="event-hovercard-hint"><%= t("planner.calendar_event.drag_hint") %></small>
+  <small class="event-hovercard-hint"><%= t("planner.calendar_event.drag_hint") %><br><%= t("planner.calendar_event.end_hint") %></small>
 </div>

@@ -72,8 +72,11 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
     )
 
     get root_path(week: "2026-11-02")
-    assert_select ".event[title*='Maj + glisser pour dupliquer']", count: 1
-    assert_select ".event-resize-handle[title]", count: 1
+    # One hover card for every block, and no browser tooltip on top of it.
+    assert_select ".event[data-preview][data-preview-title='Montage']", count: 1
+    assert_select ".event[title], .event [title], .day-body[title]", count: 0
+    assert_select "[data-event-hovercard]", text: /Maj \+ glisser pour dupliquer/
+    assert_select ".pending-hint", text: /double-cliquez pour créer un créneau/
   end
 
   test "other pages keep the usual navigation" do

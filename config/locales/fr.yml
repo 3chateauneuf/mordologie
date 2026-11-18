@@ -71,7 +71,6 @@ fr:
       back_to: "Revenir à %{hour}"
       show_earlier: "Afficher les heures précédentes"
       choose_day: "Choisir un jour de la semaine"
-      day_hint: "Glissez pour choisir une durée ou double-cliquez pour créer un créneau"
       day_totals: "%{actual} / %{planned}"
       day_totals_hint: "Réel / prévu"
       day_planned: "Prévu : %{planned}"
@@ -82,8 +81,7 @@ fr:
       change_end: "%{kind} : %{time}. Modifier"
       finish_now: "Terminer maintenant"
       drag_hint: "Glissez pour déplacer · Maj + glisser pour dupliquer · Ctrl+Z pour annuler"
-      resize_hint: "Glissez pour changer l'heure de fin"
-      change_end_hint: "Changer l'heure de fin"
+      end_hint: "Cliquez sur l'heure de fin ou glissez le bord inférieur pour la changer"
       has_notes: "Contient une note"
       has_tags: "Contient des tags"
     end_time_popover:
@@ -108,6 +106,7 @@ fr:
       remove_title: "Supprimer la tâche"
       remove_label: "Supprimer %{title}"
       drop_back: "Déposez ici pour remettre en attente"
+      create_hint: "Dans le calendrier, glissez sur les heures ou double-cliquez pour créer un créneau."
       hint: "Glissez une tâche sur une heure pour la planifier directement. « Planifier » permet de personnaliser."
     search:
       title: "Rechercher une activité"

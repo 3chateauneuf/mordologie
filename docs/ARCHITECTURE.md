@@ -25,7 +25,7 @@ Conservar el comportamiento y los datos durante refactorizaciones.
 - `public/styles/planner-toolbar.css`: barra de la agenda, menú de ajustes,
   totales por día y línea de la hora actual.
 - `public/scripts/calendar-now-line.js`: coloca la línea de la hora actual.
-- `public/scripts/calendar-hovercard.js`: ficha con nota y etiquetas al pasar el ratón.
+- `public/scripts/calendar-hovercard.js`: ficha de cada bloque al pasar el ratón.
 - `public/styles/time-block-editor.css`: formulario y reglas responsivas del editor.
 - `public/styles/mobile.css`: barra de navegación y vista diaria móvil.
 - `public/styles/dialogs.css`: diálogos, overlay, acciones guardar/eliminar.
@@ -214,10 +214,11 @@ mantienen al devolver un bloque a la bandeja y volver a planificarlo.
 
 ## Notas, etiquetas y ficha al pasar el ratón
 
-Un bloque con nota o etiquetas muestra sus iconos y lleva `data-preview-*`.
-`public/scripts/calendar-hovercard.js` muestra esos datos en una ficha al
-pasar el ratón (solo en dispositivos con ratón). Los demás bloques conservan
-el texto de ayuda nativo (`title`).
+Todos los bloques llevan `data-preview-*`; los que tienen nota o etiquetas
+muestran además sus iconos. `public/scripts/calendar-hovercard.js` muestra
+esos datos en una ficha al pasar el ratón (solo con ratón), con los gestos
+posibles. No se usan `title` nativos en el calendario: se superponían a la
+ficha. La pista para crear un bloque está en el lateral «Por planificar».
 
 ## Versiones de scripts y estilos
 

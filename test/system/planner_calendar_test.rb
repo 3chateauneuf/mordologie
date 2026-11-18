@@ -69,6 +69,16 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     assert_equal "Activité nocturne", @block.reload.title
   end
 
+  test "Escape closes the dialog without saving, even from the end time" do
+    visit edit_time_block_path(@block)
+    assert_selector "[data-planner-dialog-panel]", text: "Modifier le créneau"
+    find("#time_block_title").set("Jamais enregistré")
+    find("[data-end-input]").send_keys(:escape)
+
+    assert_no_selector "[data-planner-dialog-panel]"
+    assert_equal "Activité nocturne", @block.reload.title
+  end
+
   test "mobile keeps the calendar in one column and the settings usable" do
     page.driver.browser.manage.window.resize_to(390, 844)
     visit root_path(week: "2026-11-02", day: "2026-11-02")
