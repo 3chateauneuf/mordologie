@@ -54,10 +54,12 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
     page.driver.browser.action
         .move_to(handle.native).click_and_hold
         .move_by(0, 66).release.perform
-    assert_no_selector "#{event} .event-end-time", text: "11:15"
-    resized = @block.reload.actual_end_clock
+    # Wait for the save itself: reading the block while the page reloads
+    # can hit a detached element.
+    resized = wait_for_new_end(@block, previous: "11:15")
     assert_operator resized, :>, "11:15"
     assert_equal 0, resized.split(":").last.to_i % 5
+    assert_selector "#{event} .event-end-time", text: resized
   end
 
   test "mobile opens the end-time editor as a bottom sheet" do
@@ -73,5 +75,15 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
 
     click_button "+1 h"
     assert_selector ".event[data-calendar-block-id='#{@block.id}'] .event-end-time", text: "11:00"
+  end
+
+  private
+
+  def wait_for_new_end(block, previous:)
+    page.document.synchronize(5) do
+      current = block.reload.actual_end_clock
+      raise Capybara::ExpectationNotMet, "end still #{previous}" if current == previous
+      current
+    end
   end
 end
