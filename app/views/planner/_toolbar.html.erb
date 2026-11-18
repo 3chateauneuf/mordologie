@@ -34,6 +34,15 @@
                 options_for_select(User::LOCALES.map { |code| [t("locales.#{code}"), code] }, current_user.locale) %>
           <%= button_tag t(".apply"), type: "submit", class: "settings-apply" %>
         <% end %>
+        <details class="settings-shortcuts">
+          <summary><%= t(".shortcuts.title") %></summary>
+          <dl>
+            <% %w[create move duplicate undo end_time plan_task close].each do |key| %>
+              <dt><%= t(".shortcuts.#{key}.gesture") %></dt>
+              <dd><%= t(".shortcuts.#{key}.result") %></dd>
+            <% end %>
+          </dl>
+        </details>
         <div class="settings-account">
           <span><%= current_user.email %></span>
           <%= button_to t(".logout"), session_path, method: :delete %>

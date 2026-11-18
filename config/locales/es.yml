@@ -64,6 +64,29 @@ es:
       apply: "Aplicar"
       logout: "Cerrar sesión"
       new_block: "+ Bloque"
+      shortcuts:
+        title: "Atajos"
+        create:
+          gesture: "Arrastrar sobre las horas o doble clic"
+          result: "Crear un bloque"
+        move:
+          gesture: "Arrastrar un bloque"
+          result: "Moverlo"
+        duplicate:
+          gesture: "Shift + arrastrar un bloque"
+          result: "Duplicarlo"
+        undo:
+          gesture: "Ctrl+Z · Ctrl+Shift+Z"
+          result: "Deshacer · rehacer"
+        end_time:
+          gesture: "Clic en la hora de fin o arrastrar el borde inferior"
+          result: "Cambiar el fin"
+        plan_task:
+          gesture: "Arrastrar una tarea pendiente al calendario"
+          result: "Planificarla"
+        close:
+          gesture: "Escape o clic fuera"
+          result: "Cerrar un diálogo sin guardar"
     calendar:
       earlier:
         one: "1 bloque antes de las %{hour}"
@@ -80,8 +103,6 @@ es:
       end_planned: "Fin prevista"
       change_end: "%{kind}: %{time}. Cambiar"
       finish_now: "Terminar ahora"
-      drag_hint: "Arrastra para mover · Shift + arrastrar para duplicar · Ctrl+Z para deshacer"
-      end_hint: "Haz clic en la hora de fin o arrastra el borde inferior para cambiarla"
       has_notes: "Tiene una nota"
       has_tags: "Tiene etiquetas"
     end_time_popover:
@@ -93,21 +114,17 @@ es:
       save: "Guardar"
     pending_tasks:
       title: "Por planificar"
-      add: "+ Añadir"
-      activity: "Actividad"
-      activity_placeholder: "¿Qué tienes que hacer?"
-      estimated_minutes: "Duración estimada (min)"
-      category: "Categoría"
-      submit: "Añadir"
-      empty: "Nada pendiente. Añade una actividad sin ponerle fecha."
+      quick_label: "Nueva tarea"
+      quick_placeholder: "Escribe una tarea y pulsa Intro"
+      quick_submit: "Añadir la tarea"
+      drag_hint: "Arrástrala al calendario para planificarla."
+      empty: "Nada pendiente."
       plan: "Planificar"
       plan_label: "Planificar %{title}"
       remove_confirm: "¿Eliminar definitivamente esta tarea?"
       remove_title: "Eliminar la tarea"
       remove_label: "Eliminar %{title}"
       drop_back: "Suelta aquí para dejarla pendiente"
-      create_hint: "En el calendario, arrastra sobre las horas o haz doble clic para crear un bloque."
-      hint: "Arrastra una tarea a una hora para planificarla directamente. «Planificar» te deja ajustarla."
     search:
       title: "Buscar una actividad"
       intro: "Encuentra tus bloques por nombre, notas o etiquetas, sea cual sea la semana."

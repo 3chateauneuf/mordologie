@@ -75,8 +75,11 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
     # One hover card for every block, and no browser tooltip on top of it.
     assert_select ".event[data-preview][data-preview-title='Montage']", count: 1
     assert_select ".event[title], .event [title], .day-body[title]", count: 0
-    assert_select "[data-event-hovercard]", text: /Maj \+ glisser pour dupliquer/
-    assert_select ".pending-hint", text: /double-cliquez pour créer un créneau/
+    # The gestures are not repeated on every hover: they live in "Raccourcis".
+    assert_select "[data-event-hovercard]", text: /Maj/, count: 0
+    assert_select ".settings-shortcuts summary", text: "Raccourcis"
+    assert_select ".settings-shortcuts dt", text: "Maj + glisser un créneau"
+    assert_select ".pending-quick input[placeholder='Écrivez une tâche et appuyez sur Entrée']"
   end
 
   test "other pages keep the usual navigation" do

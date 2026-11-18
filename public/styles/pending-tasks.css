@@ -49,84 +49,49 @@
   border-radius: 999px;
 }
 
-.pending-add {
-  position: relative;
+/* Quick add: one field, Enter adds the task. */
+.pending-quick {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-.pending-add > summary {
-  list-style: none;
-  font-size: 12px;
-  color: #445dc2;
+.pending-quick input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid #dbe2ec;
+  border-radius: 8px;
+  background: white;
+  padding: 7px 10px;
+  color: #222e42;
+  font-size: 13px;
+}
+
+.pending-quick-submit {
+  flex: 0 0 36px;
+  border: none;
+  border-radius: 8px;
+  background: var(--brand);
+  color: white;
+  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.pending-add > summary::-webkit-details-marker {
-  display: none;
-}
-
-.pending-add-body {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  z-index: 25;
-  width: min(315px, 80vw);
-  background: #fff;
-  border: 1px solid #dfe4ee;
-  border-radius: 13px;
-  box-shadow: 0 14px 40px rgba(20, 31, 55, .16);
-  padding: 14px;
-}
-
-.pending-form {
-  display: grid;
-  gap: 8px;
-}
-
-.pending-form label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #4b5970;
-}
-
-.pending-form input,
-.pending-form select {
-  min-width: 0;
-  width: 100%;
-  min-height: 39px;
-  border: 1px solid #dbe2ec;
-  border-radius: 8px;
-  background: white;
-  padding: 8px 10px;
-  color: #222e42;
-}
-
-.pending-form-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
-}
-
-.pending-form-fields > div {
-  min-width: 0;
-  display: grid;
-  gap: 6px;
-}
-
-.pending-form input:focus-visible,
-.pending-form select:focus-visible,
-.pending-add > summary:focus-visible {
+.pending-quick input:focus-visible,
+.pending-quick-submit:focus-visible {
   outline: 3px solid #a8b5ed;
   outline-offset: 2px;
 }
 
-.pending-add-submit {
-  margin-top: 5px;
-  background: var(--brand) !important;
-  color: white !important;
-  font-weight: 700;
-  border: none !important;
-  cursor: pointer;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .pending-empty {
@@ -255,11 +220,6 @@
 
   .pending-task {
     cursor: default;
-  }
-
-  .pending-add-body {
-    right: -2px;
-    width: min(315px, calc(100vw - 48px));
   }
 }
 
