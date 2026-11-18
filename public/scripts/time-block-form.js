@@ -1,34 +1,68 @@
+// Block editor: start, duration and end stay in sync.
+// Editing the end recalculates the duration; the duration is what the
+// server receives (the end field has no name).
 (function () {
   const form = document.querySelector("[data-schedule-form]");
   if (!form) return;
   const date = form.querySelector("#time_block_schedule_date");
   const time = form.querySelector("#time_block_start_clock");
   const duration = form.querySelector("#time_block_duration_minutes");
-  const endPreview = form.querySelector("[data-end-preview]");
+  const endInput = form.querySelector("[data-end-input]");
+  const endMessage = form.querySelector("[data-end-message]");
   const endBox = form.querySelector(".editor-end");
   const submit = document.getElementById("planner-time-block-submit");
   const durationButtons = Array.from(form.querySelectorAll("[data-duration]"));
 
-  function updateEnd() {
-    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time.value);
-    const minutes = Number(duration.value);
-    const valid = Boolean(date.value && match && Number.isInteger(minutes) && minutes >= 1 && minutes <= 960);
-    const endMinutes = valid ? Number(match[1]) * 60 + Number(match[2]) + minutes : 0;
-    const crossesMidnight = valid && endMinutes >= 1440;
-    if (!valid) {
-      endPreview.textContent = "—";
-    } else if (crossesMidnight) {
-      endPreview.textContent = plannerText("after_midnight");
-    } else {
-      endPreview.textContent = String(Math.floor(endMinutes / 60)).padStart(2, "0") + ":" +
-        String(endMinutes % 60).padStart(2, "0");
-    }
-    endBox.classList.toggle("is-invalid", !valid || crossesMidnight);
-    submit.disabled = !valid || crossesMidnight;
+  function minutesOf(clock) {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(clock);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : null;
+  }
+
+  function clockOf(totalMinutes) {
+    return String(Math.floor(totalMinutes / 60)).padStart(2, "0") + ":" +
+      String(totalMinutes % 60).padStart(2, "0");
+  }
+
+  function showState(problem) {
+    endMessage.textContent = problem || "";
+    endBox.classList.toggle("is-invalid", Boolean(problem));
+    submit.disabled = Boolean(problem) || !date.value;
     durationButtons.forEach(function (button) {
-      button.setAttribute("aria-pressed", String(Number(button.dataset.duration) === minutes));
+      button.setAttribute("aria-pressed", String(Number(button.dataset.duration) === Number(duration.value)));
     });
   }
+
+  // Start or duration changed: show the resulting end.
+  function updateEnd() {
+    const start = minutesOf(time.value);
+    const minutes = Number(duration.value);
+    if (start === null || !Number.isInteger(minutes) || minutes < 1 || minutes > 960) {
+      endInput.value = "";
+      showState("—");
+      return;
+    }
+    if (start + minutes >= 1440) {
+      endInput.value = "";
+      showState(plannerText("after_midnight"));
+      return;
+    }
+    endInput.value = clockOf(start + minutes);
+    showState("");
+  }
+
+  // End changed by hand: the duration follows.
+  function updateDuration() {
+    const start = minutesOf(time.value);
+    const end = minutesOf(endInput.value);
+    if (start === null || end === null) return;
+    if (end <= start) {
+      showState(plannerText("end_before_start"));
+      return;
+    }
+    duration.value = String(end - start);
+    showState("");
+  }
+
   durationButtons.forEach(function (button) {
     button.addEventListener("click", function () {
       duration.value = button.dataset.duration;
@@ -39,6 +73,9 @@
     input.addEventListener("input", updateEnd);
     input.addEventListener("change", updateEnd);
   });
+  endInput.addEventListener("input", updateDuration);
+  endInput.addEventListener("change", updateDuration);
+  updateEnd();
 
   // The comma-separated input is a no-JS fallback. JS progressively adds
   // compact removable chips while still submitting the same underlying field.
@@ -121,5 +158,4 @@
       }
     });
   }
-  updateEnd();
 })();

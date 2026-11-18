@@ -30,6 +30,7 @@ class TimeBlocksController < ApplicationController
   def create
     @block = current_user.time_blocks.new(block_details)
     @block.tag_list = submitted_tag_list
+    copy_actual_times_from_task
 
     if apply_schedule_params && @block.valid? && save_with_optional_task
       # Scheduling a pending task is not undoable here (it would send the task
@@ -43,10 +44,14 @@ class TimeBlocksController < ApplicationController
   end
 
   def edit
+    @edits_actual = @block.started?
     load_schedule_from_block
   end
 
   def update
+    # Decided before any change: once a block has started, the form edits
+    # what really happened and the plan stays as it was created.
+    @edits_actual = @block.started?
     @block.assign_attributes(block_details)
     @block.tag_list = submitted_tag_list
     if apply_schedule_params && @block.save
@@ -172,8 +177,17 @@ class TimeBlocksController < ApplicationController
   # Start/end timestamps are always calculated on the server, never
   # mass-assigned from a browser form.
   def block_details
-    params.require(:time_block).permit(:title, :category, :notes,
-                                       :actual_start_clock, :actual_end_clock)
+    params.require(:time_block).permit(:title, :category, :notes)
+  end
+
+  # A pending task can carry real times (it was returned to the inbox after
+  # being worked on): scheduling it again keeps them.
+  def copy_actual_times_from_task
+    return unless @planning_task
+
+    @block.actual_start_clock = @planning_task.actual_start_clock
+    @block.actual_end_clock = @planning_task.actual_end_clock
+    @block.actual_minutes = @planning_task.actual_minutes
   end
 
   def submitted_tag_list
@@ -191,11 +205,13 @@ class TimeBlocksController < ApplicationController
     nil
   end
 
+  # The form shows what the calendar draws: real times once a block has
+  # started (see @edits_actual), planned times before.
   def load_schedule_from_block
-    start_time = @block.start_at.in_time_zone
+    start_time = (@edits_actual ? @block.displayed_start_at : @block.start_at).in_time_zone
     @schedule_date = start_time.to_date.iso8601
     @start_clock = start_time.strftime("%H:%M")
-    @duration_minutes = @block.duration_minutes
+    @duration_minutes = @edits_actual ? @block.displayed_duration_minutes : @block.duration_minutes
   end
 
   def apply_schedule_params
@@ -215,8 +231,34 @@ class TimeBlocksController < ApplicationController
 
     start_time = Time.zone.local(day.year, day.month, day.day,
                                  clock_match[1].to_i, clock_match[2].to_i)
+    return apply_actual_schedule(day, start_time, duration) if @edits_actual
+
     @block.start_at = start_time
     @block.end_at = start_time + duration.minutes
+    true
+  end
+
+  # For a block that has started: the form's start and duration become the
+  # real times, only when they were changed, so editing just the title never
+  # invents real times. Another day moves the plan too, with the same clocks.
+  def apply_actual_schedule(day, start_time, duration)
+    shown_start = @block.displayed_start_at.in_time_zone.strftime("%H:%M")
+    shown_minutes = @block.displayed_duration_minutes
+
+    days_moved = (day - @block.start_at.in_time_zone.to_date).to_i
+    if days_moved != 0
+      @block.start_at += days_moved.days
+      @block.end_at += days_moved.days
+    end
+    return true if @start_clock == shown_start && duration == shown_minutes
+
+    end_time = start_time + duration.minutes
+    if end_time.to_date != day
+      @block.errors.add(:base, t("time_blocks.errors.past_midnight"))
+      return false
+    end
+    @block.actual_start_clock = @start_clock
+    @block.actual_end_clock = end_time.strftime("%H:%M")
     true
   end
 end

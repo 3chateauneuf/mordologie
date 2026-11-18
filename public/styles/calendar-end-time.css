@@ -20,6 +20,9 @@
   white-space:nowrap;
 }
 .event-end-time {
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
   pointer-events:auto;
   font:inherit;
   font-weight:750;
@@ -29,6 +32,14 @@
   border-bottom:1px dashed currentColor;
   padding:0 1px;
   cursor:pointer;
+}
+.event-end-icon {
+  opacity:.55;
+  flex-shrink:0;
+}
+.event-end-time:hover .event-end-icon,
+.event-end-time:focus-visible .event-end-icon {
+  opacity:1;
 }
 .event-end-time:hover,
 .event-end-time:focus-visible {

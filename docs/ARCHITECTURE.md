@@ -25,6 +25,7 @@ Conservar el comportamiento y los datos durante refactorizaciones.
 - `public/styles/planner-toolbar.css`: barra de la agenda, menú de ajustes,
   totales por día y línea de la hora actual.
 - `public/scripts/calendar-now-line.js`: coloca la línea de la hora actual.
+- `public/scripts/calendar-hovercard.js`: ficha con nota y etiquetas al pasar el ratón.
 - `public/styles/time-block-editor.css`: formulario y reglas responsivas del editor.
 - `public/styles/mobile.css`: barra de navegación y vista diaria móvil.
 - `public/styles/dialogs.css`: diálogos, overlay, acciones guardar/eliminar.
@@ -184,24 +185,37 @@ No reutilizar DELETE para devolver a espera. La interfaz y los tests deben
 distinguir siempre ambos recorridos, incluidos los bloques que ya tienen
 un pendiente vinculado.
 
-## Registro de horas reales sin cálculo manual
+## Previsto y real
 
-Los registros nuevos aceptan `actual_start_clock` y `actual_end_clock`
-(HH:MM). `ActualTimeTracking` valida ambas horas en el servidor y deriva
-`actual_minutes`, sin mezclarlo con el intervalo previsto del calendario.
-Se puede guardar solo el inicio (o solo el fin) y completar la otra hora
-más adelante; la duración permanece pendiente hasta disponer del par. Si ambas
-se introducen, la final debe ser posterior dentro del mismo día. También se
-puede guardar una actividad sin horas reales.
+- **Previsto:** `start_at` y `end_at`, lo que se planifica al crear el bloque
+  (más adelante también lo que llegue de Google Calendar).
+- **Real:** `actual_start_clock` y `actual_end_clock` (HH:MM, el mismo día).
+  `ActualTimeTracking` las valida y deriva `actual_minutes`.
 
-Los minutos reales históricos sin relojes se preservan íntegramente y se
-indican como registros anteriores; no se inventan horas retrospectivamente.
-Al escribir nuevas horas, el valor anterior se sustituye por el cálculo
-verificado. Al borrar un par existente, su duración derivada se elimina.
-Los datos reales (ambas horas y el total) se conservan al mover entre agenda
-y bandeja de espera y viceversa. La migración es aditiva y sin pérdida.
+Regla: **lo que ves es lo que editas.** Antes de que un bloque empiece, sus
+horas son el plan. Una vez empezado, lo que se cambia (en el calendario o en
+el diálogo) es lo real, y lo previsto se conserva tal como se creó.
 
-El formulario Rails transmite solo las horas (no minutos calculados).
-El módulo `public/scripts/real-time-fields.js` previsualiza el cálculo
-para el usuario, pero el servidor tiene la última palabra. Sus estilos
-están aislados en `public/styles/real-time-fields.css`.
+En el diálogo hay un solo inicio, duración y fin. El fin es editable y
+recalcula la duración (`public/scripts/time-block-form.js`); el servidor
+recibe la duración. Para un bloque empezado, el controlador solo escribe las
+horas reales si inicio o duración cambiaron, así que editar el título nunca
+inventa horas reales. Cambiar de día mueve también el plan, con las mismas
+horas. Los campos reales no se aceptan directamente desde el formulario.
+
+Los minutos reales históricos sin relojes se conservan. Los datos reales se
+mantienen al devolver un bloque a la bandeja y volver a planificarlo.
+
+## Notas, etiquetas y ficha al pasar el ratón
+
+Un bloque con nota o etiquetas muestra sus iconos y lleva `data-preview-*`.
+`public/scripts/calendar-hovercard.js` muestra esos datos en una ficha al
+pasar el ratón (solo en dispositivos con ratón). Los demás bloques conservan
+el texto de ayuda nativo (`title`).
+
+## Versiones de scripts y estilos
+
+`planner_asset("/scripts/x.js")` añade `?v=<huella del archivo>`. Cada
+publicación que cambia un archivo le da una dirección nueva, así que los
+navegadores no siguen usando una copia antigua. Todo `<script>` y
+`<link rel="stylesheet">` de la plantilla pasa por ese helper.

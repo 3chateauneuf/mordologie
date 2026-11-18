@@ -242,6 +242,75 @@
   font-weight: 700;
 }
 
+/* Note and tag icons in a block, and the card shown on hover */
+.event-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.event-link strong {
+  min-width: 0;
+}
+
+.event-badges {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 3px;
+  color: color-mix(in srgb, var(--event-color) 70%, #263044);
+}
+
+.event-hovercard {
+  position: fixed;
+  z-index: 45;
+  width: 260px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px #1b22381f;
+  display: grid;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.event-hovercard[hidden] {
+  display: none;
+}
+
+.event-hovercard strong {
+  font-size: 13px;
+}
+
+.event-hovercard-times,
+.event-hovercard-hint {
+  color: var(--sub);
+  font-size: 11px;
+}
+
+.event-hovercard-tags {
+  color: #3b4fb0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.event-hovercard-notes {
+  margin: 2px 0 0;
+  color: #263044;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  max-height: 160px;
+  overflow: hidden;
+}
+
+.event-hovercard-hint {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
 @media (max-width: 1080px) {
   .toolbar-totals {
     display: none;

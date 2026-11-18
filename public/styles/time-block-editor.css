@@ -142,13 +142,34 @@
   white-space:nowrap;
   color:#728099
 }
-.editor-end strong {
+.editor-end input[type="time"] {
+  min-height:36px;
+  padding:4px 8px!important;
+  border:1px solid #dbe1e9;
+  border-radius:9px;
   font-size:15px;
+  font-weight:700;
   color:#425abd
 }
-.editor-end.is-invalid strong {
+.editor-end-message {
   font-size:12px;
   color:#b14450
+}
+.editor-end.is-invalid input[type="time"] {
+  border-color:#e4a3ab
+}
+.editor-actual-note {
+  margin:0 0 14px;
+  padding:9px 12px;
+  border-radius:9px;
+  background:#f2f4fd;
+  color:#3b4fb0;
+  font-size:12px;
+  line-height:1.45
+}
+.editor-notes-field textarea {
+  min-height:0;
+  resize:vertical
 }
 .editor-categories {
   border:0;
@@ -304,67 +325,6 @@
 .editor-tag-message:empty {
   display:none
 }
-.editor-details {
-  border-top:1px solid #e8ecf3
-}
-.editor-details>summary {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:15px 28px;
-  list-style:none;
-  cursor:pointer;
-  font-size:12px;
-  font-weight:750;
-  color:#44536b;
-  min-height:50px
-}
-.editor-details>summary::-webkit-details-marker {
-  display:none
-}
-.editor-details>summary:before {
-  content:"+";
-  font-size:18px;
-  font-weight:450;
-  color:#667ac6
-}
-.editor-details[open]>summary:before {
-  content:"−"
-}
-.editor-details>summary span {
-  margin-left:auto;
-  font-weight:450;
-  font-size:11px;
-  color:#9aa3b1
-}
-.editor-details>summary:focus-visible {
-  outline:3px solid #95a2e0;
-  outline-offset:-3px
-}
-.editor-details-content {
-  display:grid;
-  grid-template-columns:1fr 170px;
-  gap:14px;
-  padding:5px 28px 7px
-}
-.editor-details-content .editor-field {
-  margin-bottom:14px
-}
-.editor-actual-row {
-  display:flex;
-  align-items:center;
-  gap:7px;
-  color:#8993a4;
-  font-size:12px
-}
-.editor-actual-row input[type="number"] {
-  width:100px
-}
-.editor-details-content textarea {
-  resize:vertical;
-  min-height:94px
-}
 .editor-footer {
   border-top:1px solid #e8ecf3;
   padding:15px 28px;
@@ -459,13 +419,6 @@
   .editor-form {
     border-radius:14px
   }
-  .editor-details>summary {
-    padding:14px 20px
-  }
-  .editor-details-content {
-    padding:0 20px 10px;
-    grid-template-columns:1fr
-  }
   .editor-footer {
     padding:13px 20px
   }
@@ -513,12 +466,6 @@
   }
   .editor-category-grid {
     grid-template-columns:repeat(2,minmax(0,1fr))
-  }
-  .editor-details>summary {
-    padding:14px 16px
-  }
-  .editor-details-content {
-    padding:0 16px 8px
   }
   .duration-picks {
     gap:6px

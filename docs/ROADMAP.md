@@ -8,15 +8,15 @@ valor. Ante la duda, quitar antes que añadir.
 
 ## En curso
 
-- **Rediseño «Épuré».** Menos ruido y el calendario primero:
-  - una sola barra arriba (semana, «Hoy», previsto y real, buscar, ajustes,
-    «+ Bloque»); la hora de inicio y el idioma pasan al menú de ajustes;
-  - real frente a previsto en la cabecera de cada día;
-  - una línea con la hora actual en el día de hoy;
-  - bloques con el fondo del color de su categoría, sin franja lateral;
-  - «Por planificar» como columna estrecha;
-  - sin el párrafo de ayuda: las indicaciones pasan a textos al pasar el ratón;
-  - en el móvil se mantiene la vista de un solo día.
+- **Diálogo más ligero e indicadores.**
+  - en el diálogo, la hora de fin se edita a mano y recalcula la duración;
+    desaparece el bloque «Horario real»;
+  - regla: antes de empezar se edita lo previsto; una vez empezado, lo real
+    (lo previsto se conserva tal como se creó);
+  - iconos de nota y etiquetas en los bloques, y una ficha con ellas al pasar
+    el ratón;
+  - la hora de fin del calendario se reconoce como editable (icono de reloj);
+  - versiones en scripts y estilos para que el navegador no use copias antiguas.
 
 ## Más adelante
 
@@ -25,6 +25,8 @@ valor. Ante la duda, quitar antes que añadir.
   - la diferencia por día y por categoría;
   - las tareas que más se subestiman;
   - duraciones sugeridas a partir del historial al planificar una tarea.
+- **Lo previsto desde Google Calendar.** Importar los eventos de la agenda de
+  Google como bloques previstos; lo real se sigue registrando en Planner.
 
 ## Hecho
 
@@ -33,3 +35,5 @@ valor. Ante la duda, quitar antes que añadir.
 - Al mover un bloque, su tiempo real se mueve con él (#19).
 - Deshacer y rehacer con Ctrl+Z / Ctrl+Shift+Z, y duplicar con Shift + arrastrar (#20).
 - Interfaz en varios idiomas (español por defecto y francés) y esta hoja de ruta (#21).
+- Rediseño «Épuré»: barra única, real frente a previsto por día, línea de la
+  hora actual, bloques sin franja lateral (#22).
