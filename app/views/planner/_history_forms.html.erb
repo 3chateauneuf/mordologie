@@ -1,0 +1,9 @@
+<%# Ctrl+Z / Ctrl+Shift+Z submit these forms (calendar-history.js). %>
+<%= form_with url: undo_block_change_path, method: :post,
+      class: "calendar-history-form", data: { history_form: "undo" } do %>
+  <%= hidden_field_tag :day, @selected_day.iso8601, id: nil %>
+<% end %>
+<%= form_with url: redo_block_change_path, method: :post,
+      class: "calendar-history-form", data: { history_form: "redo" } do %>
+  <%= hidden_field_tag :day, @selected_day.iso8601, id: nil %>
+<% end %>

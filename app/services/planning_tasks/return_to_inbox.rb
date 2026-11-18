@@ -28,6 +28,7 @@ module PlanningTasks
         end
 
         @block.destroy!
+        BlockHistory.forget(@block)
         task
       end
     end

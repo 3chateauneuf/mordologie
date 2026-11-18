@@ -1,5 +1,5 @@
 class TimeBlocksController < ApplicationController
-  before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule, :end_time]
+  before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule, :end_time, :duplicate]
   before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
   before_action :load_planning_task, only: [:new, :create]
 
@@ -32,6 +32,9 @@ class TimeBlocksController < ApplicationController
     @block.tag_list = submitted_tag_list
 
     if apply_schedule_params && @block.valid? && save_with_optional_task
+      # Scheduling a pending task is not undoable here (it would send the task
+      # back to the inbox); a plain new block is.
+      history.record("create", @block, before: nil) unless @planning_task
       day = @block.start_at.in_time_zone.to_date.iso8601
       redirect_to root_path(week: day, day: day), notice: "Créneau ajouté."
     else
@@ -65,6 +68,7 @@ class TimeBlocksController < ApplicationController
 
   def reschedule
     previous_day = @block.start_at.in_time_zone.to_date.iso8601
+    before = BlockHistory.snapshot(@block)
     result = TimeBlocks::Rescheduler.new(
       block: @block,
       date: params[:schedule_date],
@@ -76,6 +80,7 @@ class TimeBlocksController < ApplicationController
                          alert: result.error
     end
 
+    history.record("move", result.block, before: before)
     selected_day = result.block.start_at.in_time_zone.to_date.iso8601
     notice = "Créneau déplacé."
     notice += " Attention : ce créneau chevauche une autre activité." if result.overlap
@@ -85,6 +90,7 @@ class TimeBlocksController < ApplicationController
   # Quick end-time changes from the calendar: inline edit, "+15 / +30 / +1 h",
   # resizing the block, or "Terminer maintenant".
   def end_time
+    before = BlockHistory.snapshot(@block)
     result = TimeBlocks::EndTimeAdjuster.new(
       block: @block,
       end_clock: params[:end_clock],
@@ -93,10 +99,27 @@ class TimeBlocksController < ApplicationController
 
     day = @block.start_at.in_time_zone.to_date.iso8601
     if result.success?
+      history.record("resize", result.block, before: before)
       label = result.kind == :actual ? "Fin réelle" : "Fin prévue"
       redirect_to root_path(week: day, day: day),
                   notice: "#{label} : #{result.block.displayed_end_at.in_time_zone.strftime('%H:%M')}."
     else
+      redirect_to root_path(week: day, day: day), alert: result.error
+    end
+  end
+
+  # Shift + drag in the calendar: a copy at the drop position.
+  def duplicate
+    result = TimeBlocks::Duplicator.new(
+      block: @block, date: params[:schedule_date], clock: params[:start_clock]
+    ).call
+
+    if result.success?
+      history.record("duplicate", result.block, before: nil)
+      day = result.block.start_at.in_time_zone.to_date.iso8601
+      redirect_to root_path(week: day, day: day), notice: "Créneau dupliqué."
+    else
+      day = @block.start_at.in_time_zone.to_date.iso8601
       redirect_to root_path(week: day, day: day), alert: result.error
     end
   end
@@ -113,6 +136,10 @@ class TimeBlocksController < ApplicationController
   end
 
   private
+
+  def history
+    @history ||= BlockHistory.new(current_user)
+  end
 
   def load_planning_task
     return if params[:planning_task_id].blank?
