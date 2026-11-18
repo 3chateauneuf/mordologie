@@ -63,4 +63,21 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
     assert_selector "[data-event-hovercard]", text: "Version courte"
     screenshot("desktop-hovercard")
   end
+
+  test "the note and tag icons stay visible next to a long title" do
+    @block.update!(title: "Préparer les scripts Instagram de la semaine prochaine")
+    visit root_path(week: "2026-11-02", day: "2026-11-02")
+    selector = ".event[data-calendar-block-id='#{@block.id}']"
+    assert_selector "#{selector} .event-badges svg", count: 2
+
+    sides = page.evaluate_script(<<~JS)
+      (() => {
+        const event = document.querySelector("#{selector}").getBoundingClientRect();
+        const badges = document.querySelector("#{selector} .event-badges").getBoundingClientRect();
+        return { eventRight: event.right, badgesRight: badges.right, badgesWidth: badges.width };
+      })()
+    JS
+    assert_operator sides["badgesWidth"], :>, 0
+    assert_operator sides["badgesRight"], :<=, sides["eventRight"]
+  end
 end
