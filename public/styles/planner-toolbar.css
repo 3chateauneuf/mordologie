@@ -208,25 +208,6 @@
 }
 
 /* Bar shown when some blocks start before the first visible hour */
-.calendar-earlier-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 20px;
-  background: #f8f9fc;
-  border-bottom: 1px solid var(--line);
-  color: #65718a;
-  font-size: 12px;
-}
-
-.calendar-earlier-bar a {
-  color: #445fbd;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 /* Day headings: real / planned */
 .day-totals {
   color: var(--sub);
@@ -403,7 +384,4 @@
     font-size: 16px;
   }
 
-  .calendar-earlier-bar {
-    padding: 9px 12px;
-  }
 }

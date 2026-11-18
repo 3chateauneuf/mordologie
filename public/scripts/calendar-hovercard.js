@@ -56,5 +56,6 @@
     block.addEventListener("pointerdown", hide);
     block.addEventListener("dragstart", hide);
   });
-  window.addEventListener("scroll", hide, { passive: true });
+  // Capture: also hides when the calendar frame scrolls, not only the page.
+  window.addEventListener("scroll", hide, { passive: true, capture: true });
 })();

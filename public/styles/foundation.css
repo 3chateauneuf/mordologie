@@ -144,8 +144,11 @@ p {
   overflow:hidden;
   box-shadow:0 7px 30px rgba(26,39,72,.035)
 }
+/* The 24-hour grid scrolls inside this frame; the day headings stay on top.
+   On a phone (mobile.css) the page scrolls instead. */
 .calendar-scroll {
-  overflow-x:auto
+  overflow:auto;
+  max-height:calc(100vh - 150px)
 }
 .week-grid {
   display:grid;
@@ -178,7 +181,13 @@ p {
   color:var(--brand)
 }
 .hour-header {
-  border-bottom:1px solid var(--line)
+  border-bottom:1px solid var(--line);
+  background:#fff
+}
+.hour-header,.day-heading {
+  position:sticky;
+  top:0;
+  z-index:4
 }
 .time-rail {
   height:924px;
