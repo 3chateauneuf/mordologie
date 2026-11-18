@@ -216,9 +216,13 @@ mantienen al devolver un bloque a la bandeja y volver a planificarlo.
 
 Todos los bloques llevan `data-preview-*`; los que tienen nota o etiquetas
 muestran además sus iconos. `public/scripts/calendar-hovercard.js` muestra
-esos datos en una ficha al pasar el ratón (solo con ratón), con los gestos
-posibles. No se usan `title` nativos en el calendario: se superponían a la
-ficha. La pista para crear un bloque está en el lateral «Por planificar».
+esos datos en una ficha al pasar el ratón (solo con ratón). No se usan
+`title` nativos en el calendario: se superponían a la ficha.
+
+Los gestos no se repiten en cada ficha: están en «Atajos», dentro del menú de
+ajustes. El lateral «Por planificar» tiene un campo rápido (escribir + Intro:
+1 h de trabajo por defecto; se ajusta al planificar) y una sola línea de
+ayuda cuando hay tareas.
 
 ## Versiones de scripts y estilos
 

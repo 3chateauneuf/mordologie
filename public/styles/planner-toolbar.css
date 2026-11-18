@@ -153,6 +153,36 @@
   display: none;
 }
 
+/* Shortcuts list: the gestures are learned once, then looked up here. */
+.settings-shortcuts {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.settings-shortcuts summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #263044;
+}
+
+.settings-shortcuts dl {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.settings-shortcuts dt {
+  font-weight: 700;
+  color: #263044;
+}
+
+.settings-shortcuts dd {
+  margin: 0 0 4px;
+  color: var(--sub);
+}
+
 .settings-account {
   display: grid;
   gap: 6px;
@@ -285,8 +315,7 @@
   font-size: 13px;
 }
 
-.event-hovercard-times,
-.event-hovercard-hint {
+.event-hovercard-times {
   color: var(--sub);
   font-size: 11px;
 }
@@ -306,12 +335,6 @@
   overflow-wrap: anywhere;
   max-height: 160px;
   overflow: hidden;
-}
-
-.event-hovercard-hint {
-  margin-top: 4px;
-  padding-top: 6px;
-  border-top: 1px solid var(--line);
 }
 
 @media (max-width: 1080px) {

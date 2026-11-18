@@ -64,6 +64,29 @@ fr:
       apply: "Appliquer"
       logout: "Déconnexion"
       new_block: "+ Créneau"
+      shortcuts:
+        title: "Raccourcis"
+        create:
+          gesture: "Glisser sur les heures ou double-clic"
+          result: "Créer un créneau"
+        move:
+          gesture: "Glisser un créneau"
+          result: "Le déplacer"
+        duplicate:
+          gesture: "Maj + glisser un créneau"
+          result: "Le dupliquer"
+        undo:
+          gesture: "Ctrl+Z · Ctrl+Maj+Z"
+          result: "Annuler · rétablir"
+        end_time:
+          gesture: "Clic sur l'heure de fin ou glisser le bord inférieur"
+          result: "Changer la fin"
+        plan_task:
+          gesture: "Glisser une tâche en attente sur le calendrier"
+          result: "La planifier"
+        close:
+          gesture: "Échap ou clic à l'extérieur"
+          result: "Fermer une fenêtre sans enregistrer"
     calendar:
       earlier:
         one: "1 créneau avant %{hour}"
@@ -80,8 +103,6 @@ fr:
       end_planned: "Fin prévue"
       change_end: "%{kind} : %{time}. Modifier"
       finish_now: "Terminer maintenant"
-      drag_hint: "Glissez pour déplacer · Maj + glisser pour dupliquer · Ctrl+Z pour annuler"
-      end_hint: "Cliquez sur l'heure de fin ou glissez le bord inférieur pour la changer"
       has_notes: "Contient une note"
       has_tags: "Contient des tags"
     end_time_popover:
@@ -93,21 +114,17 @@ fr:
       save: "Enregistrer"
     pending_tasks:
       title: "À planifier"
-      add: "+ Ajouter"
-      activity: "Activité"
-      activity_placeholder: "Qu'avez-vous à faire ?"
-      estimated_minutes: "Durée estimée (min)"
-      category: "Catégorie"
-      submit: "Ajouter"
-      empty: "Rien en attente. Ajoutez une activité sans lui donner de date."
+      quick_label: "Nouvelle tâche"
+      quick_placeholder: "Écrivez une tâche et appuyez sur Entrée"
+      quick_submit: "Ajouter la tâche"
+      drag_hint: "Glissez-la sur le calendrier pour la planifier."
+      empty: "Rien en attente."
       plan: "Planifier"
       plan_label: "Planifier %{title}"
       remove_confirm: "Supprimer définitivement cette tâche ?"
       remove_title: "Supprimer la tâche"
       remove_label: "Supprimer %{title}"
       drop_back: "Déposez ici pour remettre en attente"
-      create_hint: "Dans le calendrier, glissez sur les heures ou double-cliquez pour créer un créneau."
-      hint: "Glissez une tâche sur une heure pour la planifier directement. « Planifier » permet de personnaliser."
     search:
       title: "Rechercher une activité"
       intro: "Retrouvez vos créneaux par nom, notes ou tags, quelle que soit la semaine."
