@@ -21,7 +21,7 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
     assert_select ".toolbar-actions a[href='#{recherche_path}']", count: 1
     assert_select ".toolbar-settings .settings-form select[name='calendar_start_hour']", count: 1
     assert_select ".toolbar-settings .settings-account", text: /epure@example.test/
-    assert_select ".toolbar-new", text: "+ Créneau"
+    assert_select ".toolbar-new[title='+ Créneau'] .toolbar-new-full", text: "+ Créneau"
     # The previous header, stats cards and help paragraph are gone.
     assert_select ".page-head, .stats, .calendar-header, .help", count: 0
     assert_select ".topbar .nav-links", count: 0
@@ -56,7 +56,7 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
   test "only today's column has the current-time line" do
     get root_path
 
-    assert_select ".day-body.today [data-now-line]", count: 1
+    assert_select ".day-body.today [data-now-line][data-time-zone='Europe/Paris']", count: 1
     assert_select "[data-now-line]", count: 1
     assert_select "script[src='/scripts/calendar-now-line.js']", count: 1
 

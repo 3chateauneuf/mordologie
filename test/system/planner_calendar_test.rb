@@ -87,6 +87,14 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     viewport_width = page.evaluate_script("window.innerWidth")
     assert_operator page_width, :<=, viewport_width + 1
 
+    # The bar also fits a 320 px phone, on a week spanning two months.
+    page.driver.browser.manage.window.resize_to(320, 700)
+    visit root_path(week: "2026-10-26", day: "2026-10-26")
+    assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
+                    :<=, page.evaluate_script("window.innerWidth") + 1
+    page.driver.browser.manage.window.resize_to(390, 844)
+    visit root_path(week: "2026-11-02", day: "2026-11-02")
+
     # One bar, one line: no separate header above the calendar.
     bar = position(".topbar")
     assert_operator bar["bottom"] - bar["top"], :<=, 64

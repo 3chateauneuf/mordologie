@@ -48,7 +48,7 @@
           <% end %>
           <% if day == Date.current %>
             <%# Placed and kept up to date by calendar-now-line.js. %>
-            <div class="now-line" data-now-line hidden aria-hidden="true"><span data-now-line-time></span></div>
+            <div class="now-line" data-now-line data-time-zone="<%= Time.zone.tzinfo.name %>" hidden aria-hidden="true"><span data-now-line-time></span></div>
           <% end %>
         </div>
       <% end %>

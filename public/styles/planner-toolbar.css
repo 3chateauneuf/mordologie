@@ -14,6 +14,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  min-width: 0;
 }
 
 .toolbar-range {
@@ -256,9 +257,21 @@
     gap: 6px;
   }
 
+  /* The week label gives way first on very narrow screens. */
+  .toolbar-week {
+    flex: 1 1 auto;
+  }
+
   .toolbar-range {
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 13px;
+  }
+
+  .toolbar-icon,
+  .toolbar-new {
+    flex-shrink: 0;
   }
 
   .toolbar-today {
