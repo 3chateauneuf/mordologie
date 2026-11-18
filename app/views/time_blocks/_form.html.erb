@@ -1,5 +1,6 @@
 <%= form_with model: @block, html: { id: "planner-time-block-form", class: "editor-form", data: { schedule_form: true } } do |f| %>
   <%= hidden_field_tag :planning_task_id, @planning_task.id if @planning_task %>
+  <%= hidden_field_tag :schedule_mode, schedule_mode if @block.persisted? %>
   <% if @block.errors.any? %>
     <div class="editor-error" role="alert">
       <strong><%= t(".check") %></strong>

@@ -202,6 +202,12 @@ recibe la duración. Para un bloque empezado, el controlador solo escribe las
 horas reales si inicio o duración cambiaron, así que editar el título nunca
 inventa horas reales. Cambiar de día mueve también el plan, con las mismas
 horas. Los campos reales no se aceptan directamente desde el formulario.
+Las duraciones se cuentan en minutos de reloj (01:00 + 180 min termina a las
+04:00 aunque ese día cambie la hora).
+
+El diálogo envía `schedule_mode` (`planned` o `actual`). Si el bloque empezó
+mientras estaba abierto, no se guarda: se vuelve a mostrar con sus horas
+reales y un aviso.
 
 Los minutos reales históricos sin relojes se conservan. Los datos reales se
 mantienen al devolver un bloque a la bandeja y volver a planificarlo.

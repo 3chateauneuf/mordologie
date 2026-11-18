@@ -176,6 +176,7 @@ es:
       quarter_hour: "Elige una fecha y una hora en cuartos de hora."
       past_midnight: "Este bloque pasa de medianoche. Elige una hora más temprana."
       finish_now_today_only: "«Terminar ahora» solo funciona con una actividad de hoy."
+      started_meanwhile: "El bloque ha empezado mientras lo editabas: ahora ves sus horas reales. Revísalas y guarda de nuevo."
       end_clock_format: "Indica una hora de fin con el formato HH:MM."
 
   planning_tasks:

@@ -63,6 +63,27 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_nil future.actual_start_clock
   end
 
+  test "a block that started while its plan was being edited is not saved silently" do
+    patch time_block_path(@block), params: block_params(start_clock: "10:00", duration_minutes: "60")
+      .merge(schedule_mode: "planned")
+
+    assert_response :unprocessable_entity
+    assert_select ".editor-actual-note"
+    @block.reload
+    assert_nil @block.actual_start_clock
+    assert_equal "09:00", @block.start_at.in_time_zone.strftime("%H:%M")
+  end
+
+  test "the dialog says which times it shows and saves when that still holds" do
+    get edit_time_block_path(@block)
+    assert_select "input[name='schedule_mode'][value='actual']"
+
+    patch time_block_path(@block), params: block_params(start_clock: "10:00", duration_minutes: "60")
+      .merge(schedule_mode: "actual")
+    assert_response :redirect
+    assert_equal "10:00", @block.reload.actual_start_clock
+  end
+
   test "on a daylight-saving day the planned end entered is the end saved" do
     post time_blocks_path, params: {
       time_block: { title: "Nuit courte", category: "travail", schedule_date: "2030-03-31",

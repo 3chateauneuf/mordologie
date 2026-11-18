@@ -176,6 +176,7 @@ fr:
       quarter_hour: "Choisissez une date et une heure par quart d'heure."
       past_midnight: "Ce créneau dépasse minuit. Choisissez une heure plus tôt."
       finish_now_today_only: "« Terminer maintenant » ne fonctionne que pour une activité d'aujourd'hui."
+      started_meanwhile: "Le créneau a commencé pendant la modification : vous voyez maintenant ses heures réelles. Vérifiez-les et enregistrez à nouveau."
       end_clock_format: "Indiquez une heure de fin au format HH:MM."
 
   planning_tasks:

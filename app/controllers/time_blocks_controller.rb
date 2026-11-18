@@ -56,7 +56,13 @@ class TimeBlocksController < ApplicationController
     @edits_actual = @block.started?
     @block.assign_attributes(block_details)
     @block.tag_list = submitted_tag_list
-    if apply_schedule_params && @block.save
+    if schedule_mode_changed?
+      # The block started while the dialog was open: show the real times
+      # instead of reading planned values as what really happened.
+      @block.errors.add(:base, t("time_blocks.errors.started_meanwhile"))
+      load_schedule_from_block
+      render :edit, status: :unprocessable_entity
+    elsif apply_schedule_params && @block.save
       redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601, day: @block.start_at.in_time_zone.to_date.iso8601), notice: t("time_blocks.flash.updated")
     else
       render :edit, status: :unprocessable_entity
@@ -206,6 +212,19 @@ class TimeBlocksController < ApplicationController
   rescue Date::Error, ArgumentError
     nil
   end
+
+  # The dialog says which times it showed (plan or real). If that no longer
+  # matches the block, saving would write values into the other set.
+  def schedule_mode_changed?
+    shown = params[:schedule_mode].presence
+    return false unless shown
+    shown != schedule_mode
+  end
+
+  def schedule_mode
+    @edits_actual ? "actual" : "planned"
+  end
+  helper_method :schedule_mode
 
   # The form shows what the calendar draws: real times once a block has
   # started (see @edits_actual), planned times before.
