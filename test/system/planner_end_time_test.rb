@@ -51,6 +51,7 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
 
     # Dragging the bottom edge, in 5-minute steps.
     handle = find("#{event} [data-end-time-resize]", visible: :all)
+    page.scroll_to(handle, align: :center)
     page.driver.browser.action
         .move_to(handle.native).click_and_hold
         .move_by(0, 66).release.perform
