@@ -41,6 +41,9 @@
       </div>
     </details>
 
-    <%= link_to t(".new_block"), new_time_block_path(day: @selected_day.iso8601), class: "button toolbar-new" %>
+    <%# On a phone only "+" is shown; the title keeps the full name. %>
+    <%= link_to new_time_block_path(day: @selected_day.iso8601), class: "button toolbar-new", title: t(".new_block"), aria: { label: t(".new_block") } do %>
+      <span class="toolbar-new-full"><%= t(".new_block") %></span><span class="toolbar-new-short" aria-hidden="true">+</span>
+    <% end %>
   </div>
 </div>

@@ -92,6 +92,10 @@
   white-space: nowrap;
 }
 
+.toolbar-new-short {
+  display: none;
+}
+
 /* Settings menu */
 .toolbar-settings {
   position: relative;
@@ -261,9 +265,25 @@
     display: none;
   }
 
+  .toolbar-icon {
+    width: 32px;
+    height: 32px;
+  }
+
   .toolbar-new {
+    width: 36px;
+    height: 36px;
     margin-left: 2px;
-    padding: 8px 10px;
+    padding: 0;
+    font-size: 20px;
+  }
+
+  .toolbar-new-full {
+    display: none;
+  }
+
+  .toolbar-new-short {
+    display: inline;
   }
 
   .toolbar-settings-panel {
