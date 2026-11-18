@@ -4,20 +4,30 @@
       <h2 id="pending-tasks-heading"><%= t(".title") %></h2>
       <span class="pending-count"><%= @pending_tasks.size %></span>
     </div>
+    <details class="pending-add" data-pending-add>
+      <summary><%= t(".add") %></summary>
+      <div class="pending-add-body">
+        <%= form_with model: PlanningTask.new, url: planning_tasks_path, class: "pending-form" do |f| %>
+          <%= hidden_field_tag :week, @week_start.iso8601 %>
+          <%= hidden_field_tag :day, @selected_day.iso8601 %>
+          <%= f.label :title, t(".activity") %>
+          <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off",
+                placeholder: t(".activity_placeholder") %>
+          <div class="pending-form-fields">
+            <div>
+              <%= f.label :estimated_minutes, t(".estimated_minutes") %>
+              <%= f.number_field :estimated_minutes, value: 60, min: 1, max: 960, required: true %>
+            </div>
+            <div>
+              <%= f.label :category, t(".category") %>
+              <%= f.select :category, TimeBlock.category_options %>
+            </div>
+          </div>
+          <%= f.submit t(".submit"), class: "pending-add-submit" %>
+        <% end %>
+      </div>
+    </details>
   </div>
-
-  <%# Quick add: type and press Enter. Duration and category are adjusted
-      when planning the task («Planificar»). %>
-  <%= form_with model: PlanningTask.new, url: planning_tasks_path, class: "pending-quick" do |f| %>
-    <%= hidden_field_tag :week, @week_start.iso8601 %>
-    <%= hidden_field_tag :day, @selected_day.iso8601 %>
-    <%= f.hidden_field :estimated_minutes, value: 60 %>
-    <%= f.hidden_field :category, value: "travail" %>
-    <%= f.label :title, t(".quick_label"), class: "visually-hidden" %>
-    <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off",
-          placeholder: t(".quick_placeholder") %>
-    <%= f.button "+", type: "submit", class: "pending-quick-submit", aria: { label: t(".quick_submit") } %>
-  <% end %>
 
   <% if @pending_tasks.empty? %>
     <p class="pending-empty"><%= t(".empty") %></p>
@@ -54,7 +64,4 @@
     </ol>
   <% end %>
   <p class="pending-drop-instruction" aria-hidden="true"><%= t(".drop_back") %></p>
-  <% if @pending_tasks.any? %>
-    <p class="pending-hint"><%= t(".drag_hint") %></p>
-  <% end %>
 </aside>
