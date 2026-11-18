@@ -71,7 +71,6 @@ es:
       back_to: "Volver a las %{hour}"
       show_earlier: "Mostrar las horas anteriores"
       choose_day: "Elegir un día de la semana"
-      day_hint: "Arrastra para elegir una duración o haz doble clic para crear un bloque"
       day_totals: "%{actual} / %{planned}"
       day_totals_hint: "Real / previsto"
       day_planned: "Previsto: %{planned}"
@@ -82,8 +81,7 @@ es:
       change_end: "%{kind}: %{time}. Cambiar"
       finish_now: "Terminar ahora"
       drag_hint: "Arrastra para mover · Shift + arrastrar para duplicar · Ctrl+Z para deshacer"
-      resize_hint: "Arrastra para cambiar la hora de fin"
-      change_end_hint: "Cambiar la hora de fin"
+      end_hint: "Haz clic en la hora de fin o arrastra el borde inferior para cambiarla"
       has_notes: "Tiene una nota"
       has_tags: "Tiene etiquetas"
     end_time_popover:
@@ -108,6 +106,7 @@ es:
       remove_title: "Eliminar la tarea"
       remove_label: "Eliminar %{title}"
       drop_back: "Suelta aquí para dejarla pendiente"
+      create_hint: "En el calendario, arrastra sobre las horas o haz doble clic para crear un bloque."
       hint: "Arrastra una tarea a una hora para planificarla directamente. «Planificar» te deja ajustarla."
     search:
       title: "Buscar una actividad"

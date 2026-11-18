@@ -42,7 +42,7 @@
         <% (@calendar_start_hour...@calendar_end_hour).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
       </div>
       <% @days.each do |day| %>
-        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="<%= t(".day_hint") %>">
+        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>">
           <% @day_layouts.fetch(day).entries.each do |entry| %>
             <%= render "calendar_event", entry: entry %>
           <% end %>

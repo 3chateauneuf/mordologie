@@ -1,6 +1,6 @@
-// Hover card for blocks that have a note or tags (with a mouse only).
+// Hover card for every calendar block (with a mouse only).
 //
-// Each such block carries data-preview-title, -times, -tags and -notes.
+// Each block carries data-preview-title, -times, -tags and -notes.
 // After a short pause over the block, the shared card shows them next to it,
 // so the dialog doesn't need to be opened just to read a note.
 (function () {

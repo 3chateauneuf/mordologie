@@ -51,6 +51,8 @@
       });
     });
 
+    // Capture phase: Escape closes the dialog even when a field (a time
+    // input, the tag entry) is focused and would keep the key to itself.
     document.addEventListener("keydown", function (event) {
       if (!desktop.matches) return;
       const dialog = topDialog();
@@ -75,7 +77,7 @@
         event.preventDefault();
         first.focus();
       }
-    });
+    }, true);
 
     if (desktop.matches) {
       const dialog = topDialog();
