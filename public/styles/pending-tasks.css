@@ -146,11 +146,11 @@
 .pending-task {
   display: grid;
   gap: 10px;
-  border: 1px solid #e4e7f0;
-  border-left: 3px solid var(--task-color);
+  /* Same look as calendar blocks: tinted with the category colour. */
+  border: 1px solid color-mix(in srgb, var(--task-color) 18%, white);
   border-radius: 12px;
   padding: 12px;
-  background: color-mix(in srgb, var(--task-color) 4%, white);
+  background: color-mix(in srgb, var(--task-color) 8%, white);
 }
 
 .pending-task[draggable="true"] {

@@ -74,7 +74,7 @@ es:
       day_hint: "Arrastra para elegir una duración o haz doble clic para crear un bloque"
       day_totals: "%{actual} / %{planned}"
       day_totals_hint: "Real / previsto"
-      day_planned: "%{planned} previstas"
+      day_planned: "Previsto: %{planned}"
     calendar_event:
       planned: "Previsto: %{range}"
       end_actual: "Fin real"

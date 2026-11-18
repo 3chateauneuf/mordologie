@@ -74,7 +74,7 @@ fr:
       day_hint: "Glissez pour choisir une durée ou double-cliquez pour créer un créneau"
       day_totals: "%{actual} / %{planned}"
       day_totals_hint: "Réel / prévu"
-      day_planned: "%{planned} prévues"
+      day_planned: "Prévu : %{planned}"
     calendar_event:
       planned: "Prévu : %{range}"
       end_actual: "Fin réelle"

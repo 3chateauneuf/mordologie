@@ -49,7 +49,7 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
     get root_path(week: "2026-11-02")
 
     assert_select ".day-heading .day-totals", text: "1 h 30 / 2 h"
-    assert_select ".day-heading .day-totals", text: "4 h prévues"
+    assert_select ".day-heading .day-totals", text: "Prévu : 4 h"
     assert_select ".day-heading .day-totals", count: 2
   end
 
