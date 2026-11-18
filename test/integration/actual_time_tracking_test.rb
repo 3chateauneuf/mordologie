@@ -141,6 +141,44 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_equal "04:20", spring.actual_end_clock
   end
 
+  test "a real pair across the clock change loads and saves its own clocks" do
+    spring = @user.time_blocks.create!(
+      title: "Nuit", category: "travail",
+      start_at: Time.zone.local(2026, 3, 29, 1, 0),
+      end_at: Time.zone.local(2026, 3, 29, 2, 0),
+      actual_start_clock: "01:00", actual_end_clock: "04:00"
+    )
+
+    get edit_time_block_path(spring)
+    assert_select "#time_block_duration_minutes[value='180']"
+
+    patch time_block_path(spring), params: {
+      time_block: { title: spring.title, category: "travail", schedule_date: "2026-03-29",
+                    start_clock: "01:00", duration_minutes: "120" }
+    }
+    assert_equal "03:00", spring.reload.actual_end_clock
+  end
+
+  test "a real start late in the evening stays editable" do
+    late = @user.time_blocks.create!(
+      title: "Tard", category: "travail",
+      start_at: Time.zone.local(2026, 11, 2, 9, 0),
+      end_at: Time.zone.local(2026, 11, 2, 11, 0),
+      actual_start_clock: "23:00"
+    )
+
+    get edit_time_block_path(late)
+    assert_select "#time_block_duration_minutes[value='59']"
+
+    patch time_block_path(late), params: {
+      time_block: { title: "Tard (titre)", category: "travail", schedule_date: "2026-11-02",
+                    start_clock: "23:00", duration_minutes: "59" }
+    }
+    assert_response :redirect
+    assert_equal "Tard (titre)", late.reload.title
+    assert_nil late.actual_end_clock
+  end
+
   test "historical actual minutes without clock times are not lost" do
     @block.update!(actual_minutes: 80)
     patch time_block_path(@block), params: block_params(title: "Montage")

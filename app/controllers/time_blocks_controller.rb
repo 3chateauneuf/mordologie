@@ -210,10 +210,23 @@ class TimeBlocksController < ApplicationController
   # The form shows what the calendar draws: real times once a block has
   # started (see @edits_actual), planned times before.
   def load_schedule_from_block
-    start_time = (@edits_actual ? @block.displayed_start_at : @block.start_at).in_time_zone
-    @schedule_date = start_time.to_date.iso8601
-    @start_clock = start_time.strftime("%H:%M")
-    @duration_minutes = @edits_actual ? @block.displayed_duration_minutes : @block.duration_minutes
+    @schedule_date = @block.start_at.in_time_zone.to_date.iso8601
+    if @edits_actual
+      @start_clock, @duration_minutes = displayed_wall_clock
+    else
+      @start_clock = @block.start_at.in_time_zone.strftime("%H:%M")
+      @duration_minutes = @block.duration_minutes
+    end
+  end
+
+  # The drawn start and its length in wall-clock minutes, as the form counts
+  # them: a daylight-saving day shows the real clocks, and an end clipped at
+  # midnight stays on the same day (23:59).
+  def displayed_wall_clock
+    start = @block.displayed_start_at.in_time_zone
+    finish = @block.displayed_end_at.in_time_zone
+    minutes = (finish.hour * 60 + finish.min) - (start.hour * 60 + start.min)
+    [start.strftime("%H:%M"), [minutes, 1].max]
   end
 
   def apply_schedule_params
@@ -246,8 +259,7 @@ class TimeBlocksController < ApplicationController
   # real times, only when they were changed, so editing just the title never
   # invents real times. Another day moves the plan too, with the same clocks.
   def apply_actual_schedule(day, start_time, duration)
-    shown_start = @block.displayed_start_at.in_time_zone.strftime("%H:%M")
-    shown_minutes = @block.displayed_duration_minutes
+    shown_start, shown_minutes = displayed_wall_clock
 
     days_moved = (day - @block.start_at.in_time_zone.to_date).to_i
     if days_moved != 0
