@@ -220,9 +220,8 @@ esos datos en una ficha al pasar el ratón (solo con ratón). No se usan
 `title` nativos en el calendario: se superponían a la ficha.
 
 Los gestos no se repiten en cada ficha: están en «Atajos», dentro del menú de
-ajustes. El lateral «Por planificar» tiene un campo rápido (escribir + Intro:
-1 h de trabajo por defecto; se ajusta al planificar) y una sola línea de
-ayuda cuando hay tareas.
+ajustes. El lateral «Por planificar» conserva «+ Añadir» y no lleva
+párrafos de ayuda.
 
 ## Versiones de scripts y estilos
 

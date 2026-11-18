@@ -79,7 +79,9 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
     assert_select "[data-event-hovercard]", text: /Maj/, count: 0
     assert_select ".settings-shortcuts summary", text: "Raccourcis"
     assert_select ".settings-shortcuts dt", text: "Maj + glisser un créneau"
-    assert_select ".pending-quick input[placeholder='Écrivez une tâche et appuyez sur Entrée']"
+    # The inbox keeps "+ Ajouter" and no help paragraphs below the list.
+    assert_select ".pending-add summary", text: "+ Ajouter"
+    assert_select ".pending-hint", count: 0
   end
 
   test "other pages keep the usual navigation" do
