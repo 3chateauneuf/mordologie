@@ -56,7 +56,13 @@
   function updateDuration() {
     const start = minutesOf(time.value);
     const end = minutesOf(endInput.value);
-    if (start === null || end === null) return;
+    if (start === null) return;
+    // An empty or incomplete end blocks saving, so the old duration is never
+    // saved silently behind a cleared field.
+    if (end === null) {
+      showState("—");
+      return;
+    }
     if (end <= start) {
       showState(plannerText("end_before_start"));
       return;

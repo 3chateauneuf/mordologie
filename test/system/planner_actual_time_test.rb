@@ -39,6 +39,20 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
     assert_selector "#planner-time-block-submit[disabled]"
   end
 
+  test "a cleared end cannot be saved" do
+    visit edit_time_block_path(@block)
+    assert_no_selector "#planner-time-block-submit[disabled]"
+    # Clearing a time field by keyboard depends on Chrome's segment editing,
+    # so the field is emptied the way the browser reports it.
+    page.execute_script(<<~JS)
+      const end = document.querySelector("[data-end-input]");
+      end.value = "";
+      end.dispatchEvent(new Event("input", { bubbles: true }));
+    JS
+
+    assert_selector "#planner-time-block-submit[disabled]"
+  end
+
   test "hovering a block with a note and tags shows them without opening it" do
     visit root_path(week: "2026-11-02", day: "2026-11-02")
     event = find(".event[data-calendar-block-id='#{@block.id}']")
