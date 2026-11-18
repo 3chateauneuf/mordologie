@@ -64,7 +64,7 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
     screenshot("desktop-hovercard")
   end
 
-  test "the note and tag icons stay visible next to a long title" do
+  test "a long title gets two lines and the icons sit on the time line" do
     @block.update!(title: "Préparer les scripts Instagram de la semaine prochaine")
     visit root_path(week: "2026-11-02", day: "2026-11-02")
     selector = ".event[data-calendar-block-id='#{@block.id}']"
@@ -74,10 +74,38 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
       (() => {
         const event = document.querySelector("#{selector}").getBoundingClientRect();
         const badges = document.querySelector("#{selector} .event-badges").getBoundingClientRect();
-        return { eventRight: event.right, badgesRight: badges.right, badgesWidth: badges.width };
+        const title = document.querySelector("#{selector} strong").getBoundingClientRect();
+        const inTimes = !!document.querySelector("#{selector} .event-times .event-badges");
+        return { eventRight: event.right, badgesRight: badges.right, badgesWidth: badges.width,
+                 titleHeight: title.height, inTimes: inTimes };
+      })()
+    JS
+    assert sides["inTimes"], "icons should be on the time line"
+    assert_operator sides["badgesWidth"], :>, 0
+    assert_operator sides["badgesRight"], :<=, sides["eventRight"]
+    assert_operator sides["titleHeight"], :>, 20, "a long title should use two lines"
+  end
+
+  test "the icons stay inside a narrow block when blocks overlap" do
+    @user.time_blocks.create!(
+      title: "Appel client", category: "travail",
+      start_at: Time.zone.local(2026, 11, 2, 9, 30),
+      end_at: Time.zone.local(2026, 11, 2, 11, 0)
+    )
+    visit root_path(week: "2026-11-02", day: "2026-11-02")
+    selector = ".event[data-calendar-block-id='#{@block.id}']"
+    assert_selector "#{selector} .event-badges svg", count: 2
+
+    sides = page.evaluate_script(<<~JS)
+      (() => {
+        const event = document.querySelector("#{selector}").getBoundingClientRect();
+        const badges = document.querySelector("#{selector} .event-badges").getBoundingClientRect();
+        return { eventRight: event.right, eventBottom: event.bottom,
+                 badgesRight: badges.right, badgesBottom: badges.bottom, badgesWidth: badges.width };
       })()
     JS
     assert_operator sides["badgesWidth"], :>, 0
     assert_operator sides["badgesRight"], :<=, sides["eventRight"]
+    assert_operator sides["badgesBottom"], :<=, sides["eventBottom"]
   end
 end

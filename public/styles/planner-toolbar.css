@@ -273,22 +273,19 @@
 }
 
 /* Note and tag icons in a block, and the card shown on hover */
-.event-link {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  max-width: 100%;
-}
-
-/* A long title shrinks (with an ellipsis) so the icons stay visible. */
-.event-link strong {
-  min-width: 0;
-  flex-shrink: 1;
+/* A block with room shows a long title on up to two lines. */
+.event.is-roomy:not(.is-compact) strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .event-badges {
   display: inline-flex;
-  flex-shrink: 0;
+  vertical-align: middle;
+  margin-left: 6px;
   gap: 3px;
   color: color-mix(in srgb, var(--event-color) 70%, #263044);
 }
