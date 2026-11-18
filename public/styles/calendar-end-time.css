@@ -17,6 +17,9 @@
   position:relative;
   z-index:1;
   pointer-events:none;
+}
+/* The time range never breaks; the icons after it wrap when the lane is narrow. */
+.event-range {
   white-space:nowrap;
 }
 .event-end-time {

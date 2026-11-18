@@ -37,11 +37,12 @@
     <strong><%= block.title %></strong>
   <% end %>
   <small class="event-times">
-    <%= entry.start_label %> –
+    <span class="event-range"><%= entry.start_label %> –
     <button type="button" class="event-end-time" data-end-time-trigger
-            aria-label="<%= t(".change_end", kind: t(end_kind == "actual" ? ".end_actual" : ".end_planned"), time: entry.end_label) %>"><svg class="event-end-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><%= entry.end_label %></button>
-    <%# Icons sit on the time line so the title keeps the full width; a
-        compact block has no room, its hover card shows note and tags. %>
+            aria-label="<%= t(".change_end", kind: t(end_kind == "actual" ? ".end_actual" : ".end_planned"), time: entry.end_label) %>"><svg class="event-end-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><%= entry.end_label %></button></span>
+    <%# Icons sit on the time line so the title keeps the full width. In a
+        narrow lane they wrap below the times. A compact block has no room:
+        its hover card shows note and tags. %>
     <% if (has_notes || has_tags) && !entry.compact? %>
       <span class="event-badges">
         <% if has_notes %>
