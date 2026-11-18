@@ -1,4 +1,5 @@
 // Calendar event movement: use existing route-bound Rails forms.
+// Holding Shift (or Alt/Option) while dropping makes a copy instead.
 // data-calendar-start-clock and data-calendar-duration describe the slot as
 // drawn (real times when recorded); the server shifts planned and real times
 // together.
@@ -32,6 +33,11 @@
     previewDay = null;
   }
 
+  // Shift is the documented key; Alt/Option is the system copy key on macOS.
+  function isCopy(event) {
+    return event.shiftKey || event.altKey;
+  }
+
   function showPreview(event, day) {
     const slot = startAt(event, day);
     if (previewDay !== day) clearPreview();
@@ -48,9 +54,10 @@
       day.getBoundingClientRect().height - slot.top)) + "px";
     const crossesMidnight = slot.minutes + duration > 1440;
     preview.classList.toggle("is-invalid", crossesMidnight);
+    preview.classList.toggle("is-copy", isCopy(event));
     const end = slot.minutes + duration;
     preview.textContent = crossesMidnight ? "Dépasse minuit" :
-      slot.clock + " – " + String(Math.floor(end / 60)).padStart(2, "0") +
+      (isCopy(event) ? "Copie · " : "") + slot.clock + " – " + String(Math.floor(end / 60)).padStart(2, "0") +
       ":" + String(end % 60).padStart(2, "0");
   }
 
@@ -61,7 +68,7 @@
       const durationPixels = Number(block.dataset.calendarDuration) * 1.1;
       gripOffset = Math.max(0, Math.min(distance, durationPixels - 1));
       block.classList.add("is-calendar-dragging");
-      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.effectAllowed = "copyMove";
       event.dataTransfer.setData("application/x-planner-calendar-block",
         block.dataset.calendarBlockId);
     });
@@ -75,7 +82,7 @@
     day.addEventListener("dragover", event => {
       if (!dragged) return;
       event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
+      event.dataTransfer.dropEffect = isCopy(event) ? "copy" : "move";
       showPreview(event, day);
     });
     day.addEventListener("dragleave", event => {
@@ -89,15 +96,23 @@
       clearPreview();
       dragged = null;
       block.classList.remove("is-calendar-dragging");
+      if (isCopy(event)) {
+        submitSlot('.calendar-duplicate-form[data-duplicate-block-id="' +
+          block.dataset.calendarBlockId + '"]', day, clock);
+        return;
+      }
       if (day.dataset.day === block.dataset.calendarStartDate &&
           clock === block.dataset.calendarStartClock) return;
-      const form = document.querySelector(
-        '.calendar-reschedule-form[data-reschedule-block-id="' +
-        block.dataset.calendarBlockId + '"]');
-      if (!form) return;
-      form.elements.schedule_date.value = day.dataset.day;
-      form.elements.start_clock.value = clock;
-      form.requestSubmit();
+      submitSlot('.calendar-reschedule-form[data-reschedule-block-id="' +
+        block.dataset.calendarBlockId + '"]', day, clock);
     });
   });
+
+  function submitSlot(selector, day, clock) {
+    const form = document.querySelector(selector);
+    if (!form) return;
+    form.elements.schedule_date.value = day.dataset.day;
+    form.elements.start_clock.value = clock;
+    form.requestSubmit();
+  }
 })();

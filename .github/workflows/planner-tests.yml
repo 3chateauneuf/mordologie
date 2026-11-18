@@ -55,6 +55,7 @@ jobs:
           node --check public/scripts/calendar-to-inbox.js
           node --check public/scripts/calendar-block-move.js
           node --check public/scripts/calendar-end-time.js
+          node --check public/scripts/calendar-history.js
           node --check public/scripts/calendar-preferences.js
           node --check public/scripts/time-block-form.js
           node --check public/scripts/real-time-fields.js

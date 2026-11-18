@@ -5,6 +5,7 @@ class User < ApplicationRecord
   has_secure_password
   has_many :planning_tasks, dependent: :destroy
   has_many :time_blocks, dependent: :destroy
+  has_many :block_changes, dependent: :delete_all
 
   before_validation do
     self.email = email.to_s.strip.downcase

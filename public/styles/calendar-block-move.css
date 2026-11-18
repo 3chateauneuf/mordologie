@@ -1,5 +1,7 @@
 /* Shared calendar block drag feedback. */
-.calendar-reschedule-form { display:none; }
+.calendar-reschedule-form,
+.calendar-duplicate-form,
+.calendar-history-form { display:none; }
 .event[draggable="true"] { cursor:grab; }
 .event.is-calendar-dragging { opacity:.45; cursor:grabbing; }
 .day-body.calendar-move-target { background:#f5f7ff; }
@@ -12,4 +14,11 @@
 }
 .calendar-move-preview.is-invalid {
   border-color:#b53e54; background:#fff0f2; color:#9d2f43;
+}
+/* Shift held: the drop makes a copy. */
+.calendar-move-preview.is-copy {
+  border-style:dotted;
+  background:rgba(52,142,128,.16);
+  border-color:#348e80;
+  color:#24695f;
 }

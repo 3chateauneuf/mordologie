@@ -12,6 +12,7 @@ module TimeBlocks
       @block.with_lock do
         @block.planning_task&.destroy!
         @block.destroy!
+        BlockHistory.forget(@block)
       end
     end
   end

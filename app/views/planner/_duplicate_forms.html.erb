@@ -1,0 +1,10 @@
+<%# Shift + drag: one form per block, bound to its own URL (CSRF token).
+    JavaScript fills only the target slot, never form.action. %>
+<% @blocks.each do |block| %>
+  <%= form_with url: duplicate_time_block_path(block), method: :post,
+        class: "calendar-duplicate-form",
+        data: { duplicate_block_id: block.id } do %>
+    <%= hidden_field_tag :schedule_date, nil, id: nil %>
+    <%= hidden_field_tag :start_clock, nil, id: nil %>
+  <% end %>
+<% end %>

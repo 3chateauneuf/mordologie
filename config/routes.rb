@@ -16,6 +16,9 @@ Rails.application.routes.draw do
     post :return_to_inbox, on: :member
     post :reschedule, on: :member
     patch :end_time, on: :member
+    post :duplicate, on: :member
   end
+  post "/historique/annuler", to: "block_history#undo", as: :undo_block_change
+  post "/historique/retablir", to: "block_history#redo", as: :redo_block_change
   root "planner#index"
 end
