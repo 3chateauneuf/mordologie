@@ -82,4 +82,40 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     assert_equal "2026-11-02", block.reload.start_at.in_time_zone.to_date.iso8601
   end
+
+  test "moving a block with real times shifts them and keeps every duration" do
+    @block.update!(actual_start_clock: "09:10", actual_end_clock: "11:40")
+
+    post reschedule_time_block_path(@block),
+         params: { schedule_date: "2026-11-03", start_clock: "14:00" }
+
+    assert_redirected_to root_path(week: "2026-11-03", day: "2026-11-03")
+    @block.reload
+    assert_equal "14:00", @block.actual_start_clock
+    assert_equal "16:30", @block.actual_end_clock
+    assert_equal 150, @block.actual_minutes
+    assert_equal "2026-11-03 13:50", @block.start_at.in_time_zone.strftime("%F %H:%M")
+    assert_equal 75, @block.duration_minutes
+  end
+
+  test "a move that pushes real times past midnight changes nothing" do
+    @block.update!(actual_start_clock: "09:00", actual_end_clock: "12:00")
+
+    post reschedule_time_block_path(@block),
+         params: { schedule_date: "2026-11-02", start_clock: "22:00" }
+
+    assert_equal "Ce créneau dépasse minuit. Choisissez une heure plus tôt.", flash[:alert]
+    @block.reload
+    assert_equal "09:00", @block.actual_start_clock
+    assert_equal "12:00", @block.actual_end_clock
+    assert_equal "09:00", @block.start_at.in_time_zone.strftime("%H:%M")
+  end
+
+  test "moving onto a daylight-saving day keeps the planned duration" do
+    post reschedule_time_block_path(@block),
+         params: { schedule_date: "2026-03-29", start_clock: "00:30" }
+
+    assert_equal 75, @block.reload.duration_minutes
+    assert_equal "00:30", @block.start_at.in_time_zone.strftime("%H:%M")
+  end
 end

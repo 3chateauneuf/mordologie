@@ -1,4 +1,7 @@
 // Calendar event movement: use existing route-bound Rails forms.
+// data-calendar-start-clock and data-calendar-duration describe the slot as
+// drawn (real times when recorded); the server shifts planned and real times
+// together.
 (function () {
   let dragged = null;
   let gripOffset = 0;
