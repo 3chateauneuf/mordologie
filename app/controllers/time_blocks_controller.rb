@@ -295,9 +295,11 @@ class TimeBlocksController < ApplicationController
 
     # Unchanged times keep the stored plan exactly (a title-only edit never
     # rebuilds it, which matters on clock-change days).
-    shown_start, shown_minutes = planned_wall_clock
-    same_day = day == @block.start_at.in_time_zone.to_date
-    return true if same_day && @start_clock == shown_start && duration == shown_minutes
+    if @block.persisted?
+      shown_start, shown_minutes = planned_wall_clock
+      same_day = day == @block.start_at.in_time_zone.to_date
+      return true if same_day && @start_clock == shown_start && duration == shown_minutes
+    end
 
     @block.start_at = start_time
     @block.end_at = wall_clock_end(day, start_time, duration)
