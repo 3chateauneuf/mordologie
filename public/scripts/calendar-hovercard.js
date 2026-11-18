@@ -1,11 +1,11 @@
-// Hover card for blocks that have a note or tags (desktop only).
+// Hover card for blocks that have a note or tags (with a mouse only).
 //
 // Each such block carries data-preview-title, -times, -tags and -notes.
 // After a short pause over the block, the shared card shows them next to it,
 // so the dialog doesn't need to be opened just to read a note.
 (function () {
   const card = document.querySelector("[data-event-hovercard]");
-  if (!card || !window.matchMedia("(hover: hover)").matches) return;
+  if (!card) return;
 
   const fields = {
     title: card.querySelector("[data-hovercard-title]"),
@@ -45,11 +45,13 @@
   }
 
   document.querySelectorAll("[data-preview]").forEach(function (block) {
-    block.addEventListener("mouseenter", function () {
+    // Only a mouse: a finger tap on a phone opens the block instead.
+    block.addEventListener("pointerenter", function (event) {
+      if (event.pointerType !== "mouse") return;
       clearTimeout(timer);
       timer = setTimeout(function () { show(block); }, delay);
     });
-    block.addEventListener("mouseleave", hide);
+    block.addEventListener("pointerleave", hide);
     // Moving, resizing or clicking the block: the card would be in the way.
     block.addEventListener("pointerdown", hide);
     block.addEventListener("dragstart", hide);
