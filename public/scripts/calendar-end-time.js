@@ -51,7 +51,7 @@
     title.textContent = isActual ? "Fin réelle" : "Fin prévue";
     hint.textContent = "Début : " + block.dataset.displayStartClock;
     input.value = block.dataset.endClock;
-    input.min = toClock(toMinutes(block.dataset.displayStartClock) + 1);
+    input.setCustomValidity("");
     finishNowButton.hidden = block.dataset.finishNow !== "true";
 
     popover.hidden = false;
@@ -85,12 +85,15 @@
     popover.style.top = Math.max(12, top) + "px";
   }
 
+  // Any minute is accepted; the end only has to come after the start.
+  // (A "min" attribute would also shift the step grid, so it is not used.)
   function save() {
-    if (!openBlock || !input.value) return;
-    if (!input.checkValidity()) {
-      input.reportValidity();
-      return;
-    }
+    if (!openBlock) return;
+    const afterStart = input.value &&
+      toMinutes(input.value) > toMinutes(openBlock.dataset.displayStartClock);
+    input.setCustomValidity(afterStart ? "" :
+      "La fin doit être après le début (" + openBlock.dataset.displayStartClock + ").");
+    if (!input.reportValidity()) return;
     submitEnd(openBlock, { endClock: input.value });
   }
 
@@ -122,6 +125,7 @@
   popover.querySelector("[data-end-time-save]").addEventListener("click", save);
   popover.querySelector("[data-end-time-cancel]").addEventListener("click", closePopover);
 
+  input.addEventListener("input", function () { input.setCustomValidity(""); });
   input.addEventListener("keydown", function (event) {
     if (event.key === "Enter") {
       event.preventDefault();
