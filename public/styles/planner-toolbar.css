@@ -247,10 +247,13 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  max-width: 100%;
 }
 
+/* A long title shrinks (with an ellipsis) so the icons stay visible. */
 .event-link strong {
   min-width: 0;
+  flex-shrink: 1;
 }
 
 .event-badges {
