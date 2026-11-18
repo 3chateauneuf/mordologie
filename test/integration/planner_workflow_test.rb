@@ -88,9 +88,9 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
 
     get root_path(week: "2026-11-02")
     assert_response :success
-    assert_select ".calendar-start-form select option[selected][value='6']", count: 1
+    assert_select ".settings-form select option[selected][value='6']", count: 1
     assert_select "script[src='/scripts/calendar-preferences.js']", count: 1
-    assert_select "link[href='/styles/calendar-preferences.css']", count: 1
+    assert_select "link[href='/styles/planner-toolbar.css']", count: 1
     assert_select ".time-rail .hour:first-child", text: "06:00"
     assert_select ".hour", text: "05:00", count: 0
     assert_select "form[action='#{calendar_preferences_path}']", count: 1
@@ -105,7 +105,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
 
     get root_path(week: "2026-11-02", day: "2026-11-03")
     assert_response :success
-    assert_select ".calendar-start-form select option[selected][value='5']", count: 1
+    assert_select ".settings-form select option[selected][value='5']", count: 1
     assert_select ".time-rail .hour:first-child", text: "05:00"
     assert_select ".hour", text: "05:00"
     assert_select ".hour", text: "04:00", count: 0

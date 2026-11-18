@@ -43,6 +43,11 @@ class PlannerController < ApplicationController
     @blocks_by_day = @blocks.group_by { |block| block.start_at.in_time_zone.to_date }
     @pending_tasks = current_user.planning_tasks.pending.order(created_at: :desc, id: :desc).to_a
     @planned_minutes = @blocks.sum(&:duration_minutes)
+    # Planned and real minutes per day, for the day headings.
+    @day_totals = @days.index_with do |day|
+      blocks = @blocks_by_day.fetch(day, [])
+      { planned: blocks.sum(&:duration_minutes), actual: blocks.sum { |block| block.actual_minutes.to_i } }
+    end
     @actual_minutes = @blocks.sum { |block| block.actual_minutes.to_i }
 
     # The configured hour is the first visible row. Earlier activities stay

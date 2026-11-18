@@ -1,5 +1,5 @@
 /* Mobile app shell and focused one-day agenda */
-.mobile-menu,.mobile-day-picker,.mobile-calendar-label,.mobile-help {
+.mobile-menu,.mobile-day-picker {
   display:none
 }
 @media (max-width:720px) {
@@ -14,6 +14,10 @@
   .topbar .brand {
     font-size:19px;
     letter-spacing:-.55px
+  }
+  /* On the calendar page the bar holds the week and actions: logo only. */
+  .topbar:has(.planner-toolbar) .brand-name {
+    display:none
   }
   .topbar .brand-mark {
     width:33px;
@@ -93,72 +97,8 @@
   .page-head p {
     display:none
   }
-  .week-number {
-    font-size:11px;
-    padding:5px 8px;
-    border-radius:7px
-  }
-  .page-head .actions {
-    width:100%;
-    gap:0
-  }
-  .page-head .actions .button.secondary {
-    display:none
-  }
-  .page-head .actions .button:not(.secondary) {
-    width:100%;
-    justify-content:center;
-    min-height:43px;
-    font-size:13px
-  }
-  .stats {
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:7px;
-    margin-bottom:13px
-  }
-  .stat {
-    min-width:0;
-    padding:11px 9px;
-    border-radius:11px
-  }
-  .stat span {
-    display:block;
-    min-height:26px;
-    font-size:10px;
-    line-height:1.25
-  }
-  .stat strong {
-    font-size:18px;
-    line-height:1.25;
-    margin-top:4px
-  }
   .calendar-shell {
     border-radius:13px
-  }
-  .calendar-header {
-    padding:11px 12px;
-    gap:8px
-  }
-  .calendar-header strong {
-    font-size:14px
-  }
-  .desktop-calendar-label {
-    display:none
-  }
-  .mobile-calendar-label {
-    display:inline
-  }
-  .week-nav {
-    gap:5px
-  }
-  .week-nav a {
-    min-height:39px;
-    min-width:39px;
-    display:grid;
-    place-items:center;
-    padding:5px 8px;
-    font-size:12px
   }
   .mobile-day-picker {
     display:grid;
@@ -223,17 +163,6 @@
     grid-column:2;
     grid-row:1
   }
-  .help {
-    padding:10px 12px;
-    font-size:11px;
-    line-height:1.45
-  }
-  .desktop-help {
-    display:none
-  }
-  .mobile-help {
-    display:inline
-  }
 }
 @media (max-width:480px) {
   .editor-schedule-row {
@@ -264,26 +193,11 @@
   }
 }
 @media (max-width:340px) {
-  .stats {
-    gap:5px
-  }
-  .stat {
-    padding:8px 6px
-  }
-  .stat span {
-    font-size:9px
-  }
-  .stat strong {
-    font-size:16px
-  }
   .mobile-day-picker {
     gap:1px;
     padding-inline:5px
   }
   .mobile-day strong {
     font-size:15px
-  }
-  .week-nav a {
-    min-width:35px
   }
 }

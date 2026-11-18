@@ -1,5 +1,4 @@
-<%= render "week_header" %>
-<%= render "week_summary" %>
+<% content_for :toolbar, render("toolbar") %>
 <div class="planner-workspace">
   <%= render "calendar" %>
   <%= render "pending_tasks" %>

@@ -14,12 +14,17 @@ Conservar el comportamiento y los datos durante refactorizaciones.
   parámetros permitidos y autorización sobre el usuario autenticado.
 - `app/models/time_block.rb`: reglas y validaciones de bloques y tags.
 - `app/views/planner/index.html.erb`: composición de la pantalla.
-- `app/views/planner/_week_header.html.erb`: título, semana y acciones.
-- `app/views/planner/_week_summary.html.erb`: indicadores semanales.
-- `app/views/planner/_calendar.html.erb`: cuadrícula, eventos y navegación.
+- `app/views/planner/_toolbar.html.erb`: la barra única de la agenda (semana,
+  previsto y real, buscar, ajustes, «+ Bloque»), que se muestra dentro de la
+  barra superior mediante `content_for :toolbar`.
+- `app/views/planner/_calendar.html.erb`: cuadrícula, totales por día, línea
+  de la hora actual y eventos.
 - `app/views/time_blocks/_form.html.erb`: campos HTML del formulario compartido.
 - `app/views/time_blocks/{new,edit}.html.erb`: contenedores de diálogo.
 - `public/styles/foundation.css`: estilos generales y calendario base.
+- `public/styles/planner-toolbar.css`: barra de la agenda, menú de ajustes,
+  totales por día y línea de la hora actual.
+- `public/scripts/calendar-now-line.js`: coloca la línea de la hora actual.
 - `public/styles/time-block-editor.css`: formulario y reglas responsivas del editor.
 - `public/styles/mobile.css`: barra de navegación y vista diaria móvil.
 - `public/styles/dialogs.css`: diálogos, overlay, acciones guardar/eliminar.
@@ -75,10 +80,9 @@ automáticamente cuando hay bloques anteriores. En móvil no se autodesplaza al
 primer bloque; se respeta el inicio de jornada. Las actividades anteriores
 no fuerzan el comienzo del calendario: aparece un acceso explícito para mostrar
 las horas previas, y las actividades que cruzan el inicio siguen visibles.
-La selección de hora es un formulario compacto que se guarda al cambiar
-(`public/scripts/calendar-preferences.js`) y conserva un botón accesible sin JS.
-Sus estilos viven en `public/styles/calendar-preferences.css` y deben mantener
-la cabecera estable en escritorio y móvil.
+La hora de inicio y el idioma están en el menú de ajustes de la barra; se
+guardan al cambiar (`public/scripts/calendar-preferences.js`) y conservan un
+botón accesible sin JS.
 
 Para cambiar este comportamiento, actualizar modelo, migración, controlador,
 vista y pruebas de forma conjunta. No guardar esta preferencia en localStorage.

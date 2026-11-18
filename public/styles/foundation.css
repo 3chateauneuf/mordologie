@@ -90,25 +90,6 @@ h1 {
   line-height:1.18;
   margin:0
 }
-.planner-page-title {
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:12px
-}
-.week-number {
-  display:inline-flex;
-  align-items:center;
-  background:#e7ebf8;
-  border:1px solid #d5ddf3;
-  border-radius:9px;
-  padding:6px 10px;
-  color:#455aaf;
-  font-size:13px;
-  font-weight:750;
-  letter-spacing:0;
-  white-space:nowrap
-}
 h2 {
   font-size:16px;
   margin:0
@@ -156,55 +137,12 @@ p {
   gap:8px;
   align-items:center
 }
-.stats {
-  display:flex;
-  gap:12px;
-  margin-bottom:23px
-}
-.stat {
-  border:1px solid var(--line);
-  background:white;
-  border-radius:15px;
-  padding:15px 18px;
-  min-width:185px
-}
-.stat span {
-  font-size:12px;
-  color:var(--sub)
-}
-.stat strong {
-  display:block;
-  font-size:23px;
-  letter-spacing:-.5px;
-  margin-top:2px
-}
 .calendar-shell {
   background:white;
   border:1px solid var(--line);
   border-radius:16px;
   overflow:hidden;
   box-shadow:0 7px 30px rgba(26,39,72,.035)
-}
-.calendar-header {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:18px 20px;
-  border-bottom:1px solid var(--line)
-}
-.calendar-header strong {
-  font-size:16px
-}
-.week-nav {
-  display:flex;
-  gap:8px;
-  align-items:center
-}
-.week-nav a {
-  border:1px solid var(--line);
-  border-radius:8px;
-  padding:6px 10px;
-  color:#45516a
 }
 .calendar-scroll {
   overflow-x:auto
@@ -215,7 +153,9 @@ p {
   min-width:1080px
 }
 .day-heading {
-  height:64px;
+  height:76px;
+  align-content:center;
+  gap:1px;
   display:grid;
   place-items:center;
   border-bottom:1px solid var(--line);
@@ -328,8 +268,7 @@ p {
   width:calc((100% - 8px) / var(--lanes,1) - 2px);
   overflow:hidden;
   border-radius:8px;
-  border-left:3px solid var(--event-color);
-  background:color-mix(in srgb,var(--event-color) 12%,white);
+  background:color-mix(in srgb,var(--event-color) 16%,white);
   padding:5px 8px;
   color:#263044;
   display:flex;
@@ -366,12 +305,6 @@ p {
   line-height:1.2;
   color:var(--event-color);
   font-weight:750
-}
-.help {
-  font-size:12px;
-  padding:13px 20px;
-  color:var(--sub);
-  border-top:1px solid var(--line)
 }
 .flash {
   padding:12px 16px;
@@ -551,18 +484,6 @@ a.tag-pill:hover,button.tag-pill:hover {
   }
   .page-head h1 {
     font-size:26px
-  }
-  .stats {
-    flex-wrap:wrap
-  }
-  .stat {
-    flex:1;
-    min-width:140px
-  }
-  .calendar-header {
-    padding:14px;
-    flex-wrap:wrap;
-    gap:10px
   }
   .form-card {
     margin:15px auto;
