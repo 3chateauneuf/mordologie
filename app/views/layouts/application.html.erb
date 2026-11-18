@@ -5,33 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f6f9">
   <title><%= t(".title") %></title>
-  <link rel="stylesheet" href="/styles/foundation.css">
-  <link rel="stylesheet" href="/styles/time-block-editor.css">
-  <link rel="stylesheet" href="/styles/mobile.css">
-  <link rel="stylesheet" href="/styles/dialogs.css">
-  <link rel="stylesheet" href="/styles/real-time-fields.css">
+  <link rel="stylesheet" href="<%= planner_asset("/styles/foundation.css") %>">
+  <link rel="stylesheet" href="<%= planner_asset("/styles/time-block-editor.css") %>">
+  <link rel="stylesheet" href="<%= planner_asset("/styles/mobile.css") %>">
+  <link rel="stylesheet" href="<%= planner_asset("/styles/dialogs.css") %>">
   <% if controller_name == "planner" && action_name == "index" %>
-    <link rel="stylesheet" href="/styles/pending-tasks.css">
-    <link rel="stylesheet" href="/styles/calendar-block-move.css">
-    <link rel="stylesheet" href="/styles/calendar-end-time.css">
-    <link rel="stylesheet" href="/styles/planner-toolbar.css">
+    <link rel="stylesheet" href="<%= planner_asset("/styles/pending-tasks.css") %>">
+    <link rel="stylesheet" href="<%= planner_asset("/styles/calendar-block-move.css") %>">
+    <link rel="stylesheet" href="<%= planner_asset("/styles/calendar-end-time.css") %>">
+    <link rel="stylesheet" href="<%= planner_asset("/styles/planner-toolbar.css") %>">
   <% end %>
   <%# Loaded first: the other scripts read their texts through it. %>
-  <script src="/scripts/i18n.js" defer></script>
-  <script src="/planner-dialog.js" defer></script>
-  <script src="/scripts/confirm-destroy.js" defer></script>
+  <script src="<%= planner_asset("/scripts/i18n.js") %>" defer></script>
+  <script src="<%= planner_asset("/planner-dialog.js") %>" defer></script>
+  <script src="<%= planner_asset("/scripts/confirm-destroy.js") %>" defer></script>
   <% if controller_name == "time_blocks" %>
-    <script src="/scripts/time-block-form.js" defer></script>
-    <script src="/scripts/real-time-fields.js" defer></script>
+    <script src="<%= planner_asset("/scripts/time-block-form.js") %>" defer></script>
   <% elsif controller_name == "planner" && action_name == "index" %>
-    <script src="/scripts/week-calendar.js" defer></script>
-    <script src="/scripts/pending-calendar-drag.js" defer></script>
-    <script src="/scripts/calendar-to-inbox.js" defer></script>
-    <script src="/scripts/calendar-block-move.js" defer></script>
-    <script src="/scripts/calendar-end-time.js" defer></script>
-    <script src="/scripts/calendar-history.js" defer></script>
-    <script src="/scripts/calendar-preferences.js" defer></script>
-    <script src="/scripts/calendar-now-line.js" defer></script>
+    <script src="<%= planner_asset("/scripts/week-calendar.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/pending-calendar-drag.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/calendar-to-inbox.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/calendar-block-move.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/calendar-end-time.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/calendar-history.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/calendar-preferences.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/calendar-now-line.js") %>" defer></script>
+    <script src="<%= planner_asset("/scripts/calendar-hovercard.js") %>" defer></script>
   <% end %>
 </head>
 <body data-i18n="<%= planner_js_translations.to_json %>" class="<%= controller_name == 'time_blocks' ? 'is-editor-page' : '' %> <%= controller_name == 'time_blocks' && %w[new create edit update].include?(action_name) ? 'is-dialog-page' : '' %>">

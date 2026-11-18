@@ -1,4 +1,9 @@
 class TimeBlocksController < ApplicationController
+  MAX_PLANNED_MINUTES = 960
+  MAX_ACTUAL_MINUTES = 24 * 60 - 1
+  # The model limits a plan to 16 elapsed hours. Durations here are clock
+  # minutes, and on the spring clock change 16 h read as 17 on the clock.
+  MAX_PLANNED_CLOCK_MINUTES = MAX_PLANNED_MINUTES + 60
   before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule, :end_time, :duplicate]
   before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
   before_action :load_planning_task, only: [:new, :create]
@@ -30,6 +35,7 @@ class TimeBlocksController < ApplicationController
   def create
     @block = current_user.time_blocks.new(block_details)
     @block.tag_list = submitted_tag_list
+    copy_actual_times_from_task
 
     if apply_schedule_params && @block.valid? && save_with_optional_task
       # Scheduling a pending task is not undoable here (it would send the task
@@ -43,13 +49,23 @@ class TimeBlocksController < ApplicationController
   end
 
   def edit
+    @edits_actual = @block.started?
     load_schedule_from_block
   end
 
   def update
+    # Decided before any change: once a block has started, the form edits
+    # what really happened and the plan stays as it was created.
+    @edits_actual = @block.started?
     @block.assign_attributes(block_details)
     @block.tag_list = submitted_tag_list
-    if apply_schedule_params && @block.save
+    if schedule_mode_changed?
+      # The block started while the dialog was open: show the real times
+      # instead of reading planned values as what really happened.
+      @block.errors.add(:base, t("time_blocks.errors.started_meanwhile"))
+      load_schedule_from_block
+      render :edit, status: :unprocessable_entity
+    elsif apply_schedule_params && @block.save
       redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601, day: @block.start_at.in_time_zone.to_date.iso8601), notice: t("time_blocks.flash.updated")
     else
       render :edit, status: :unprocessable_entity
@@ -172,8 +188,17 @@ class TimeBlocksController < ApplicationController
   # Start/end timestamps are always calculated on the server, never
   # mass-assigned from a browser form.
   def block_details
-    params.require(:time_block).permit(:title, :category, :notes,
-                                       :actual_start_clock, :actual_end_clock)
+    params.require(:time_block).permit(:title, :category, :notes)
+  end
+
+  # A pending task can carry real times (it was returned to the inbox after
+  # being worked on): scheduling it again keeps them.
+  def copy_actual_times_from_task
+    return unless @planning_task
+
+    @block.actual_start_clock = @planning_task.actual_start_clock
+    @block.actual_end_clock = @planning_task.actual_end_clock
+    @block.actual_minutes = @planning_task.actual_minutes
   end
 
   def submitted_tag_list
@@ -191,11 +216,60 @@ class TimeBlocksController < ApplicationController
     nil
   end
 
+  # The dialog says which times it showed (plan or real). If that no longer
+  # matches the block, saving would write values into the other set.
+  def schedule_mode_changed?
+    shown = params[:schedule_mode].presence
+    return false unless shown
+    shown != schedule_mode
+  end
+
+  def longest_duration
+    @edits_actual ? MAX_ACTUAL_MINUTES : MAX_PLANNED_CLOCK_MINUTES
+  end
+  helper_method :longest_duration
+
+  def schedule_mode
+    @edits_actual ? "actual" : "planned"
+  end
+  helper_method :schedule_mode
+
+  # The form shows what the calendar draws: real times once a block has
+  # started (see @edits_actual), planned times before.
   def load_schedule_from_block
-    start_time = @block.start_at.in_time_zone
-    @schedule_date = start_time.to_date.iso8601
-    @start_clock = start_time.strftime("%H:%M")
-    @duration_minutes = @block.duration_minutes
+    @schedule_date = @block.start_at.in_time_zone.to_date.iso8601
+    if @edits_actual
+      @start_clock, @duration_minutes = displayed_wall_clock
+    else
+      @start_clock, @duration_minutes = planned_wall_clock
+    end
+  end
+
+  # The planned start and its length in clock minutes. A plan inside the
+  # repeated autumn hour (02:30 CEST–02:00 CET) has no positive clock length,
+  # so it shows its elapsed minutes instead.
+  def planned_wall_clock
+    start = @block.start_at.in_time_zone
+    minutes = wall_clock_minutes(start, @block.end_at.in_time_zone)
+    minutes = @block.duration_minutes if minutes < 1
+    [start.strftime("%H:%M"), minutes]
+  end
+
+  # Minutes between two times as read on the clock, so a daylight-saving day
+  # shows the same length as the form counts (01:00–04:00 is 180 min).
+  def wall_clock_minutes(start, finish)
+    days = (finish.to_date - start.to_date).to_i
+    days * 24 * 60 + (finish.hour * 60 + finish.min) - (start.hour * 60 + start.min)
+  end
+
+  # The drawn start and its length in wall-clock minutes, as the form counts
+  # them: a daylight-saving day shows the real clocks, and an end clipped at
+  # midnight stays on the same day (23:59).
+  def displayed_wall_clock
+    start = @block.displayed_start_at.in_time_zone
+    finish = @block.displayed_end_at.in_time_zone
+    minutes = (finish.hour * 60 + finish.min) - (start.hour * 60 + start.min)
+    [start.strftime("%H:%M"), [minutes, 1].max]
   end
 
   def apply_schedule_params
@@ -208,15 +282,62 @@ class TimeBlocksController < ApplicationController
     clock_match = @start_clock.match(/\A([01]\d|2[0-3]):([0-5]\d)\z/)
     duration = Integer(@duration_minutes, exception: false)
 
-    unless day && clock_match && duration && duration.between?(1, 960)
+    # A plan lasts at most 16 h (checked exactly by the model); real times
+    # may fill the whole day.
+    unless day && clock_match && duration && duration.between?(1, longest_duration)
       @block.errors.add(:base, t("time_blocks.errors.invalid_schedule"))
       return false
     end
 
     start_time = Time.zone.local(day.year, day.month, day.day,
                                  clock_match[1].to_i, clock_match[2].to_i)
+    return apply_actual_schedule(day, start_time, duration) if @edits_actual
+
+    # Unchanged times keep the stored plan exactly (a title-only edit never
+    # rebuilds it, which matters on clock-change days).
+    if @block.persisted?
+      shown_start, shown_minutes = planned_wall_clock
+      same_day = day == @block.start_at.in_time_zone.to_date
+      return true if same_day && @start_clock == shown_start && duration == shown_minutes
+    end
+
     @block.start_at = start_time
-    @block.end_at = start_time + duration.minutes
+    @block.end_at = wall_clock_end(day, start_time, duration)
+    true
+  end
+
+  # The end the form shows: start clock plus the duration in clock minutes,
+  # so 01:00 + 180 min ends at 04:00 even on a daylight-saving day.
+  def wall_clock_end(day, start_time, duration)
+    end_minutes = start_time.hour * 60 + start_time.min + duration
+    end_day = day + end_minutes / (24 * 60)
+    minute_of_day = end_minutes % (24 * 60)
+    Time.zone.local(end_day.year, end_day.month, end_day.day,
+                    minute_of_day / 60, minute_of_day % 60)
+  end
+
+  # For a block that has started: the form's start and duration become the
+  # real times, only when they were changed, so editing just the title never
+  # invents real times. Another day moves the plan too, with the same clocks.
+  def apply_actual_schedule(day, start_time, duration)
+    shown_start, shown_minutes = displayed_wall_clock
+
+    days_moved = (day - @block.start_at.in_time_zone.to_date).to_i
+    if days_moved != 0
+      @block.start_at += days_moved.days
+      @block.end_at += days_moved.days
+    end
+    return true if @start_clock == shown_start && duration == shown_minutes
+
+    # Wall-clock minutes, as in the form: on a daylight-saving day the end
+    # entered is the end saved.
+    end_minutes = start_time.hour * 60 + start_time.min + duration
+    if end_minutes >= 24 * 60
+      @block.errors.add(:base, t("time_blocks.errors.past_midnight"))
+      return false
+    end
+    @block.actual_start_clock = @start_clock
+    @block.actual_end_clock = format("%02d:%02d", end_minutes / 60, end_minutes % 60)
     true
   end
 end

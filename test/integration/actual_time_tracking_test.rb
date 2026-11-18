@@ -1,5 +1,7 @@
 require "test_helper"
 
+# The block dialog has a single start / duration / end. Once a block has
+# started, they are what really happened and the plan stays as created.
 class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.create!(
@@ -13,6 +15,7 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to root_path
 
+    # In the past: it has started.
     @block = @user.time_blocks.create!(
       title: "Montage", category: "travail",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
@@ -20,10 +23,8 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     )
   end
 
-  test "14:11 to 17:38 calculates 207 actual minutes, without changing planned time" do
-    patch time_block_path(@block), params: block_params(
-      actual_start_clock: "14:11", actual_end_clock: "17:38"
-    )
+  test "changing the times of a started block records the real times" do
+    patch time_block_path(@block), params: block_params(start_clock: "14:11", duration_minutes: "207")
     assert_response :redirect
 
     @block.reload
@@ -34,100 +35,241 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_equal "09:00", @block.start_at.in_time_zone.strftime("%H:%M")
   end
 
-  test "the server ignores a forged minute total and derives duration from clocks" do
-    patch time_block_path(@block), params: {
-      time_block: block_params[:time_block].merge(
-        actual_start_clock: "14:11", actual_end_clock: "17:38",
-        actual_minutes: "999"
-      )
-    }
+  test "editing only the title never invents real times" do
+    patch time_block_path(@block), params: block_params(title: "Montage final")
     assert_response :redirect
-    assert_equal 207, @block.reload.actual_minutes
-  end
 
-  test "new activity can be saved without real clock times" do
-    post time_blocks_path, params: {
-      time_block: {
-        title: "Sans temps réel", category: "travail",
-        schedule_date: "2026-11-03", start_clock: "10:00",
-        duration_minutes: "30", actual_start_clock: "", actual_end_clock: ""
-      }
-    }
-    assert_response :redirect
-    block = @user.time_blocks.last
-    assert_nil block.actual_minutes
-    assert_nil block.actual_start_clock.presence
-    assert_nil block.actual_end_clock.presence
-  end
-
-  test "one real clock may be saved and completed later without calculating early" do
-    patch time_block_path(@block), params: block_params(
-      actual_start_clock: "14:11", actual_end_clock: ""
-    )
-    assert_response :redirect
     @block.reload
-    assert_equal "14:11", @block.actual_start_clock
-    assert_nil @block.actual_end_clock.presence
+    assert_equal "Montage final", @block.title
+    assert_nil @block.actual_start_clock
+    assert_nil @block.actual_end_clock
     assert_nil @block.actual_minutes
+  end
+
+  test "a future block's times are still the plan" do
+    future = @user.time_blocks.create!(
+      title: "Plus tard", category: "travail",
+      start_at: Time.zone.local(2030, 1, 7, 9, 0),
+      end_at: Time.zone.local(2030, 1, 7, 10, 0)
+    )
+    patch time_block_path(future), params: {
+      time_block: { title: "Plus tard", category: "travail", schedule_date: "2030-01-07",
+                    start_clock: "10:00", duration_minutes: "90" }
+    }
+
+    future.reload
+    assert_equal "10:00", future.start_at.in_time_zone.strftime("%H:%M")
+    assert_equal 90, future.duration_minutes
+    assert_nil future.actual_start_clock
+  end
+
+  test "a block that started while its plan was being edited is not saved silently" do
+    patch time_block_path(@block), params: block_params(start_clock: "10:00", duration_minutes: "60")
+      .merge(schedule_mode: "planned")
+
+    assert_response :unprocessable_entity
+    assert_select ".editor-actual-note"
+    @block.reload
+    assert_nil @block.actual_start_clock
+    assert_equal "09:00", @block.start_at.in_time_zone.strftime("%H:%M")
+  end
+
+  test "the dialog says which times it shows and saves when that still holds" do
+    get edit_time_block_path(@block)
+    assert_select "input[name='schedule_mode'][value='actual']"
+
+    patch time_block_path(@block), params: block_params(start_clock: "10:00", duration_minutes: "60")
+      .merge(schedule_mode: "actual")
+    assert_response :redirect
+    assert_equal "10:00", @block.reload.actual_start_clock
+  end
+
+  test "a 16-hour plan across the clock change stays editable" do
+    spring = @user.time_blocks.create!(
+      title: "Longue journée", category: "travail",
+      start_at: Time.zone.local(2030, 3, 31, 0, 0),
+      end_at: Time.zone.local(2030, 3, 31, 0, 0) + 16.hours
+    )
+    get edit_time_block_path(spring)
+    assert_select "input[name='time_block[duration_minutes]'][value='1020']"
+
+    patch time_block_path(spring), params: {
+      time_block: { title: "Journée", category: "travail", schedule_date: "2030-03-31",
+                    start_clock: "00:00", duration_minutes: "1020" }
+    }
+    assert_response :redirect
+    assert_equal "Journée", spring.reload.title
+    assert_equal 960, spring.duration_minutes
+  end
+
+  test "a plan inside the repeated autumn hour stays editable and unchanged" do
+    # 02:30 CEST to 02:00 CET on 2030-10-27: 30 elapsed minutes.
+    start = Time.utc(2030, 10, 27, 0, 30)
+    autumn = @user.time_blocks.create!(
+      title: "Heure répétée", category: "travail", start_at: start, end_at: start + 30.minutes
+    )
+    get edit_time_block_path(autumn)
+    assert_select "input[name='time_block[duration_minutes]'][value='30']"
+
+    patch time_block_path(autumn), params: {
+      time_block: { title: "Renommée", category: "travail", schedule_date: "2030-10-27",
+                    start_clock: "02:30", duration_minutes: "30" }
+    }
+    assert_response :redirect
+    autumn.reload
+    assert_equal "Renommée", autumn.title
+    assert_equal start, autumn.start_at
+    assert_equal start + 30.minutes, autumn.end_at
+  end
+
+  test "a plan longer than 16 hours on an ordinary day is refused" do
+    future = @user.time_blocks.create!(
+      title: "Trop long", category: "travail",
+      start_at: Time.zone.local(2030, 1, 7, 6, 0),
+      end_at: Time.zone.local(2030, 1, 7, 7, 0)
+    )
+    patch time_block_path(future), params: {
+      time_block: { title: "Trop long", category: "travail", schedule_date: "2030-01-07",
+                    start_clock: "06:00", duration_minutes: "1000" }
+    }
+    assert_response :unprocessable_entity
+    assert_equal 60, future.reload.duration_minutes
+  end
+
+  test "on a daylight-saving day the planned end entered is the end saved" do
+    post time_blocks_path, params: {
+      time_block: { title: "Nuit courte", category: "travail", schedule_date: "2030-03-31",
+                    start_clock: "01:00", duration_minutes: "180" }
+    }
+
+    block = @user.time_blocks.find_by!(title: "Nuit courte")
+    assert_equal "04:00", block.end_at.in_time_zone.strftime("%H:%M")
+
+    get edit_time_block_path(block)
+    assert_select "input[name='time_block[duration_minutes]'][value='180']"
+  end
+
+  test "the dialog shows the real times, the plan as a note and an editable end" do
+    @block.update!(actual_start_clock: "09:10", actual_end_clock: "12:00")
 
     get edit_time_block_path(@block)
     assert_response :success
-    assert_select "#time_block_actual_start_clock[value='14:11']", count: 1
-
-    patch time_block_path(@block), params: block_params(
-      actual_start_clock: "14:11", actual_end_clock: "17:38"
-    )
-    assert_response :redirect
-    assert_equal 207, @block.reload.actual_minutes
+    assert_select "#time_block_start_clock[value='09:10']"
+    assert_select "#time_block_duration_minutes[value='170']"
+    assert_select "input[type='time'][data-end-input]", count: 1
+    assert_select ".editor-actual-note", text: /09:00 – 11:45/
+    assert_select "textarea[name='time_block[notes]']", count: 1
+    # The separate real-time section is gone.
+    assert_select "[name='time_block[actual_start_clock]'], [name='time_block[actual_end_clock]']", count: 0
+    assert_select ".editor-details", count: 0
   end
 
-  test "an end before start or an invalid clock is rejected" do
-    [
-      { actual_start_clock: "17:38", actual_end_clock: "14:11" },
-      { actual_start_clock: "14:11", actual_end_clock: "14:11" },
-      { actual_start_clock: "27:00", actual_end_clock: "17:38" }
-    ].each do |value|
-      patch time_block_path(@block), params: block_params(value)
-      assert_response :unprocessable_entity
-      assert_nil @block.reload.actual_minutes
-      assert_nil @block.actual_start_clock
-      assert_nil @block.actual_end_clock
-    end
+  test "a new block's dialog has no real-time note" do
+    get new_time_block_path(day: "2030-01-07")
+    assert_select ".editor-actual-note", count: 0
   end
 
-  test "clearing an existing pair clears the derived total" do
-    @block.update!(actual_start_clock: "14:11", actual_end_clock: "17:38")
-    assert_equal 207, @block.actual_minutes
-
+  test "real-time fields sent by hand are ignored" do
     patch time_block_path(@block), params: block_params(
-      actual_start_clock: "", actual_end_clock: ""
+      actual_start_clock: "14:11", actual_end_clock: "17:38", actual_minutes: "999"
     )
-    assert_response :redirect
+
     @block.reload
+    assert_nil @block.actual_start_clock
     assert_nil @block.actual_minutes
-    assert_nil @block.actual_start_clock.presence
-    assert_nil @block.actual_end_clock.presence
+  end
+
+  test "moving a started block to another day moves the plan and keeps real clocks" do
+    @block.update!(actual_start_clock: "09:10", actual_end_clock: "12:00")
+    patch time_block_path(@block), params: block_params(
+      schedule_date: "2026-11-04", start_clock: "09:10", duration_minutes: "170"
+    )
+
+    @block.reload
+    assert_equal "2026-11-04 09:00", @block.start_at.in_time_zone.strftime("%F %H:%M")
+    assert_equal "09:10", @block.actual_start_clock
+    assert_equal "12:00", @block.actual_end_clock
+  end
+
+  test "real times past midnight are refused" do
+    patch time_block_path(@block), params: block_params(start_clock: "23:00", duration_minutes: "120")
+
+    assert_response :unprocessable_entity
+    assert_nil @block.reload.actual_start_clock
+  end
+
+  test "real times longer than 16 hours stay editable" do
+    @block.update!(actual_start_clock: "01:00", actual_end_clock: "19:00")
+
+    get edit_time_block_path(@block)
+    assert_select "#time_block_duration_minutes[value='1080'][max='1439']"
+
+    patch time_block_path(@block), params: block_params(
+      title: "Longue journée", start_clock: "01:00", duration_minutes: "1080"
+    )
+    assert_response :redirect
+    assert_equal "Longue journée", @block.reload.title
+    assert_equal "19:00", @block.actual_end_clock
+  end
+
+  test "on a daylight-saving day the real end entered is the end saved" do
+    spring = @user.time_blocks.create!(
+      title: "Changement d'heure", category: "travail",
+      start_at: Time.zone.local(2026, 3, 29, 1, 0),
+      end_at: Time.zone.local(2026, 3, 29, 4, 0)
+    )
+    patch time_block_path(spring), params: {
+      time_block: { title: spring.title, category: "travail", schedule_date: "2026-03-29",
+                    start_clock: "01:00", duration_minutes: "200" }
+    }
+
+    assert_equal "01:00", spring.reload.actual_start_clock
+    assert_equal "04:20", spring.actual_end_clock
+  end
+
+  test "a real pair across the clock change loads and saves its own clocks" do
+    spring = @user.time_blocks.create!(
+      title: "Nuit", category: "travail",
+      start_at: Time.zone.local(2026, 3, 29, 1, 0),
+      end_at: Time.zone.local(2026, 3, 29, 2, 0),
+      actual_start_clock: "01:00", actual_end_clock: "04:00"
+    )
+
+    get edit_time_block_path(spring)
+    assert_select "#time_block_duration_minutes[value='180']"
+
+    patch time_block_path(spring), params: {
+      time_block: { title: spring.title, category: "travail", schedule_date: "2026-03-29",
+                    start_clock: "01:00", duration_minutes: "120" }
+    }
+    assert_equal "03:00", spring.reload.actual_end_clock
+  end
+
+  test "a real start late in the evening stays editable" do
+    late = @user.time_blocks.create!(
+      title: "Tard", category: "travail",
+      start_at: Time.zone.local(2026, 11, 2, 9, 0),
+      end_at: Time.zone.local(2026, 11, 2, 11, 0),
+      actual_start_clock: "23:00"
+    )
+
+    get edit_time_block_path(late)
+    assert_select "#time_block_duration_minutes[value='59']"
+
+    patch time_block_path(late), params: {
+      time_block: { title: "Tard (titre)", category: "travail", schedule_date: "2026-11-02",
+                    start_clock: "23:00", duration_minutes: "59" }
+    }
+    assert_response :redirect
+    assert_equal "Tard (titre)", late.reload.title
+    assert_nil late.actual_end_clock
   end
 
   test "historical actual minutes without clock times are not lost" do
     @block.update!(actual_minutes: 80)
-    get edit_time_block_path(@block)
-    assert_response :success
-    assert_select ".editor-legacy-duration", text: /1 h 20/
-    assert_select "#time_block_actual_start_clock", count: 1
-    assert_select "#time_block_actual_end_clock", count: 1
+    patch time_block_path(@block), params: block_params(title: "Montage")
 
-    patch time_block_path(@block), params: block_params(
-      actual_start_clock: "", actual_end_clock: ""
-    )
-    assert_response :redirect
     assert_equal 80, @block.reload.actual_minutes
-
-    patch time_block_path(@block), params: block_params(
-      actual_start_clock: "14:11", actual_end_clock: "17:38"
-    )
-    assert_response :redirect
-    assert_equal 207, @block.reload.actual_minutes
   end
 
   test "real start/end survive standby and reprogramming with the same linked task" do
@@ -150,19 +292,9 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_equal 165, block.duration_minutes
   end
 
-  test "the editor exposes two real clock fields and no manual minutes input" do
-    get edit_time_block_path(@block)
-    assert_response :success
-    assert_select "input[type='time'][name='time_block[actual_start_clock]']", count: 1
-    assert_select "input[type='time'][name='time_block[actual_end_clock]']", count: 1
-    assert_select "input[name='time_block[actual_minutes]']", count: 0
-    assert_select "script[src='/scripts/real-time-fields.js']", count: 1
-    assert_select "link[href='/styles/real-time-fields.css']", count: 1
-    assert_select "script:not([src])", count: 0
-  end
-
   private
 
+  # What the dialog sends unchanged for @block (09:00, 165 min).
   def block_params(changes = {})
     {
       time_block: {

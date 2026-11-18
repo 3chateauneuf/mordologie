@@ -1,5 +1,6 @@
 <%= form_with model: @block, html: { id: "planner-time-block-form", class: "editor-form", data: { schedule_form: true } } do |f| %>
   <%= hidden_field_tag :planning_task_id, @planning_task.id if @planning_task %>
+  <%= hidden_field_tag :schedule_mode, schedule_mode if @block.persisted? %>
   <% if @block.errors.any? %>
     <div class="editor-error" role="alert">
       <strong><%= t(".check") %></strong>
@@ -13,6 +14,10 @@
       <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off", placeholder: t(".activity_placeholder") %>
     </div>
 
+    <% if @edits_actual %>
+      <%# Once a block has started, these fields are what really happened. %>
+      <p class="editor-actual-note"><%= t(".editing_actual", planned: "#{@block.start_at.in_time_zone.strftime('%H:%M')} – #{@block.end_at.in_time_zone.strftime('%H:%M')}") %></p>
+    <% end %>
     <div class="editor-schedule-row">
       <div class="editor-field">
         <%= label_tag :time_block_schedule_date, t(".date") %>
@@ -33,13 +38,16 @@
       </div>
       <div class="editor-duration-bottom">
         <div class="editor-custom-duration">
-          <span><%= t(".planned_duration") %></span>
-          <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1, aria: { label: t(".duration_minutes") } %>
+          <span><%= @edits_actual ? t(".actual_duration_label") : t(".planned_duration") %></span>
+          <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: longest_duration, step: 1, aria: { label: t(".duration_minutes") } %>
           <span>min</span>
         </div>
-        <div class="editor-end" role="status" aria-live="polite">
-          <span><%= t(".end") %></span>
-          <strong data-end-preview>—</strong>
+        <%# Editing the end recalculates the duration (time-block-form.js);
+            the duration is what the server receives. %>
+        <div class="editor-end">
+          <label for="time_block_end_clock"><%= t(".end") %></label>
+          <input type="time" id="time_block_end_clock" step="60" data-end-input>
+          <span class="editor-end-message" data-end-message role="status" aria-live="polite"></span>
         </div>
       </div>
     </div>
@@ -75,40 +83,13 @@
       <% end %>
       <p class="editor-tag-message" role="status" aria-live="polite" data-tag-message></p>
     </div>
+
+    <div class="editor-field editor-notes-field">
+      <%= f.label :notes do %><%= t(".notes") %> <span class="editor-optional"><%= t(".optional") %></span><% end %>
+      <%= f.text_area :notes, rows: 2, placeholder: t(".notes_placeholder") %>
+    </div>
   </div>
 
-  <details class="editor-details" <%= "open" if @block.notes.present? || @block.actual_minutes.present? || @block.actual_start_clock.present? %>>
-    <summary><%= t(".details") %> <span><%= t(".details_optional") %></span></summary>
-    <div class="editor-details-content">
-      <div class="editor-field">
-        <%= f.label :notes, t(".notes") %>
-        <%= f.text_area :notes, rows: 3, placeholder: t(".notes_placeholder") %>
-      </div>
-      <fieldset class="editor-field editor-real-time" data-actual-time>
-        <legend><%= t(".actual_times") %></legend>
-        <div class="editor-actual-times">
-          <div>
-            <%= f.label :actual_start_clock, t(".actual_start") %>
-            <%= f.time_field :actual_start_clock, step: 60 %>
-          </div>
-          <div>
-            <%= f.label :actual_end_clock, t(".actual_end") %>
-            <%= f.time_field :actual_end_clock, step: 60 %>
-          </div>
-        </div>
-        <p class="editor-actual-result" data-actual-preview aria-live="polite">
-          <% if @block.actual_start_clock.present? && @block.actual_end_clock.present? && @block.actual_minutes.present? %>
-            <%= t(".actual_duration", duration: planner_duration(@block.actual_minutes)) %>
-          <% else %>
-            <%= t(".actual_duration", duration: "—") %>
-          <% end %>
-        </p>
-        <% if @block.actual_minutes.present? && @block.actual_start_clock.blank? && @block.actual_end_clock.blank? %>
-          <p class="editor-legacy-duration"><%= t(".legacy_duration", duration: planner_duration(@block.actual_minutes)) %></p>
-        <% end %>
-      </fieldset>
-    </div>
-  </details>
 
 <% end %>
 

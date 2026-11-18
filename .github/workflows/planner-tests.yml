@@ -59,8 +59,8 @@ jobs:
           node --check public/scripts/calendar-history.js
           node --check public/scripts/calendar-preferences.js
           node --check public/scripts/calendar-now-line.js
+          node --check public/scripts/calendar-hovercard.js
           node --check public/scripts/time-block-form.js
-          node --check public/scripts/real-time-fields.js
           node --check public/planner-dialog.js
           node --check public/scripts/confirm-destroy.js
       - name: Enforce external view scripts and styles

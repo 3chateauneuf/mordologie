@@ -20,8 +20,8 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-calendar]", count: 1
-    assert_select "script[src='/scripts/week-calendar.js']", count: 1
-    assert_select "link[href='/styles/foundation.css']", count: 1
+    assert_select "script[src^='/scripts/week-calendar.js?v=']", count: 1
+    assert_select "link[href^='/styles/foundation.css?v=']", count: 1
     assert_select "style", count: 0
     assert_select "script:not([src])", count: 0
   end
@@ -53,7 +53,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     assert_select ".editor-delete-button", count: 1
     assert_select "form[data-confirm-destroy]", count: 1
     assert_select "button[form='planner-time-block-form']", count: 1
-    assert_select "script[src='/scripts/time-block-form.js']", count: 1
+    assert_select "script[src^='/scripts/time-block-form.js?v=']", count: 1
     assert_select "script:not([src])", count: 0
 
     patch time_block_path(block), params: {
@@ -64,18 +64,19 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
         start_clock: "10:00",
         duration_minutes: "30",
         tag_list: "montage",
-        notes: "Terminé",
-        actual_start_clock: "10:00",
-        actual_end_clock: "10:42"
+        notes: "Terminé"
       }
     }
     assert_redirected_to root_path(week: "2026-11-02", day: "2026-11-02")
     block.reload
     assert_equal "Monter un épisode", block.title
-    assert_equal 30, block.duration_minutes
-    assert_equal 42, block.actual_minutes
+    # The block is in the past: changed times are what really happened,
+    # and the plan stays as it was created.
     assert_equal "10:00", block.actual_start_clock
-    assert_equal "10:42", block.actual_end_clock
+    assert_equal "10:30", block.actual_end_clock
+    assert_equal 30, block.actual_minutes
+    assert_equal "09:30", block.start_at.in_time_zone.strftime("%H:%M")
+    assert_equal 45, block.duration_minutes
     assert_equal ["montage"], block.tags
 
     assert_difference("TimeBlock.count", -1) do
@@ -89,8 +90,8 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     get root_path(week: "2026-11-02")
     assert_response :success
     assert_select ".settings-form select option[selected][value='6']", count: 1
-    assert_select "script[src='/scripts/calendar-preferences.js']", count: 1
-    assert_select "link[href='/styles/planner-toolbar.css']", count: 1
+    assert_select "script[src^='/scripts/calendar-preferences.js?v=']", count: 1
+    assert_select "link[href^='/styles/planner-toolbar.css?v=']", count: 1
     assert_select ".time-rail .hour:first-child", text: "06:00"
     assert_select ".hour", text: "05:00", count: 0
     assert_select "form[action='#{calendar_preferences_path}']", count: 1

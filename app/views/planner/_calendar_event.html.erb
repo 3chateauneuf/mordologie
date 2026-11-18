@@ -5,10 +5,14 @@
 <% category_label = TimeBlock.category_label(block.category) %>
 <% end_kind = block.started? ? "actual" : "planned" %>
 <% lane_style = "--lane:#{entry.lane};--lanes:#{entry.lanes};--event-color:#{block.color}" %>
-<% tooltip = ["#{block.title} · #{entry.start_label} – #{entry.end_label} · #{category_label}"]
-   tooltip << "##{block.tags.join(' #')}" if block.tags.any?
-   tooltip << t(".planned", range: entry.planned_label) if entry.planned_ghost?
-   tooltip << t(".drag_hint") %>
+<% has_notes = block.notes.present?
+   has_tags = block.tags.any?
+   # Blocks with a note or tags get a hover card (calendar-hovercard.js);
+   # the others keep the browser's simple tooltip.
+   preview = has_notes || has_tags
+   times_label = "#{entry.start_label} – #{entry.end_label} · #{category_label}"
+   times_label += " · #{t('.planned', range: entry.planned_label)}" if entry.planned_ghost?
+   tooltip = [block.title, times_label, t(".drag_hint")].join(" · ") %>
 
 <% if entry.planned_ghost? %>
   <div class="event-planned-ghost" aria-hidden="true"
@@ -18,7 +22,15 @@
 <div class="event <%= 'is-compact' if entry.compact? %> <%= 'is-actual' if block.shows_actual_time? %>"
      draggable="true"
      style="top:<%= entry.top %>px;height:<%= entry.height %>px;<%= lane_style %>"
-     title="<%= tooltip.join(' · ') %>"
+     <% if preview %>
+       data-preview
+       data-preview-title="<%= block.title %>"
+       data-preview-times="<%= times_label %>"
+       data-preview-tags="<%= block.tags.map { |tag| "##{tag}" }.join(' ') %>"
+       data-preview-notes="<%= block.notes %>"
+     <% else %>
+       title="<%= tooltip %>"
+     <% end %>
      data-calendar-block-id="<%= block.id %>"
      data-calendar-start-clock="<%= entry.start_label %>"
      data-calendar-start-date="<%= block.start_at.in_time_zone.to_date.iso8601 %>"
@@ -27,11 +39,23 @@
      data-end-clock="<%= entry.end_label %>"
      data-end-kind="<%= end_kind %>"
      data-finish-now="<%= entry.finish_now? %>">
-  <%= link_to edit_time_block_path(block), class: "event-link" do %><strong><%= block.title %></strong><% end %>
+  <%= link_to edit_time_block_path(block), class: "event-link" do %>
+    <strong><%= block.title %></strong>
+    <% if preview %>
+      <span class="event-badges">
+        <% if has_notes %>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" role="img" aria-label="<%= t(".has_notes") %>"><path d="M4 5h16M4 11h16M4 17h10"/></svg>
+        <% end %>
+        <% if has_tags %>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="<%= t(".has_tags") %>"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/></svg>
+        <% end %>
+      </span>
+    <% end %>
+  <% end %>
   <small class="event-times">
     <%= entry.start_label %> –
-    <button type="button" class="event-end-time" data-end-time-trigger
-            aria-label="<%= t(".change_end", kind: t(end_kind == "actual" ? ".end_actual" : ".end_planned"), time: entry.end_label) %>"><%= entry.end_label %></button>
+    <button type="button" class="event-end-time" data-end-time-trigger title="<%= t(".change_end_hint") %>"
+            aria-label="<%= t(".change_end", kind: t(end_kind == "actual" ? ".end_actual" : ".end_planned"), time: entry.end_label) %>"><svg class="event-end-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><%= entry.end_label %></button>
   </small>
   <% if entry.height >= 82 %><span class="category"><%= category_label %></span><% end %>
   <% if entry.finish_now? && entry.height >= 70 %>

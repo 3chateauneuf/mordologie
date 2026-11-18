@@ -58,7 +58,7 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
 
     assert_select ".day-body.today [data-now-line][data-time-zone='Europe/Paris']", count: 1
     assert_select "[data-now-line]", count: 1
-    assert_select "script[src='/scripts/calendar-now-line.js']", count: 1
+    assert_select "script[src^='/scripts/calendar-now-line.js?v=']", count: 1
 
     get root_path(week: "2026-11-02")
     assert_select "[data-now-line]", count: 0 unless Date.current.between?(Date.new(2026, 11, 2), Date.new(2026, 11, 8))

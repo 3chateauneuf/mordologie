@@ -1,4 +1,19 @@
+require "digest"
+
 module PlannerHelper
+  # "/scripts/x.js" -> "/scripts/x.js?v=3f2a91c0". The version is a digest of
+  # the file, so each deploy that changes a file gives it a new address and
+  # browsers stop using an old cached copy. Computed once per file and process.
+  PUBLIC_ASSET_VERSIONS = Hash.new do |versions, path|
+    file = Rails.public_path.join(path.delete_prefix("/"))
+    versions[path] = file.file? ? Digest::MD5.file(file).hexdigest.first(8) : nil
+  end
+
+  def planner_asset(path)
+    version = PUBLIC_ASSET_VERSIONS[path]
+    version ? "#{path}?v=#{version}" : path
+  end
+
   # Display exact tracked minutes instead of rounding fractions of hours.
   # E.g. 15 minutes should never be shown as "0.3 h".
   def planner_duration(total_minutes)

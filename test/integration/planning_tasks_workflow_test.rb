@@ -43,6 +43,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
   end
 
   test "scheduling a pending task links exactly one block and unscheduling restores it" do
+    # A future block: its times are still the plan, which flows back to the task.
     task = @user.planning_tasks.create!(
       title: "Préparer une vidéo",
       category: "travail",
@@ -50,7 +51,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       notes: "Plan"
     )
 
-    get new_time_block_path(day: "2026-11-02", planning_task_id: task.id)
+    get new_time_block_path(day: "2030-01-07", planning_task_id: task.id)
     assert_response :success
     assert_select "#time_block_title[value='Préparer une vidéo']", count: 1
     assert_select "#time_block_duration_minutes[value='90']", count: 1
@@ -60,7 +61,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       title: "Préparer une vidéo",
       category: "travail",
       notes: "Plan",
-      schedule_date: "2026-11-02",
+      schedule_date: "2030-01-07",
       start_clock: "10:00",
       duration_minutes: "90",
       tag_list: "video"
@@ -75,7 +76,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal block.id, task.reload.scheduled_block_id
     assert_equal 90, block.duration_minutes
 
-    get root_path(week: "2026-11-02")
+    get root_path(week: "2030-01-07")
     assert_response :success
     assert_select ".pending-task[data-pending-task-id='#{task.id}']", count: 0
     assert_select ".day-body .event", text: /Préparer une vidéo/
@@ -97,14 +98,14 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       end
     end
 
-    assert_redirected_to root_path(week: "2026-11-02", day: "2026-11-02")
+    assert_redirected_to root_path(week: "2030-01-07", day: "2030-01-07")
     task.reload
     assert_nil task.scheduled_block_id
     assert_equal "Montage final", task.title
     assert_equal 30, task.estimated_minutes
     assert_equal "Plan", task.notes
 
-    get root_path(week: "2026-11-02")
+    get root_path(week: "2030-01-07")
     assert_select ".pending-task[data-pending-task-id='#{task.id}']", text: /Montage final/
   end
 
