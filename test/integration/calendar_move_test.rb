@@ -110,4 +110,12 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
     assert_equal "12:00", @block.actual_end_clock
     assert_equal "09:00", @block.start_at.in_time_zone.strftime("%H:%M")
   end
+
+  test "moving onto a daylight-saving day keeps the planned duration" do
+    post reschedule_time_block_path(@block),
+         params: { schedule_date: "2026-03-29", start_clock: "00:30" }
+
+    assert_equal 75, @block.reload.duration_minutes
+    assert_equal "00:30", @block.start_at.in_time_zone.strftime("%H:%M")
+  end
 end

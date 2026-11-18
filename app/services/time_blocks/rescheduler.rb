@@ -45,11 +45,17 @@ module TimeBlocks
       end
 
       start_at = local_time(date, planned_start)
+      # Elapsed time, not wall-clock: the planned duration stays the same
+      # even on the days when the clocks change.
+      end_at = start_at + @block.duration_minutes.minutes
+      if end_at.in_time_zone.to_date != date
+        return Result.new(error: "Ce créneau dépasse minuit. Choisissez une heure plus tôt.")
+      end
       return Result.new(block: @block, overlap: false) if start_at == @block.start_at
 
       @block.assign_attributes(
         start_at: start_at,
-        end_at: local_time(date, planned_end),
+        end_at: end_at,
         actual_start_clock: actual_start,
         actual_end_clock: actual_end
       )
