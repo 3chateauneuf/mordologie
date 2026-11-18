@@ -27,7 +27,7 @@
   <% end %>
 </div>
 <div class="page-head" style="margin-top:20px">
-  <div><h2><%= t(".results", count: "#{@results.length}#{ if @results.length == 100}") %></h2><p><%= t(".results_note") %></p></div>
+  <div><h2><%= t(".results", count: @results.length == 100 ? "100+" : @results.length) %></h2><p><%= t(".results_note") %></p></div>
 </div>
 <div class="result-list">
   <% if @results.empty? %>
