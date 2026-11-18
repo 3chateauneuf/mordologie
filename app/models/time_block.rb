@@ -53,6 +53,10 @@ class TimeBlock < ApplicationRecord
      start_at.in_time_zone.end_of_day].min
   end
 
+  def displayed_duration_minutes
+    ((displayed_end_at - displayed_start_at) / 60).round
+  end
+
   def shows_actual_time?
     displayed_start_at != start_at || displayed_end_at != end_at
   end
