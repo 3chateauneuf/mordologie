@@ -23,7 +23,7 @@ class PlannerCalendarSpecificSlotTest < ApplicationSystemTestCase
       const marker = document.createElement("div");
       marker.className = "test-calendar-drop-slot";
       marker.style.cssText =
-        "position:absolute;top:396px;height:12px;left:5px;right:5px;z-index:30";
+        "position:absolute;top:792px;height:12px;left:5px;right:5px;z-index:30"; // 12:00, 66 px per hour from 00:00
       day.appendChild(marker);
     JS
 
