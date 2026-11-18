@@ -37,7 +37,44 @@ class TimeBlock < ApplicationRecord
     CATEGORIES.fetch(category, CATEGORIES.fetch("travail"))[:color]
   end
 
+  # The calendar draws what really happened when it is known,
+  # and falls back to the planned slot otherwise.
+  def displayed_start_at
+    actual_clock_time(actual_start_clock) || start_at
+  end
+
+  def displayed_end_at
+    finish = actual_clock_time(actual_end_clock)
+    return finish if finish && finish > displayed_start_at
+
+    # Real start without a real end yet: keep the planned length,
+    # without crossing midnight.
+    [displayed_start_at + duration_minutes.minutes,
+     start_at.in_time_zone.end_of_day].min
+  end
+
+  def shows_actual_time?
+    displayed_start_at != start_at || displayed_end_at != end_at
+  end
+
+  # Once a block has begun, its end time describes what really happened.
+  # Before that, it is still a plan.
+  def started?(now = Time.current)
+    displayed_start_at <= now
+  end
+
   private
+
+  # Real clocks are stored as "HH:MM" on the block's own day.
+  # Built from date + clock (not midnight + minutes) so that days when
+  # the clocks change keep the same wall-clock time.
+  def actual_clock_time(clock)
+    minutes = clock_minutes(clock)
+    return nil unless minutes && start_at
+
+    day = start_at.in_time_zone.to_date
+    Time.zone.local(day.year, day.month, day.day, minutes / 60, minutes % 60)
+  end
 
   def valid_tags
     if tags.length > 12

@@ -8,7 +8,8 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    # Ruby 3.3.8 is not built for ubuntu-26.04 (the new ubuntu-latest).
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17
@@ -53,6 +54,7 @@ jobs:
           node --check public/scripts/pending-calendar-drag.js
           node --check public/scripts/calendar-to-inbox.js
           node --check public/scripts/calendar-block-move.js
+          node --check public/scripts/calendar-end-time.js
           node --check public/scripts/calendar-preferences.js
           node --check public/scripts/time-block-form.js
           node --check public/scripts/real-time-fields.js

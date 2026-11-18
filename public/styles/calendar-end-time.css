@@ -1,0 +1,208 @@
+/* Quick end-time editing in the calendar: visible end time, "Terminer
+   maintenant", resize handle, planned-slot outline and the shared editor. */
+
+/* The title link covers the whole block: a click anywhere edits it.
+   Controls that sit above it (z-index 1) keep their own action. */
+.event-link {
+  color:inherit;
+  text-decoration:none;
+  min-width:0;
+}
+.event-link::after {
+  content:"";
+  position:absolute;
+  inset:0;
+}
+.event-times {
+  position:relative;
+  z-index:1;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.event-end-time {
+  pointer-events:auto;
+  font:inherit;
+  font-weight:750;
+  color:#263044;
+  background:none;
+  border:0;
+  border-bottom:1px dashed currentColor;
+  padding:0 1px;
+  cursor:pointer;
+}
+.event-end-time:hover,
+.event-end-time:focus-visible {
+  color:var(--brand);
+  outline:none;
+  background:#ffffffb3;
+  border-radius:3px;
+}
+
+/* Too short for two lines: title and times share one. */
+.event.is-compact {
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+}
+.event.is-compact .event-link {
+  flex:1 1 auto;
+  overflow:hidden;
+}
+.event.is-compact .event-times {
+  flex:0 0 auto;
+}
+
+/* "Terminer maintenant" on the task in progress. */
+.event-finish-form {
+  position:relative;
+  z-index:1;
+  margin:2px 0 0;
+}
+.event-finish-now {
+  border:0;
+  border-radius:999px;
+  padding:3px 9px;
+  background:var(--event-color);
+  color:white;
+  font-size:10px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+/* Bottom edge: drag to change the end, in 5-minute steps. */
+.event-resize-handle {
+  position:absolute;
+  z-index:1;
+  left:0;
+  right:0;
+  bottom:0;
+  height:8px;
+  cursor:ns-resize;
+  touch-action:none;
+}
+.event-resize-handle::after {
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:2px;
+  width:22px;
+  height:3px;
+  margin-left:-11px;
+  border-radius:3px;
+  background:var(--event-color);
+  opacity:0;
+  transition:opacity .15s;
+}
+.event:hover .event-resize-handle::after,
+.event.is-resizing .event-resize-handle::after {
+  opacity:.7;
+}
+.event.is-resizing {
+  box-shadow:0 4px 16px #2223;
+  z-index:4;
+}
+@media (pointer:coarse) {
+  .event-resize-handle { height:14px; }
+  .event-resize-handle::after { opacity:.5; }
+}
+
+/* Planned slot, shown as an outline when the real time differs. */
+.event-planned-ghost {
+  position:absolute;
+  left:calc(5px + (100% - 8px) * var(--lane,0) / var(--lanes,1));
+  width:calc((100% - 8px) / var(--lanes,1) - 2px);
+  border:1.5px dashed color-mix(in srgb,var(--event-color) 55%,white);
+  border-radius:8px;
+  pointer-events:none;
+}
+
+/* Shared end-time editor. */
+.end-time-popover {
+  position:fixed;
+  z-index:50;
+  width:250px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:white;
+  box-shadow:0 12px 32px #1b22381f;
+  color:var(--ink);
+}
+.end-time-popover[hidden] { display:none; }
+.end-time-popover-title {
+  margin:0;
+  font-size:13px;
+  font-weight:750;
+}
+.end-time-popover-hint {
+  margin:2px 0 10px;
+  color:var(--sub);
+  font-size:11px;
+}
+.end-time-popover-field {
+  display:grid;
+  gap:4px;
+  color:#59667b;
+  font-size:11px;
+}
+.end-time-popover-field input {
+  font:inherit;
+  font-size:15px;
+  padding:7px 9px;
+  border:1px solid #dbe1e9;
+  border-radius:9px;
+}
+.end-time-quick {
+  display:flex;
+  gap:6px;
+  margin:10px 0;
+}
+.end-time-quick button,
+.end-time-actions button,
+.end-time-finish-now {
+  flex:1;
+  font:inherit;
+  font-size:12px;
+  padding:7px 8px;
+  border:1px solid #dbe1e9;
+  border-radius:9px;
+  background:white;
+  color:#4a556e;
+  cursor:pointer;
+}
+.end-time-quick button:hover { background:#edf0ff; color:var(--brand); }
+.end-time-finish-now {
+  width:100%;
+  margin-bottom:10px;
+  border-color:var(--brand);
+  color:var(--brand);
+  font-weight:750;
+}
+.end-time-actions {
+  display:flex;
+  gap:6px;
+}
+.end-time-actions .is-primary {
+  background:var(--brand);
+  border-color:var(--brand);
+  color:white;
+  font-weight:750;
+}
+
+/* Mobile: a bottom sheet, easy to reach with the thumb. */
+@media (max-width:720px) {
+  .end-time-popover {
+    left:0;
+    right:0;
+    bottom:0;
+    top:auto;
+    width:auto;
+    padding:16px 16px 22px;
+    border-radius:16px 16px 0 0;
+  }
+  .end-time-popover-field input { font-size:16px; }
+  .end-time-quick button,
+  .end-time-actions button,
+  .end-time-finish-now { padding:11px 8px; font-size:14px; }
+}

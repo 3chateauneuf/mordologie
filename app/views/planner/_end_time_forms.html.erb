@@ -1,0 +1,10 @@
+<%# Each block has its own form bound to its URL (per-form CSRF tokens).
+    JavaScript only fills end_clock or finish_now, never form.action. %>
+<% @blocks.each do |block| %>
+  <%= form_with url: end_time_time_block_path(block), method: :patch,
+        class: "calendar-end-time-form",
+        data: { end_time_block_id: block.id } do %>
+    <%= hidden_field_tag :end_clock, nil %>
+    <%= hidden_field_tag :finish_now, nil %>
+  <% end %>
+<% end %>
