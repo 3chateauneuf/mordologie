@@ -30,7 +30,7 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
     # +30 min saves straight away and the blocks now sit side by side.
     find("#{event} .event-end-time").click
     assert_selector "[data-end-time-popover]", text: "Fin réelle"
-    click_button "+30 min"
+    on_next_page { click_button "+30 min" }
     assert_selector "#{event} .event-end-time", text: "10:30"
     assert_equal "10:30", @block.reload.actual_end_clock
     assert_equal "09:00", @block.actual_start_clock
@@ -46,7 +46,7 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
     # A Time value lets Capybara set the field reliably; typing over a
     # prefilled <input type="time"> depends on Chrome's segment editing.
     fill_in "Heure de fin", with: Time.zone.parse("2026-11-02 11:15")
-    find("[data-end-time-input]").send_keys(:enter)
+    on_next_page { find("[data-end-time-input]").send_keys(:enter) }
     assert_selector "#{event} .event-end-time", text: "11:15"
     assert_equal "11:15", @block.reload.actual_end_clock
 
@@ -80,6 +80,17 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
   end
 
   private
+
+  # Runs a step that saves through a form and waits for the new page, so the
+  # next step never acts on an element of the page being replaced.
+  def on_next_page
+    page.execute_script("window.endTimeTestOldPage = true")
+    yield
+    page.document.synchronize(5) do
+      still_old = page.evaluate_script("window.endTimeTestOldPage === true")
+      raise Capybara::ExpectationNotMet, "page not reloaded yet" if still_old
+    end
+  end
 
   def wait_for_new_end(block, previous:)
     page.document.synchronize(5) do
