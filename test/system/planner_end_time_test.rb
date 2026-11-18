@@ -6,7 +6,8 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
     @user = User.create!(
       email: "browser-end-time@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     @block = @user.time_blocks.create!(
       title: "Montage vidéo", category: "travail",

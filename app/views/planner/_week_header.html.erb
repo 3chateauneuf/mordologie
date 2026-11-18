@@ -1,4 +1,4 @@
 <div class="page-head">
-  <div><h1 class="planner-page-title">Ma semaine <span class="week-number">Semana <%= @week_start.cweek %></span></h1><p>Du <%= @week_start.strftime("%d/%m") %> au <%= (@week_start + 6).strftime("%d/%m/%Y") %> · Organiser, puis comprendre le temps réellement utilisé.</p></div>
-  <div class="actions"><%= link_to "Rechercher", recherche_path, class: "button secondary" %><%= link_to "+ Planifier un créneau", new_time_block_path(day: @selected_day.iso8601), class: "button" %></div>
+  <div><h1 class="planner-page-title"><%= t(".title") %> <span class="week-number"><%= t(".week_number", number: @week_start.cweek) %></span></h1><p><%= t(".range", from: @week_start.strftime("%d/%m"), to: (@week_start + 6).strftime("%d/%m/%Y")) %></p></div>
+  <div class="actions"><%= link_to t(".search"), recherche_path, class: "button secondary" %><%= link_to t(".plan"), new_time_block_path(day: @selected_day.iso8601), class: "button" %></div>
 </div>

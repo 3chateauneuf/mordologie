@@ -5,7 +5,8 @@ class EndTimeTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       email: "end-time-http@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     post session_path, params: { email: @user.email, password: "test-password-1234" }
     @block = @user.time_blocks.create!(
@@ -38,7 +39,8 @@ class EndTimeTest < ActionDispatch::IntegrationTest
     other = User.create!(
       email: "other@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     foreign = other.time_blocks.create!(
       title: "Privé", category: "travail",

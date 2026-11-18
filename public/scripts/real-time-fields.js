@@ -33,16 +33,16 @@
     let error = "";
 
     if (!start.value && !end.value) {
-      preview.textContent = "Durée réelle : —";
+      preview.textContent = plannerText("actual_duration", { duration: "—" });
     } else if (!start.value || !end.value) {
       // Saving just the beginning is useful during an ongoing activity.
-      preview.textContent = "Durée réelle : — (en attente des deux heures)";
+      preview.textContent = plannerText("actual_waiting");
     } else if (first === null || last === null) {
-      error = "Indiquez des heures valides.";
+      error = plannerText("invalid_clocks");
     } else if (last <= first) {
-      error = "La fin doit être après le début, le même jour.";
+      error = plannerText("end_after_start_same_day");
     } else {
-      preview.textContent = "Durée réelle : " + duration(last - first);
+      preview.textContent = plannerText("actual_duration", { duration: duration(last - first) });
     }
 
     if (error) {

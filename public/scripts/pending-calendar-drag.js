@@ -62,7 +62,7 @@
     )) + "px";
 
     preview.textContent = crossesMidnight
-      ? "Dépasse minuit"
+      ? plannerText("past_midnight")
       : clock(location.minutes) + " – " + clock(end);
 
     return location;

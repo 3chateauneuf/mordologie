@@ -38,16 +38,14 @@ class PlanningTask < ApplicationRecord
   private
 
   def valid_tags
-    errors.add(:tags, "ne peuvent pas dépasser 12 étiquettes") if tags.length > 12
-    if tags.any? { |tag| tag.length > 40 }
-      errors.add(:tags, "doivent contenir 40 caractères maximum chacune")
-    end
+    errors.add(:tags, :too_many_tags) if tags.length > 12
+    errors.add(:tags, :tag_too_long) if tags.any? { |tag| tag.length > 40 }
   end
 
   def scheduled_block_belongs_to_user
     return unless scheduled_block
     return if scheduled_block.user_id == user_id
 
-    errors.add(:scheduled_block, "doit appartenir au même compte")
+    errors.add(:scheduled_block, :same_account)
   end
 end

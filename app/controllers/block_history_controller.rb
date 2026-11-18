@@ -2,16 +2,16 @@
 class BlockHistoryController < ApplicationController
   def undo
     result = BlockHistory.new(current_user).undo
-    return back_to_calendar(alert: "Rien à annuler.") unless result
+    return back_to_calendar(alert: t("block_history.flash.nothing_to_undo")) unless result
 
-    back_to_calendar(result, notice: "Annulé : #{result.change.label}. Ctrl+Maj+Z pour rétablir.")
+    back_to_calendar(result, notice: t("block_history.flash.undone", change: result.change.label))
   end
 
   def redo
     result = BlockHistory.new(current_user).redo
-    return back_to_calendar(alert: "Rien à rétablir.") unless result
+    return back_to_calendar(alert: t("block_history.flash.nothing_to_redo")) unless result
 
-    back_to_calendar(result, notice: "Rétabli : #{result.change.label}.")
+    back_to_calendar(result, notice: t("block_history.flash.redone", change: result.change.label))
   end
 
   private

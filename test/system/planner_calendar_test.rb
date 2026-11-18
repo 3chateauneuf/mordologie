@@ -5,7 +5,8 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     @user = User.create!(
       email: "browser-planner@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
 
     # This must never change the configured first visible hour.
@@ -74,7 +75,8 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     assert_equal "visible", page.evaluate_script(
       "getComputedStyle(document.querySelector('.calendar-scroll')).overflowY"
     )
-    assert_selector ".calendar-start-form select", visible: true, count: 1
+    assert_selector ".calendar-start-form select[name='calendar_start_hour']", visible: true, count: 1
+    assert_selector ".calendar-start-form select[name='locale']", visible: true, count: 1
     assert_operator position(".pending-panel")["top"], :<, position(".calendar-shell")["top"]
 
     page_width = page.evaluate_script("document.documentElement.scrollWidth")

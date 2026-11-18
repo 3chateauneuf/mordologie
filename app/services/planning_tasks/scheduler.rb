@@ -19,19 +19,19 @@ module PlanningTasks
     def call
       date = parse_date
       clock = @clock.match(/\A([01]\d|2[0-3]):(00|15|30|45)\z/)
-      return Result.new(error: "Choisissez un jour et une heure par quart d'heure.") unless date && clock
+      return Result.new(error: I18n.t("planning_tasks.errors.quarter_hour")) unless date && clock
 
       starts_at = Time.zone.local(date.year, date.month, date.day,
                                   clock[1].to_i, clock[2].to_i)
       ends_at = starts_at + @task.estimated_minutes.minutes
 
       if ends_at.in_time_zone.to_date != date
-        return Result.new(error: "Cette activité dépasse minuit. Choisissez une heure plus tôt.")
+        return Result.new(error: I18n.t("planning_tasks.errors.past_midnight"))
       end
 
       @task.with_lock do
         if @task.scheduled?
-          Result.new(error: "Cette activité est déjà planifiée.")
+          Result.new(error: I18n.t("time_blocks.errors.already_scheduled"))
         else
           reserve(starts_at, ends_at)
         end

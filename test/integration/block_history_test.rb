@@ -5,7 +5,8 @@ class BlockHistoryHttpTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       email: "history-http@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     post session_path, params: { email: @user.email, password: "test-password-1234" }
     @block = @user.time_blocks.create!(
@@ -63,7 +64,7 @@ class BlockHistoryHttpTest < ActionDispatch::IntegrationTest
     delete session_path
     other = User.create!(email: "other-history@example.test",
                          password: "test-password-1234",
-                         password_confirmation: "test-password-1234")
+                         password_confirmation: "test-password-1234", locale: "fr")
     post session_path, params: { email: other.email, password: "test-password-1234" }
 
     post undo_block_change_path

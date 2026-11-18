@@ -2,12 +2,12 @@
     The title link covers the whole block (click = edit); the end time,
     "Terminer maintenant" and the bottom handle sit above it. %>
 <% block = entry.block %>
-<% category_label = TimeBlock::CATEGORIES.fetch(block.category)[:label] %>
+<% category_label = TimeBlock.category_label(block.category) %>
 <% end_kind = block.started? ? "actual" : "planned" %>
 <% lane_style = "--lane:#{entry.lane};--lanes:#{entry.lanes};--event-color:#{block.color}" %>
 <% tooltip = ["#{block.title} · #{entry.start_label} – #{entry.end_label} · #{category_label}"]
    tooltip << "##{block.tags.join(' #')}" if block.tags.any?
-   tooltip << "Prévu : #{entry.planned_label}" if entry.planned_ghost? %>
+   tooltip << t(".planned", range: entry.planned_label) if entry.planned_ghost? %>
 
 <% if entry.planned_ghost? %>
   <div class="event-planned-ghost" aria-hidden="true"
@@ -30,11 +30,11 @@
   <small class="event-times">
     <%= entry.start_label %> –
     <button type="button" class="event-end-time" data-end-time-trigger
-            aria-label="<%= end_kind == 'actual' ? 'Fin réelle' : 'Fin prévue' %> : <%= entry.end_label %>. Modifier"><%= entry.end_label %></button>
+            aria-label="<%= t(".change_end", kind: t(end_kind == "actual" ? ".end_actual" : ".end_planned"), time: entry.end_label) %>"><%= entry.end_label %></button>
   </small>
   <% if entry.height >= 82 %><span class="category"><%= category_label %></span><% end %>
   <% if entry.finish_now? && entry.height >= 70 %>
-    <%= button_to "Terminer maintenant", end_time_time_block_path(block),
+    <%= button_to t(".finish_now"), end_time_time_block_path(block),
           method: :patch, params: { finish_now: "1" },
           class: "event-finish-now", form_class: "event-finish-form" %>
   <% end %>

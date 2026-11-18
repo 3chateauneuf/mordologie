@@ -5,6 +5,8 @@ gem "rails", "~> 8.0.0"
 gem "pg", "~> 1.5"
 gem "puma", "~> 6.0"
 gem "bcrypt", "~> 3.1"
+# Standard Rails translations (dates, numbers, validation messages) for es and fr.
+gem "rails-i18n", "~> 8.0"
 
 # Browser tests run only in the isolated test environment.
 group :test do

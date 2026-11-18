@@ -5,7 +5,8 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
     @user = User.create!(
       email: "browser-actual-time@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     @block = @user.time_blocks.create!(
       title: "Montage réel", category: "travail",

@@ -13,13 +13,13 @@ class SessionsController < ApplicationController
       session[:user_id] = user.id
       redirect_to root_path
     else
-      flash.now[:alert] = "Email ou mot de passe incorrect."
+      flash.now[:alert] = t("sessions.flash.failed")
       render :new, status: :unprocessable_entity
     end
   end
 
   def destroy
     reset_session
-    redirect_to connexion_path, notice: "Déconnecté."
+    redirect_to connexion_path, notice: t("sessions.flash.logged_out")
   end
 end

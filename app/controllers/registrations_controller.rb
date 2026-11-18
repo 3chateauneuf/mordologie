@@ -11,7 +11,7 @@ class RegistrationsController < ApplicationController
     expected = ENV.fetch("PLANNER_SETUP_TOKEN", "")
     unless expected.present? && ActiveSupport::SecurityUtils.secure_compare(provided, expected)
       @user = User.new(user_params)
-      flash.now[:alert] = "Code d'installation incorrect."
+      flash.now[:alert] = t("registrations.flash.wrong_token")
       return render :new, status: :unprocessable_entity
     end
 
@@ -19,7 +19,7 @@ class RegistrationsController < ApplicationController
     if @user.save
       reset_session
       session[:user_id] = @user.id
-      redirect_to root_path, notice: "Bienvenue dans Planner."
+      redirect_to root_path, notice: t("registrations.flash.welcome")
     else
       render :new, status: :unprocessable_entity
     end

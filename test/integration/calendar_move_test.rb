@@ -5,7 +5,8 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       email: "calendar-move@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     post session_path, params: {
       email: @user.email, password: "test-password-1234"
@@ -70,7 +71,8 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
     other = User.create!(
       email: "other-move@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     block = other.time_blocks.create!(
       title: "Privé", category: "travail",

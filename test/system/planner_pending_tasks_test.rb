@@ -5,7 +5,8 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
     @user = User.create!(
       email: "browser-pending@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     login
   end

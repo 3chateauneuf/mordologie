@@ -7,7 +7,8 @@ class DayLayoutTest < ActiveSupport::TestCase
     @user = User.create!(
       email: "day-layout@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
   end
 

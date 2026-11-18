@@ -85,6 +85,16 @@
     font-size: 11px;
   }
 
+  /* The menu shows the language name already: keep its label for screen
+     readers only, so the settings stay on one line. */
+  .calendar-start-form .calendar-language-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
   .calendar-start-form select {
     padding: 6px 7px;
     min-height: 38px;

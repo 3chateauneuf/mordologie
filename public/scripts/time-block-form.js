@@ -18,7 +18,7 @@
     if (!valid) {
       endPreview.textContent = "—";
     } else if (crossesMidnight) {
-      endPreview.textContent = "Après minuit";
+      endPreview.textContent = plannerText("after_midnight");
     } else {
       endPreview.textContent = String(Math.floor(endMinutes / 60)).padStart(2, "0") + ":" +
         String(endMinutes % 60).padStart(2, "0");
@@ -77,9 +77,9 @@
     function add(value) {
       const incoming = value.split(",").map(normalize).filter(Boolean);
       for (const tag of incoming) {
-        if (tag.length > 40) { inform("40 caractères maximum par tag."); return false; }
+        if (tag.length > 40) { inform(plannerText("tag_too_long")); return false; }
         if (tags.includes(tag)) continue;
-        if (tags.length >= 12) { inform("12 tags maximum."); return false; }
+        if (tags.length >= 12) { inform(plannerText("too_many_tags")); return false; }
         tags.push(tag);
       }
       inform("");

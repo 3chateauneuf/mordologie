@@ -20,13 +20,13 @@ module TimeBlocks
     def call
       date = parse_date
       time_match = @clock.match(/\A([01]\d|2[0-3]):(00|15|30|45)\z/)
-      return Result.new(error: "Choisissez une date et une heure par quart d'heure.") unless date && time_match
+      return Result.new(error: I18n.t("time_blocks.errors.quarter_hour")) unless date && time_match
 
       start_at = Time.zone.local(date.year, date.month, date.day,
                                  time_match[1].to_i, time_match[2].to_i)
       end_at = start_at + @block.displayed_duration_minutes.minutes
       if end_at.in_time_zone.to_date != date
-        return Result.new(error: "Ce créneau dépasse minuit. Choisissez une heure plus tôt.")
+        return Result.new(error: I18n.t("time_blocks.errors.past_midnight"))
       end
 
       copy = @block.user.time_blocks.new(

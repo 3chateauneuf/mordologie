@@ -1,36 +1,36 @@
 <aside class="pending-panel" aria-labelledby="pending-tasks-heading">
   <div class="pending-panel-header">
     <div class="pending-panel-title">
-      <h2 id="pending-tasks-heading">À planifier</h2>
+      <h2 id="pending-tasks-heading"><%= t(".title") %></h2>
       <span class="pending-count"><%= @pending_tasks.size %></span>
     </div>
     <details class="pending-add" data-pending-add>
-      <summary>+ Ajouter</summary>
+      <summary><%= t(".add") %></summary>
       <div class="pending-add-body">
         <%= form_with model: PlanningTask.new, url: planning_tasks_path, class: "pending-form" do |f| %>
           <%= hidden_field_tag :week, @week_start.iso8601 %>
           <%= hidden_field_tag :day, @selected_day.iso8601 %>
-          <%= f.label :title, "Activité" %>
+          <%= f.label :title, t(".activity") %>
           <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off",
-                placeholder: "Qu'avez-vous à faire ?" %>
+                placeholder: t(".activity_placeholder") %>
           <div class="pending-form-fields">
             <div>
-              <%= f.label :estimated_minutes, "Durée estimée (min)" %>
+              <%= f.label :estimated_minutes, t(".estimated_minutes") %>
               <%= f.number_field :estimated_minutes, value: 60, min: 1, max: 960, required: true %>
             </div>
             <div>
-              <%= f.label :category, "Catégorie" %>
-              <%= f.select :category, TimeBlock::CATEGORIES.map { |key, value| [value[:label], key] } %>
+              <%= f.label :category, t(".category") %>
+              <%= f.select :category, TimeBlock.category_options %>
             </div>
           </div>
-          <%= f.submit "Ajouter", class: "pending-add-submit" %>
+          <%= f.submit t(".submit"), class: "pending-add-submit" %>
         <% end %>
       </div>
     </details>
   </div>
 
   <% if @pending_tasks.empty? %>
-    <p class="pending-empty">Rien en attente. Ajoutez une activité sans lui donner de date.</p>
+    <p class="pending-empty"><%= t(".empty") %></p>
   <% else %>
     <ol class="pending-list">
       <% @pending_tasks.each do |task| %>
@@ -39,18 +39,18 @@
             style="--task-color:<%= TimeBlock::CATEGORIES.fetch(task.category)[:color] %>">
           <div class="pending-task-main">
             <strong><%= task.title %></strong>
-            <span><%= TimeBlock::CATEGORIES.fetch(task.category)[:label] %> · <%= planner_duration(task.estimated_minutes) %></span>
+            <span><%= TimeBlock.category_label(task.category) %> · <%= planner_duration(task.estimated_minutes) %></span>
           </div>
           <div class="pending-task-actions">
-            <%= link_to "Planifier", new_time_block_path(day: @selected_day.iso8601,
+            <%= link_to t(".plan"), new_time_block_path(day: @selected_day.iso8601,
                   planning_task_id: task.id), class: "pending-plan",
-                  aria: { label: "Planifier #{task.title}" } %>
+                  aria: { label: t(".plan_label", title: task.title) } %>
             <%= button_to "×", planning_task_path(task), method: :delete,
                   params: { week: @week_start.iso8601, day: @selected_day.iso8601 },
                   class: "pending-remove", form: {
-                    data: { confirm_destroy: "Supprimer définitivement cette tâche ?" }
-                  }, title: "Supprimer la tâche",
-                  aria: { label: "Supprimer #{task.title}" } %>
+                    data: { confirm_destroy: t(".remove_confirm") }
+                  }, title: t(".remove_title"),
+                  aria: { label: t(".remove_label", title: task.title) } %>
           </div>
           <%= form_with url: schedule_planning_task_path(task), method: :post,
                 class: "pending-schedule-form", data: { schedule_task_form: true } do %>
@@ -63,6 +63,6 @@
       <% end %>
     </ol>
   <% end %>
-  <p class="pending-drop-instruction" aria-hidden="true">Déposez ici pour remettre en attente</p>
-  <p class="pending-hint">Glissez une tâche sur une heure pour la planifier directement. « Planifier » permet de personnaliser.</p>
+  <p class="pending-drop-instruction" aria-hidden="true"><%= t(".drop_back") %></p>
+  <p class="pending-hint"><%= t(".hint") %></p>
 </aside>

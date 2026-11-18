@@ -56,8 +56,8 @@
     preview.classList.toggle("is-invalid", crossesMidnight);
     preview.classList.toggle("is-copy", isCopy(event));
     const end = slot.minutes + duration;
-    preview.textContent = crossesMidnight ? "Dépasse minuit" :
-      (isCopy(event) ? "Copie · " : "") + slot.clock + " – " + String(Math.floor(end / 60)).padStart(2, "0") +
+    preview.textContent = crossesMidnight ? plannerText("past_midnight") :
+      (isCopy(event) ? plannerText("copy") : "") + slot.clock + " – " + String(Math.floor(end / 60)).padStart(2, "0") +
       ":" + String(end % 60).padStart(2, "0");
   }
 

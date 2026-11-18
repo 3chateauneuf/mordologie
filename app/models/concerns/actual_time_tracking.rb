@@ -47,15 +47,15 @@ module ActualTimeTracking
     # A partial entry can be saved now and completed later.
     # It has no calculable duration until both clocks are present.
     if first.present? && clock_minutes(first).nil?
-      errors.add(:actual_start_clock, "doit être au format HH:MM")
+      errors.add(:actual_start_clock, :clock_format)
     end
     if last.present? && clock_minutes(last).nil?
-      errors.add(:actual_end_clock, "doit être au format HH:MM")
+      errors.add(:actual_end_clock, :clock_format)
     end
     return if errors.any? || first.blank? || last.blank?
 
     if clock_minutes(last) <= clock_minutes(first)
-      errors.add(:base, "La fin réelle doit être après le début réel, le même jour.")
+      errors.add(:base, :actual_end_after_start)
     end
   end
 end

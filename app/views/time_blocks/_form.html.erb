@@ -2,70 +2,70 @@
   <%= hidden_field_tag :planning_task_id, @planning_task.id if @planning_task %>
   <% if @block.errors.any? %>
     <div class="editor-error" role="alert">
-      <strong>Vérifiez les informations :</strong>
+      <strong><%= t(".check") %></strong>
       <ul><% @block.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
     </div>
   <% end %>
 
   <div class="editor-core">
     <div class="editor-field editor-title-field">
-      <%= f.label :title, "Activité" %>
-      <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off", placeholder: "Que voulez-vous faire ?" %>
+      <%= f.label :title, t(".activity") %>
+      <%= f.text_field :title, required: true, maxlength: 120, autocomplete: "off", placeholder: t(".activity_placeholder") %>
     </div>
 
     <div class="editor-schedule-row">
       <div class="editor-field">
-        <%= label_tag :time_block_schedule_date, "Date" %>
+        <%= label_tag :time_block_schedule_date, t(".date") %>
         <%= date_field_tag "time_block[schedule_date]", @schedule_date, id: "time_block_schedule_date", required: true %>
       </div>
       <div class="editor-field">
-        <%= label_tag :time_block_start_clock, "Début" %>
+        <%= label_tag :time_block_start_clock, t(".start") %>
         <%= time_field_tag "time_block[start_clock]", @start_clock, id: "time_block_start_clock", required: true, step: 60 %>
       </div>
     </div>
 
     <div class="editor-field editor-duration-field">
-      <%= label_tag :time_block_duration_minutes, "Durée" %>
-      <div class="duration-picks" role="group" aria-label="Durées rapides">
+      <%= label_tag :time_block_duration_minutes, t(".duration") %>
+      <div class="duration-picks" role="group" aria-label="<%= t(".quick_durations") %>">
         <% [[15, "15 min"], [30, "30 min"], [60, "1 h"], [90, "1 h 30"], [120, "2 h"]].each do |minutes, label| %>
           <button type="button" class="duration-pick" data-duration="<%= minutes %>" aria-pressed="false"><%= label %></button>
         <% end %>
       </div>
       <div class="editor-duration-bottom">
         <div class="editor-custom-duration">
-          <span>Durée prévue</span>
-          <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1, aria: { label: "Durée en minutes" } %>
+          <span><%= t(".planned_duration") %></span>
+          <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1, aria: { label: t(".duration_minutes") } %>
           <span>min</span>
         </div>
         <div class="editor-end" role="status" aria-live="polite">
-          <span>Fin</span>
+          <span><%= t(".end") %></span>
           <strong data-end-preview>—</strong>
         </div>
       </div>
     </div>
 
     <fieldset class="editor-field editor-categories">
-      <legend>Catégorie</legend>
+      <legend><%= t(".category") %></legend>
       <div class="editor-category-grid">
         <% TimeBlock::CATEGORIES.each do |key, data| %>
           <label class="editor-category-choice" style="--category-color:<%= data[:color] %>">
             <%= f.radio_button :category, key, required: true %>
-            <span class="category-choice-inner"><span class="category-color"></span><%= data[:label] %></span>
+            <span class="category-choice-inner"><span class="category-color"></span><%= TimeBlock.category_label(key) %></span>
           </label>
         <% end %>
       </div>
     </fieldset>
 
     <div class="editor-field editor-tags-field">
-      <label for="time_block_tag_list">Tags <span class="editor-optional">· facultatif</span></label>
+      <label for="time_block_tag_list"><%= t(".tags") %> <span class="editor-optional"><%= t(".optional") %></span></label>
       <div class="tag-editor" data-tags-editor>
-        <%= text_field_tag "time_block[tag_list]", @block.tag_list, id: "time_block_tag_list", class: "tag-source", maxlength: 550, autocomplete: "off", placeholder: "Ex. vidéo, youtube, sin rueditas" %>
+        <%= text_field_tag "time_block[tag_list]", @block.tag_list, id: "time_block_tag_list", class: "tag-source", maxlength: 550, autocomplete: "off", placeholder: t(".tags_placeholder") %>
         <div class="tag-editor-chips" data-tag-chips></div>
-        <input type="text" class="tag-entry" data-tag-entry placeholder="+ Ajouter un tag" aria-label="Ajouter un tag puis Entrée" maxlength="40" hidden>
+        <input type="text" class="tag-entry" data-tag-entry placeholder="<%= t(".add_tag") %>" aria-label="<%= t(".add_tag_label") %>" maxlength="40" hidden>
       </div>
       <% if @suggested_tags.present? %>
         <details class="editor-tag-reuse">
-          <summary>Réutiliser un tag</summary>
+          <summary><%= t(".reuse_tag") %></summary>
           <div class="tag-suggestions">
             <% @suggested_tags.each do |tag| %>
               <button type="button" class="tag-pill" data-suggest-tag="<%= tag %>">#<%= tag %></button>
@@ -78,33 +78,33 @@
   </div>
 
   <details class="editor-details" <%= "open" if @block.notes.present? || @block.actual_minutes.present? || @block.actual_start_clock.present? %>>
-    <summary>Notes et temps réel <span>Facultatif</span></summary>
+    <summary><%= t(".details") %> <span><%= t(".details_optional") %></span></summary>
     <div class="editor-details-content">
       <div class="editor-field">
-        <%= f.label :notes, "Notes" %>
-        <%= f.text_area :notes, rows: 3, placeholder: "Informations utiles pour cette activité" %>
+        <%= f.label :notes, t(".notes") %>
+        <%= f.text_area :notes, rows: 3, placeholder: t(".notes_placeholder") %>
       </div>
       <fieldset class="editor-field editor-real-time" data-actual-time>
-        <legend>Horaires réels</legend>
+        <legend><%= t(".actual_times") %></legend>
         <div class="editor-actual-times">
           <div>
-            <%= f.label :actual_start_clock, "Début réel" %>
+            <%= f.label :actual_start_clock, t(".actual_start") %>
             <%= f.time_field :actual_start_clock, step: 60 %>
           </div>
           <div>
-            <%= f.label :actual_end_clock, "Fin réelle" %>
+            <%= f.label :actual_end_clock, t(".actual_end") %>
             <%= f.time_field :actual_end_clock, step: 60 %>
           </div>
         </div>
         <p class="editor-actual-result" data-actual-preview aria-live="polite">
           <% if @block.actual_start_clock.present? && @block.actual_end_clock.present? && @block.actual_minutes.present? %>
-            Durée réelle : <%= planner_duration(@block.actual_minutes) %>
+            <%= t(".actual_duration", duration: planner_duration(@block.actual_minutes)) %>
           <% else %>
-            Durée réelle : —
+            <%= t(".actual_duration", duration: "—") %>
           <% end %>
         </p>
         <% if @block.actual_minutes.present? && @block.actual_start_clock.blank? && @block.actual_end_clock.blank? %>
-          <p class="editor-legacy-duration">Ancienne durée enregistrée : <%= planner_duration(@block.actual_minutes) %>. Saisissez les deux heures pour la remplacer.</p>
+          <p class="editor-legacy-duration"><%= t(".legacy_duration", duration: planner_duration(@block.actual_minutes)) %></p>
         <% end %>
       </fieldset>
     </div>
@@ -115,12 +115,12 @@
 <footer class="editor-footer <%= 'editor-footer-edit editor-footer-with-actions' if @block.persisted? %>">
   <% if @block.persisted? %>
     <div class="editor-delete-zone">
-      <%= button_to "Remettre en attente", return_to_inbox_time_block_path(@block),
+      <%= button_to t(".return_to_inbox"), return_to_inbox_time_block_path(@block),
             method: :post, class: "editor-standby-button" %>
-      <%= button_to "Supprimer définitivement", time_block_path(@block),
+      <%= button_to t(".delete"), time_block_path(@block),
             method: :delete, class: "editor-delete-button",
-            form: { data: { confirm_destroy: "Supprimer définitivement cette activité et son éventuel rappel en attente ? Cette action est irréversible." } } %>
+            form: { data: { confirm_destroy: t(".delete_confirm") } } %>
     </div>
   <% end %>
-  <button type="submit" form="planner-time-block-form" id="planner-time-block-submit" class="editor-submit"><%= @block.persisted? ? "Enregistrer" : "Créer le créneau" %></button>
+  <button type="submit" form="planner-time-block-form" id="planner-time-block-submit" class="editor-submit"><%= @block.persisted? ? t(".save") : t(".create") %></button>
 </footer>

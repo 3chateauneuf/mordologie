@@ -1,7 +1,7 @@
 // Quick end-time changes from the calendar.
 //
 // - Click a block's end time: a small editor opens (type a time,
-//   "+15 / +30 / +1 h", or "Terminer maintenant" for the task in progress).
+//   "+15 / +30 / +1 h", or "finish now" for the task in progress).
 // - Drag a block's bottom edge: the end moves in 5-minute steps.
 //
 // Every change is sent through the block's own Rails form
@@ -48,8 +48,8 @@
     openBlock = block;
     openTrigger = trigger;
     const isActual = block.dataset.endKind === "actual";
-    title.textContent = isActual ? "Fin réelle" : "Fin prévue";
-    hint.textContent = "Début : " + block.dataset.displayStartClock;
+    title.textContent = plannerText(isActual ? "end_actual" : "end_planned");
+    hint.textContent = plannerText("start_hint", { time: block.dataset.displayStartClock });
     input.value = block.dataset.endClock;
     input.setCustomValidity("");
     finishNowButton.hidden = block.dataset.finishNow !== "true";
@@ -92,7 +92,7 @@
     const afterStart = input.value &&
       toMinutes(input.value) > toMinutes(openBlock.dataset.displayStartClock);
     input.setCustomValidity(afterStart ? "" :
-      "La fin doit être après le début (" + openBlock.dataset.displayStartClock + ").");
+      plannerText("end_after_start", { time: openBlock.dataset.displayStartClock }));
     if (!input.reportValidity()) return;
     submitEnd(openBlock, { endClock: input.value });
   }
