@@ -214,9 +214,17 @@ class TimeBlocksController < ApplicationController
     if @edits_actual
       @start_clock, @duration_minutes = displayed_wall_clock
     else
-      @start_clock = @block.start_at.in_time_zone.strftime("%H:%M")
-      @duration_minutes = @block.duration_minutes
+      start = @block.start_at.in_time_zone
+      @start_clock = start.strftime("%H:%M")
+      @duration_minutes = wall_clock_minutes(start, @block.end_at.in_time_zone)
     end
+  end
+
+  # Minutes between two times as read on the clock, so a daylight-saving day
+  # shows the same length as the form counts (01:00–04:00 is 180 min).
+  def wall_clock_minutes(start, finish)
+    days = (finish.to_date - start.to_date).to_i
+    days * 24 * 60 + (finish.hour * 60 + finish.min) - (start.hour * 60 + start.min)
   end
 
   # The drawn start and its length in wall-clock minutes, as the form counts
@@ -251,8 +259,18 @@ class TimeBlocksController < ApplicationController
     return apply_actual_schedule(day, start_time, duration) if @edits_actual
 
     @block.start_at = start_time
-    @block.end_at = start_time + duration.minutes
+    @block.end_at = wall_clock_end(day, start_time, duration)
     true
+  end
+
+  # The end the form shows: start clock plus the duration in clock minutes,
+  # so 01:00 + 180 min ends at 04:00 even on a daylight-saving day.
+  def wall_clock_end(day, start_time, duration)
+    end_minutes = start_time.hour * 60 + start_time.min + duration
+    end_day = day + end_minutes / (24 * 60)
+    minute_of_day = end_minutes % (24 * 60)
+    Time.zone.local(end_day.year, end_day.month, end_day.day,
+                    minute_of_day / 60, minute_of_day % 60)
   end
 
   # For a block that has started: the form's start and duration become the

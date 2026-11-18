@@ -63,6 +63,19 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_nil future.actual_start_clock
   end
 
+  test "on a daylight-saving day the planned end entered is the end saved" do
+    post time_blocks_path, params: {
+      time_block: { title: "Nuit courte", category: "travail", schedule_date: "2030-03-31",
+                    start_clock: "01:00", duration_minutes: "180" }
+    }
+
+    block = @user.time_blocks.find_by!(title: "Nuit courte")
+    assert_equal "04:00", block.end_at.in_time_zone.strftime("%H:%M")
+
+    get edit_time_block_path(block)
+    assert_select "input[name='time_block[duration_minutes]'][value='180']"
+  end
+
   test "the dialog shows the real times, the plan as a note and an editable end" do
     @block.update!(actual_start_clock: "09:10", actual_end_clock: "12:00")
 
