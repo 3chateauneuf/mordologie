@@ -29,7 +29,7 @@ class BlockHistory
     after = self.class.snapshot(block)
     return if before == after # Nothing changed, nothing to undo.
 
-    BlockChange.transaction do
+    serialized do
       @user.block_changes.undone.delete_all
       @user.block_changes.create!(action: action, time_block_id: block.id,
                                   state_before: before, state_after: after)
@@ -39,10 +39,10 @@ class BlockHistory
 
   # Returns nil when there is nothing to undo.
   def undo
-    change = @user.block_changes.active.order(id: :desc).first
-    return nil unless change
+    serialized do
+      change = @user.block_changes.active.order(id: :desc).first
+      next nil unless change
 
-    BlockChange.transaction do
       block = restore(change, change.state_before)
       change.update!(undone_at: Time.current)
       Result.new(change: change, block: block)
@@ -51,10 +51,10 @@ class BlockHistory
 
   # Returns nil when there is nothing to redo.
   def redo
-    change = @user.block_changes.undone.order(:id).first
-    return nil unless change
+    serialized do
+      change = @user.block_changes.undone.order(:id).first
+      next nil unless change
 
-    BlockChange.transaction do
       block = restore(change, change.state_after)
       change.update!(undone_at: nil)
       Result.new(change: change, block: block)
@@ -76,6 +76,9 @@ class BlockHistory
     block = @user.time_blocks.find_by(id: change.time_block_id)
 
     if state.nil?
+      # Keep what is being removed (including later form edits), so that
+      # redo brings back exactly this block.
+      change.update!(state_after: self.class.snapshot(block)) if block
       block&.destroy!
       return nil
     end
@@ -88,6 +91,12 @@ class BlockHistory
     # have minutes without clocks: restore the stored value exactly.
     block.update_columns(actual_minutes: state["actual_minutes"])
     block
+  end
+
+  # One history operation at a time per person: two tabs pressing Ctrl+Z
+  # together undo two steps, never the same one twice.
+  def serialized(&block)
+    @user.with_lock(&block)
   end
 
   def prune

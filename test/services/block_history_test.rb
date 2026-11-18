@@ -55,6 +55,21 @@ class BlockHistoryTest < ActiveSupport::TestCase
     assert_equal ["projet"], restored.tags
   end
 
+  test "redo after undoing a creation keeps later form edits" do
+    created = @user.time_blocks.create!(
+      title: "Nouveau", category: "travail",
+      start_at: Time.zone.local(2026, 11, 4, 9, 0),
+      end_at: Time.zone.local(2026, 11, 4, 9, 30)
+    )
+    @history.record("create", created, before: nil)
+    created.update!(title: "Nouveau titre", notes: "Ajouté ensuite")
+
+    @history.undo
+    restored = @history.redo.block
+    assert_equal "Nouveau titre", restored.title
+    assert_equal "Ajouté ensuite", restored.notes
+  end
+
   test "a form edit made after a move survives undoing the move" do
     move_to(Time.zone.local(2026, 11, 3, 14, 0))
     @block.update!(title: "Montage final")
