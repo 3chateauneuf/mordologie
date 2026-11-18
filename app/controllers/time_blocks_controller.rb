@@ -241,10 +241,18 @@ class TimeBlocksController < ApplicationController
     if @edits_actual
       @start_clock, @duration_minutes = displayed_wall_clock
     else
-      start = @block.start_at.in_time_zone
-      @start_clock = start.strftime("%H:%M")
-      @duration_minutes = wall_clock_minutes(start, @block.end_at.in_time_zone)
+      @start_clock, @duration_minutes = planned_wall_clock
     end
+  end
+
+  # The planned start and its length in clock minutes. A plan inside the
+  # repeated autumn hour (02:30 CEST–02:00 CET) has no positive clock length,
+  # so it shows its elapsed minutes instead.
+  def planned_wall_clock
+    start = @block.start_at.in_time_zone
+    minutes = wall_clock_minutes(start, @block.end_at.in_time_zone)
+    minutes = @block.duration_minutes if minutes < 1
+    [start.strftime("%H:%M"), minutes]
   end
 
   # Minutes between two times as read on the clock, so a daylight-saving day
@@ -284,6 +292,12 @@ class TimeBlocksController < ApplicationController
     start_time = Time.zone.local(day.year, day.month, day.day,
                                  clock_match[1].to_i, clock_match[2].to_i)
     return apply_actual_schedule(day, start_time, duration) if @edits_actual
+
+    # Unchanged times keep the stored plan exactly (a title-only edit never
+    # rebuilds it, which matters on clock-change days).
+    shown_start, shown_minutes = planned_wall_clock
+    same_day = day == @block.start_at.in_time_zone.to_date
+    return true if same_day && @start_clock == shown_start && duration == shown_minutes
 
     @block.start_at = start_time
     @block.end_at = wall_clock_end(day, start_time, duration)

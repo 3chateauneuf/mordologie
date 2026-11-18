@@ -102,6 +102,26 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_equal 960, spring.duration_minutes
   end
 
+  test "a plan inside the repeated autumn hour stays editable and unchanged" do
+    # 02:30 CEST to 02:00 CET on 2030-10-27: 30 elapsed minutes.
+    start = Time.utc(2030, 10, 27, 0, 30)
+    autumn = @user.time_blocks.create!(
+      title: "Heure répétée", category: "travail", start_at: start, end_at: start + 30.minutes
+    )
+    get edit_time_block_path(autumn)
+    assert_select "input[name='time_block[duration_minutes]'][value='30']"
+
+    patch time_block_path(autumn), params: {
+      time_block: { title: "Renommée", category: "travail", schedule_date: "2030-10-27",
+                    start_clock: "02:30", duration_minutes: "30" }
+    }
+    assert_response :redirect
+    autumn.reload
+    assert_equal "Renommée", autumn.title
+    assert_equal start, autumn.start_at
+    assert_equal start + 30.minutes, autumn.end_at
+  end
+
   test "a plan longer than 16 hours on an ordinary day is refused" do
     future = @user.time_blocks.create!(
       title: "Trop long", category: "travail",
