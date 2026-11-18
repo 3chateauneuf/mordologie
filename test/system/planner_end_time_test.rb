@@ -42,7 +42,9 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
 
     # Typing an exact time.
     find("#{event} .event-end-time").click
-    fill_in "Heure de fin", with: "11:15"
+    # A Time value lets Capybara set the field reliably; typing over a
+    # prefilled <input type="time"> depends on Chrome's segment editing.
+    fill_in "Heure de fin", with: Time.zone.parse("2026-11-02 11:15")
     find("[data-end-time-input]").send_keys(:enter)
     assert_selector "#{event} .event-end-time", text: "11:15"
     assert_equal "11:15", @block.reload.actual_end_clock
