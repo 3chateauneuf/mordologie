@@ -112,6 +112,35 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_nil @block.reload.actual_start_clock
   end
 
+  test "real times longer than 16 hours stay editable" do
+    @block.update!(actual_start_clock: "01:00", actual_end_clock: "19:00")
+
+    get edit_time_block_path(@block)
+    assert_select "#time_block_duration_minutes[value='1080'][max='1439']"
+
+    patch time_block_path(@block), params: block_params(
+      title: "Longue journée", start_clock: "01:00", duration_minutes: "1080"
+    )
+    assert_response :redirect
+    assert_equal "Longue journée", @block.reload.title
+    assert_equal "19:00", @block.actual_end_clock
+  end
+
+  test "on a daylight-saving day the real end entered is the end saved" do
+    spring = @user.time_blocks.create!(
+      title: "Changement d'heure", category: "travail",
+      start_at: Time.zone.local(2026, 3, 29, 1, 0),
+      end_at: Time.zone.local(2026, 3, 29, 4, 0)
+    )
+    patch time_block_path(spring), params: {
+      time_block: { title: spring.title, category: "travail", schedule_date: "2026-03-29",
+                    start_clock: "01:00", duration_minutes: "200" }
+    }
+
+    assert_equal "01:00", spring.reload.actual_start_clock
+    assert_equal "04:20", spring.actual_end_clock
+  end
+
   test "historical actual minutes without clock times are not lost" do
     @block.update!(actual_minutes: 80)
     patch time_block_path(@block), params: block_params(title: "Montage")

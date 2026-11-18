@@ -38,7 +38,7 @@
       <div class="editor-duration-bottom">
         <div class="editor-custom-duration">
           <span><%= @edits_actual ? t(".actual_duration_label") : t(".planned_duration") %></span>
-          <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: 960, step: 1, aria: { label: t(".duration_minutes") } %>
+          <%= number_field_tag "time_block[duration_minutes]", @duration_minutes, id: "time_block_duration_minutes", required: true, min: 1, max: (@edits_actual ? TimeBlocksController::MAX_ACTUAL_MINUTES : TimeBlocksController::MAX_PLANNED_MINUTES), step: 1, aria: { label: t(".duration_minutes") } %>
           <span>min</span>
         </div>
         <%# Editing the end recalculates the duration (time-block-form.js);

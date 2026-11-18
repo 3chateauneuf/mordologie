@@ -36,7 +36,9 @@
   function updateEnd() {
     const start = minutesOf(time.value);
     const minutes = Number(duration.value);
-    if (start === null || !Number.isInteger(minutes) || minutes < 1 || minutes > 960) {
+    // The longest duration comes from the field (16 h for a plan, the whole
+    // day for real times).
+    if (start === null || !Number.isInteger(minutes) || minutes < 1 || minutes > Number(duration.max)) {
       endInput.value = "";
       showState("—");
       return;

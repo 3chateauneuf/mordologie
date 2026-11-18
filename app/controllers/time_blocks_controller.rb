@@ -1,4 +1,6 @@
 class TimeBlocksController < ApplicationController
+  MAX_PLANNED_MINUTES = 960
+  MAX_ACTUAL_MINUTES = 24 * 60 - 1
   before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule, :end_time, :duplicate]
   before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
   before_action :load_planning_task, only: [:new, :create]
@@ -224,7 +226,9 @@ class TimeBlocksController < ApplicationController
     clock_match = @start_clock.match(/\A([01]\d|2[0-3]):([0-5]\d)\z/)
     duration = Integer(@duration_minutes, exception: false)
 
-    unless day && clock_match && duration && duration.between?(1, 960)
+    # A plan lasts at most 16 h; real times may fill the whole day.
+    longest = @edits_actual ? MAX_ACTUAL_MINUTES : MAX_PLANNED_MINUTES
+    unless day && clock_match && duration && duration.between?(1, longest)
       @block.errors.add(:base, t("time_blocks.errors.invalid_schedule"))
       return false
     end
@@ -252,13 +256,15 @@ class TimeBlocksController < ApplicationController
     end
     return true if @start_clock == shown_start && duration == shown_minutes
 
-    end_time = start_time + duration.minutes
-    if end_time.to_date != day
+    # Wall-clock minutes, as in the form: on a daylight-saving day the end
+    # entered is the end saved.
+    end_minutes = start_time.hour * 60 + start_time.min + duration
+    if end_minutes >= 24 * 60
       @block.errors.add(:base, t("time_blocks.errors.past_midnight"))
       return false
     end
     @block.actual_start_clock = @start_clock
-    @block.actual_end_clock = end_time.strftime("%H:%M")
+    @block.actual_end_clock = format("%02d:%02d", end_minutes / 60, end_minutes % 60)
     true
   end
 end
