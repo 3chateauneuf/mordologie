@@ -49,28 +49,22 @@ es:
       welcome: "Bienvenido a Planner."
 
   planner:
-    week_header:
-      title: "Mi semana"
-      week_number: "Semana %{number}"
-      range: "Del %{from} al %{to} · Organizar y luego entender el tiempo que de verdad dedicas."
-      search: "Buscar"
-      plan: "+ Planificar un bloque"
-    week_summary:
-      label: "Resumen de la semana"
+    toolbar:
+      week: "Semana %{number}"
+      previous_week: "Semana anterior"
+      next_week: "Semana siguiente"
+      today: "Hoy"
       planned: "Previsto"
       actual: "Real"
       actual_hint: "Tiempo realmente registrado"
-      blocks: "Bloques"
-    calendar:
-      title: "Agenda semanal"
-      title_mobile: "Agenda"
-      start: "Inicio"
-      start_label: "Primera hora que se muestra en la agenda"
+      search: "Buscar"
+      settings: "Ajustes"
+      start: "Inicio del día"
       language: "Idioma"
       apply: "Aplicar"
-      previous_week: "Semana anterior"
-      today: "Hoy"
-      next_week: "Semana siguiente"
+      logout: "Cerrar sesión"
+      new_block: "+ Bloque"
+    calendar:
       earlier:
         one: "1 bloque antes de las %{hour}"
         other: "%{count} bloques antes de las %{hour}"
@@ -78,14 +72,17 @@ es:
       show_earlier: "Mostrar las horas anteriores"
       choose_day: "Elegir un día de la semana"
       day_hint: "Arrastra para elegir una duración o haz doble clic para crear un bloque"
-      help_desktop: "Arrastra sobre un hueco libre para elegir un horario o haz doble clic para crear una hora. Haz clic en un bloque para editarlo, en su hora de fin para cambiarla, o tira de su borde inferior. Shift + arrastrar duplica un bloque; Ctrl+Z deshace."
-      help_mobile: "Toca una hora libre para añadir un bloque. Toca un bloque para editarlo, o su hora de fin para cambiarla."
+      day_totals: "%{actual} / %{planned}"
+      day_totals_hint: "Real / previsto"
+      day_planned: "%{planned} previstas"
     calendar_event:
       planned: "Previsto: %{range}"
       end_actual: "Fin real"
       end_planned: "Fin prevista"
       change_end: "%{kind}: %{time}. Cambiar"
       finish_now: "Terminar ahora"
+      drag_hint: "Arrastra para mover · Shift + arrastrar para duplicar · Ctrl+Z para deshacer"
+      resize_hint: "Arrastra para cambiar la hora de fin"
     end_time_popover:
       title: "Fin real"
       end_time: "Hora de fin"

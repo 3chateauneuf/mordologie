@@ -22,10 +22,11 @@ class LocaleTest < ActionDispatch::IntegrationTest
     get root_path(week: "2026-11-02")
     assert_response :success
     assert_select "html[lang='es']"
-    assert_select "h1", text: /Mi semana/
+    assert_select "h1.toolbar-range", text: "2 – 8 noviembre"
+    assert_select ".toolbar-totals", text: /Previsto/
     assert_select "#pending-tasks-heading", text: "Por planificar"
     assert_select ".day-heading em", text: "Lun"
-    assert_select ".calendar-start-form select[name='locale'] option[selected]", text: "Español"
+    assert_select ".settings-form select[name='locale'] option[selected]", text: "Español"
   end
 
   test "flash messages follow the chosen language" do
@@ -40,7 +41,7 @@ class LocaleTest < ActionDispatch::IntegrationTest
 
     get root_path(week: "2026-11-02")
     assert_select "html[lang='fr']"
-    assert_select "h1", text: /Ma semaine/
+    assert_select "h1.toolbar-range", text: "2 – 8 novembre"
     assert_select "#pending-tasks-heading", text: "À planifier"
   end
 

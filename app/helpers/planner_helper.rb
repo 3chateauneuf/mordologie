@@ -14,6 +14,16 @@ module PlannerHelper
     I18n.t("js")
   end
 
+  # "16 – 22 noviembre", or "27 oct. – 2 nov." when the week spans two months.
+  def planner_week_range(week_start)
+    week_end = week_start + 6
+    if week_start.month == week_end.month
+      "#{week_start.day} – #{I18n.l(week_end, format: '%-d %B')}"
+    else
+      "#{I18n.l(week_start, format: '%-d %b')} – #{I18n.l(week_end, format: '%-d %b')}"
+    end
+  end
+
   # Weekday name for a date in the current language: :short ("lun."),
   # :long ("lunes") or :letter ("L").
   def planner_weekday(date, style = :short)

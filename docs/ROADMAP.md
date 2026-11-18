@@ -8,13 +8,6 @@ valor. Ante la duda, quitar antes que añadir.
 
 ## En curso
 
-- **Idiomas.** Toda la interfaz sale de `config/locales/es.yml` y `fr.yml`.
-  Cada persona elige su idioma en los ajustes del calendario; por defecto,
-  español. Añadir un idioma = añadir su archivo (con las mismas claves) y su
-  código en `User::LOCALES`.
-
-## Siguiente
-
 - **Rediseño «Épuré».** Menos ruido y el calendario primero:
   - una sola barra arriba (semana, «Hoy», previsto y real, buscar, ajustes,
     «+ Bloque»); la hora de inicio y el idioma pasan al menú de ajustes;
@@ -39,3 +32,4 @@ valor. Ante la duda, quitar antes que añadir.
   el borde inferior y bloques solapados uno al lado del otro (#18).
 - Al mover un bloque, su tiempo real se mueve con él (#19).
 - Deshacer y rehacer con Ctrl+Z / Ctrl+Shift+Z, y duplicar con Shift + arrastrar (#20).
+- Interfaz en varios idiomas (español por defecto y francés) y esta hoja de ruta (#21).

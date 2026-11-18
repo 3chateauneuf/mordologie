@@ -1,0 +1,46 @@
+<%# The single bar of the calendar page (shown inside the top bar):
+    week, totals, search, settings and "+ Bloque". %>
+<div class="planner-toolbar">
+  <nav class="toolbar-week" aria-label="<%= t(".week", number: @week_start.cweek) %>">
+    <%= link_to "‹", root_path(week: (@week_start - 7).iso8601), class: "toolbar-icon", aria: { label: t(".previous_week") } %>
+    <h1 class="toolbar-range"><%= planner_week_range(@week_start) %></h1>
+    <%= link_to "›", root_path(week: (@week_start + 7).iso8601), class: "toolbar-icon", aria: { label: t(".next_week") } %>
+    <%= link_to t(".today"), root_path, class: "toolbar-today" %>
+  </nav>
+
+  <p class="toolbar-totals">
+    <span><%= t(".planned") %> <strong><%= planner_duration(@planned_minutes) %></strong></span>
+    <span title="<%= t(".actual_hint") %>"><%= t(".actual") %> <strong><%= planner_duration(@actual_minutes) %></strong></span>
+  </p>
+
+  <div class="toolbar-actions">
+    <%= link_to recherche_path, class: "toolbar-icon", aria: { label: t(".search") }, title: t(".search") do %>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <% end %>
+
+    <details class="toolbar-settings">
+      <summary class="toolbar-icon" aria-label="<%= t(".settings") %>" title="<%= t(".settings") %>">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+      </summary>
+      <div class="toolbar-settings-panel">
+        <%= form_with url: calendar_preferences_path, method: :patch, class: "settings-form", data: { settings_form: true } do %>
+          <%= hidden_field_tag :week, @week_start.iso8601 %>
+          <%= hidden_field_tag :day, @selected_day.iso8601 %>
+          <label for="calendar_start_hour"><%= t(".start") %></label>
+          <%= select_tag :calendar_start_hour,
+                options_for_select(User::CALENDAR_START_HOURS.map { |hour| [format("%02d:00", hour), hour] }, current_user.calendar_start_hour) %>
+          <label for="locale"><%= t(".language") %></label>
+          <%= select_tag :locale,
+                options_for_select(User::LOCALES.map { |code| [t("locales.#{code}"), code] }, current_user.locale) %>
+          <%= button_tag t(".apply"), type: "submit", class: "settings-apply" %>
+        <% end %>
+        <div class="settings-account">
+          <span><%= current_user.email %></span>
+          <%= button_to t(".logout"), session_path, method: :delete %>
+        </div>
+      </div>
+    </details>
+
+    <%= link_to t(".new_block"), new_time_block_path(day: @selected_day.iso8601), class: "button toolbar-new" %>
+  </div>
+</div>

@@ -1,7 +1,7 @@
 /* Pending tasks are a separate step from reserving calendar time. */
 .planner-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 272px;
+  grid-template-columns: minmax(0, 1fr) 240px;
   gap: 16px;
   align-items: start;
 }

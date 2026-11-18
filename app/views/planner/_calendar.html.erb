@@ -1,24 +1,4 @@
 <div class="calendar-shell" data-calendar data-new-block-url="<%= new_time_block_path %>">
-  <div class="calendar-header">
-    <strong><span class="desktop-calendar-label"><%= t(".title") %></span><span class="mobile-calendar-label"><%= t(".title_mobile") %></span></strong>
-    <%= form_with url: calendar_preferences_path, method: :patch, class: "calendar-start-form", data: { calendar_start_form: true } do %>
-      <%= hidden_field_tag :week, @week_start.iso8601 %>
-      <%= hidden_field_tag :day, @selected_day.iso8601 %>
-      <%= label_tag :calendar_start_hour, t(".start") %>
-      <%= select_tag :calendar_start_hour,
-            options_for_select(User::CALENDAR_START_HOURS.map { |hour| [format("%02d:00", hour), hour] }, current_user.calendar_start_hour),
-            aria: { label: t(".start_label") } %>
-      <%= label_tag :locale, t(".language"), class: "calendar-language-label" %>
-      <%= select_tag :locale,
-            options_for_select(User::LOCALES.map { |code| [t("locales.#{code}"), code] }, current_user.locale) %>
-      <%= button_tag t(".apply"), type: "submit" %>
-    <% end %>
-    <div class="week-nav">
-      <%= link_to "←", root_path(week: (@week_start - 7).iso8601), aria: { label: t(".previous_week") } %>
-      <%= link_to t(".today"), root_path %>
-      <%= link_to "→", root_path(week: (@week_start + 7).iso8601), aria: { label: t(".next_week") } %>
-    </div>
-  </div>
   <% if @earlier_blocks.any? %>
     <div class="calendar-earlier-bar">
       <% start_hour = format("%02d:00", current_user.calendar_start_hour) %>
@@ -47,9 +27,15 @@
     <div class="week-grid">
       <div class="hour-header"></div>
       <% @days.each do |day| %>
+        <% totals = @day_totals.fetch(day) %>
         <div class="day-heading <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>">
           <em><%= planner_weekday(day) %></em>
           <strong><%= day.day %></strong>
+          <% if totals[:actual].positive? %>
+            <small class="day-totals" title="<%= t(".day_totals_hint") %>"><%= t(".day_totals", actual: planner_duration(totals[:actual]), planned: planner_duration(totals[:planned])) %></small>
+          <% elsif totals[:planned].positive? %>
+            <small class="day-totals"><%= t(".day_planned", planned: planner_duration(totals[:planned])) %></small>
+          <% end %>
         </div>
       <% end %>
       <div class="time-rail" style="height:<%= @calendar_height %>px">
@@ -59,6 +45,10 @@
         <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="<%= t(".day_hint") %>">
           <% @day_layouts.fetch(day).entries.each do |entry| %>
             <%= render "calendar_event", entry: entry %>
+          <% end %>
+          <% if day == Date.current %>
+            <%# Placed and kept up to date by calendar-now-line.js. %>
+            <div class="now-line" data-now-line hidden aria-hidden="true"><span data-now-line-time></span></div>
           <% end %>
         </div>
       <% end %>
@@ -70,5 +60,4 @@
   <%= render "duplicate_forms" %>
   <%= render "history_forms" %>
   <%= render "end_time_popover" %>
-  <p class="help"><span class="desktop-help"><%= t(".help_desktop") %></span><span class="mobile-help"><%= t(".help_mobile") %></span></p>
 </div>

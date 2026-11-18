@@ -49,28 +49,22 @@ fr:
       welcome: "Bienvenue dans Planner."
 
   planner:
-    week_header:
-      title: "Ma semaine"
-      week_number: "Semaine %{number}"
-      range: "Du %{from} au %{to} · Organiser, puis comprendre le temps réellement utilisé."
-      search: "Rechercher"
-      plan: "+ Planifier un créneau"
-    week_summary:
-      label: "Résumé de la semaine"
-      planned: "Planifié"
-      actual: "Réalisé"
+    toolbar:
+      week: "Semaine %{number}"
+      previous_week: "Semaine précédente"
+      next_week: "Semaine suivante"
+      today: "Aujourd'hui"
+      planned: "Prévu"
+      actual: "Réel"
       actual_hint: "Temps réellement déclaré"
-      blocks: "Créneaux"
-    calendar:
-      title: "Planning hebdomadaire"
-      title_mobile: "Agenda"
-      start: "Début"
-      start_label: "Première heure affichée dans le planning"
+      search: "Rechercher"
+      settings: "Réglages"
+      start: "Début de journée"
       language: "Langue"
       apply: "Appliquer"
-      previous_week: "Semaine précédente"
-      today: "Aujourd'hui"
-      next_week: "Semaine suivante"
+      logout: "Déconnexion"
+      new_block: "+ Créneau"
+    calendar:
       earlier:
         one: "1 créneau avant %{hour}"
         other: "%{count} créneaux avant %{hour}"
@@ -78,14 +72,17 @@ fr:
       show_earlier: "Afficher les heures précédentes"
       choose_day: "Choisir un jour de la semaine"
       day_hint: "Glissez pour choisir une durée ou double-cliquez pour créer un créneau"
-      help_desktop: "Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier, sur son heure de fin pour la changer, ou tirez son bord inférieur. Maj + glisser duplique un bloc ; Ctrl+Z annule."
-      help_mobile: "Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier, ou son heure de fin pour la changer."
+      day_totals: "%{actual} / %{planned}"
+      day_totals_hint: "Réel / prévu"
+      day_planned: "%{planned} prévues"
     calendar_event:
       planned: "Prévu : %{range}"
       end_actual: "Fin réelle"
       end_planned: "Fin prévue"
       change_end: "%{kind} : %{time}. Modifier"
       finish_now: "Terminer maintenant"
+      drag_hint: "Glissez pour déplacer · Maj + glisser pour dupliquer · Ctrl+Z pour annuler"
+      resize_hint: "Glissez pour changer l'heure de fin"
     end_time_popover:
       title: "Fin réelle"
       end_time: "Heure de fin"

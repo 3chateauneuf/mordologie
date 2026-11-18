@@ -1,0 +1,284 @@
+/* Calendar page: the single top bar (week, totals, search, settings,
+   "+ Bloque"), the earlier-hours bar, the totals in each day heading and
+   the current-time line. */
+
+.planner-toolbar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.toolbar-week {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-range {
+  min-width: 150px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.toolbar-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #4b5568;
+  font-size: 18px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.toolbar-icon:hover,
+.toolbar-icon:focus-visible {
+  background: #eef1f6;
+  color: var(--ink);
+  outline: none;
+}
+
+.toolbar-icon::-webkit-details-marker {
+  display: none;
+}
+
+.toolbar-today {
+  margin-left: 8px;
+  padding: 7px 12px;
+  border: 1px solid #dbe1e9;
+  border-radius: 9px;
+  color: #344054;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.toolbar-today:hover {
+  background: #f5f7fb;
+}
+
+.toolbar-totals {
+  display: flex;
+  gap: 18px;
+  margin: 0 0 0 auto;
+  color: #4b5568;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.toolbar-totals strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-new {
+  margin-left: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Settings menu */
+.toolbar-settings {
+  position: relative;
+}
+
+.toolbar-settings[open] > summary {
+  background: #eef1f6;
+  color: var(--ink);
+}
+
+.toolbar-settings-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 250px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px #1b22381f;
+}
+
+.settings-form {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.settings-form label {
+  color: #59667b;
+  font-size: 12px;
+}
+
+.settings-form select {
+  margin-bottom: 6px;
+  padding: 7px 9px;
+  border: 1px solid #dfe5ef;
+  border-radius: 9px;
+  background: #fff;
+  color: #34435c;
+}
+
+.settings-apply {
+  padding: 8px;
+  border: 1px solid #dfe5ef;
+  border-radius: 9px;
+  background: #f5f7fb;
+  color: #34435c;
+}
+
+/* With JavaScript a change saves immediately (calendar-preferences.js). */
+.settings-form.is-enhanced .settings-apply {
+  display: none;
+}
+
+.settings-account {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--sub);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.settings-account form {
+  margin: 0;
+}
+
+.settings-account button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3b4fb0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Bar shown when some blocks start before the first visible hour */
+.calendar-earlier-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 20px;
+  background: #f8f9fc;
+  border-bottom: 1px solid var(--line);
+  color: #65718a;
+  font-size: 12px;
+}
+
+.calendar-earlier-bar a {
+  color: #445fbd;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Day headings: real / planned */
+.day-totals {
+  color: var(--sub);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-heading.today .day-totals {
+  color: var(--brand);
+}
+
+/* Current time in today's column */
+.now-line {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid #d14a5b;
+  pointer-events: none;
+}
+
+.now-line::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d14a5b;
+}
+
+.now-line span {
+  position: absolute;
+  right: 4px;
+  top: -18px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #d14a5b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+@media (max-width: 1080px) {
+  .toolbar-totals {
+    display: none;
+  }
+
+  .toolbar-actions {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .planner-toolbar {
+    gap: 6px;
+  }
+
+  .toolbar-range {
+    min-width: 0;
+    font-size: 13px;
+  }
+
+  .toolbar-today {
+    display: none;
+  }
+
+  .toolbar-new {
+    margin-left: 2px;
+    padding: 8px 10px;
+  }
+
+  .toolbar-settings-panel {
+    position: fixed;
+    top: 64px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .settings-form select {
+    font-size: 16px;
+  }
+
+  .calendar-earlier-bar {
+    padding: 9px 12px;
+  }
+}

@@ -7,7 +7,8 @@
 <% lane_style = "--lane:#{entry.lane};--lanes:#{entry.lanes};--event-color:#{block.color}" %>
 <% tooltip = ["#{block.title} · #{entry.start_label} – #{entry.end_label} · #{category_label}"]
    tooltip << "##{block.tags.join(' #')}" if block.tags.any?
-   tooltip << t(".planned", range: entry.planned_label) if entry.planned_ghost? %>
+   tooltip << t(".planned", range: entry.planned_label) if entry.planned_ghost?
+   tooltip << t(".drag_hint") %>
 
 <% if entry.planned_ghost? %>
   <div class="event-planned-ghost" aria-hidden="true"
@@ -38,5 +39,5 @@
           method: :patch, params: { finish_now: "1" },
           class: "event-finish-now", form_class: "event-finish-form" %>
   <% end %>
-  <span class="event-resize-handle" data-end-time-resize aria-hidden="true"></span>
+  <span class="event-resize-handle" data-end-time-resize aria-hidden="true" title="<%= t(".resize_hint") %>"></span>
 </div>

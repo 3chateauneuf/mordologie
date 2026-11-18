@@ -10,11 +10,11 @@
   <link rel="stylesheet" href="/styles/mobile.css">
   <link rel="stylesheet" href="/styles/dialogs.css">
   <link rel="stylesheet" href="/styles/real-time-fields.css">
-  <link rel="stylesheet" href="/styles/calendar-preferences.css">
   <% if controller_name == "planner" && action_name == "index" %>
     <link rel="stylesheet" href="/styles/pending-tasks.css">
     <link rel="stylesheet" href="/styles/calendar-block-move.css">
     <link rel="stylesheet" href="/styles/calendar-end-time.css">
+    <link rel="stylesheet" href="/styles/planner-toolbar.css">
   <% end %>
   <%# Loaded first: the other scripts read their texts through it. %>
   <script src="/scripts/i18n.js" defer></script>
@@ -31,12 +31,15 @@
     <script src="/scripts/calendar-end-time.js" defer></script>
     <script src="/scripts/calendar-history.js" defer></script>
     <script src="/scripts/calendar-preferences.js" defer></script>
+    <script src="/scripts/calendar-now-line.js" defer></script>
   <% end %>
 </head>
 <body data-i18n="<%= planner_js_translations.to_json %>" class="<%= controller_name == 'time_blocks' ? 'is-editor-page' : '' %> <%= controller_name == 'time_blocks' && %w[new create edit update].include?(action_name) ? 'is-dialog-page' : '' %>">
   <header class="topbar">
-    <a href="<%= root_path %>" class="brand"><span class="brand-mark">P</span>Planner</a>
-    <% if current_user %>
+    <a href="<%= root_path %>" class="brand"><span class="brand-mark">P</span><span class="brand-name">Planner</span></a>
+    <% if current_user && content_for?(:toolbar) %>
+      <%= yield :toolbar %>
+    <% elsif current_user %>
       <div class="nav-links"><%= link_to t(".planning"), root_path, class: controller_name == "planner" && action_name == "index" ? "active" : "" %><%= link_to t(".search"), recherche_path, class: action_name == "search" ? "active" : "" %><%= link_to t(".new_block"), new_time_block_path %></div>
       <div class="account"><span><%= current_user.email %></span><%= button_to t(".logout"), session_path, method: :delete %></div>
       <details class="mobile-menu">
