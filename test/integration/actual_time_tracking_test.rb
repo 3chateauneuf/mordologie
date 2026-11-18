@@ -84,6 +84,38 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_equal "10:00", @block.reload.actual_start_clock
   end
 
+  test "a 16-hour plan across the clock change stays editable" do
+    spring = @user.time_blocks.create!(
+      title: "Longue journée", category: "travail",
+      start_at: Time.zone.local(2030, 3, 31, 0, 0),
+      end_at: Time.zone.local(2030, 3, 31, 0, 0) + 16.hours
+    )
+    get edit_time_block_path(spring)
+    assert_select "input[name='time_block[duration_minutes]'][value='1020']"
+
+    patch time_block_path(spring), params: {
+      time_block: { title: "Journée", category: "travail", schedule_date: "2030-03-31",
+                    start_clock: "00:00", duration_minutes: "1020" }
+    }
+    assert_response :redirect
+    assert_equal "Journée", spring.reload.title
+    assert_equal 960, spring.duration_minutes
+  end
+
+  test "a plan longer than 16 hours on an ordinary day is refused" do
+    future = @user.time_blocks.create!(
+      title: "Trop long", category: "travail",
+      start_at: Time.zone.local(2030, 1, 7, 6, 0),
+      end_at: Time.zone.local(2030, 1, 7, 7, 0)
+    )
+    patch time_block_path(future), params: {
+      time_block: { title: "Trop long", category: "travail", schedule_date: "2030-01-07",
+                    start_clock: "06:00", duration_minutes: "1000" }
+    }
+    assert_response :unprocessable_entity
+    assert_equal 60, future.reload.duration_minutes
+  end
+
   test "on a daylight-saving day the planned end entered is the end saved" do
     post time_blocks_path, params: {
       time_block: { title: "Nuit courte", category: "travail", schedule_date: "2030-03-31",

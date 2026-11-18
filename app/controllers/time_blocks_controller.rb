@@ -1,6 +1,9 @@
 class TimeBlocksController < ApplicationController
   MAX_PLANNED_MINUTES = 960
   MAX_ACTUAL_MINUTES = 24 * 60 - 1
+  # The model limits a plan to 16 elapsed hours. Durations here are clock
+  # minutes, and on the spring clock change 16 h read as 17 on the clock.
+  MAX_PLANNED_CLOCK_MINUTES = MAX_PLANNED_MINUTES + 60
   before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule, :end_time, :duplicate]
   before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
   before_action :load_planning_task, only: [:new, :create]
@@ -221,6 +224,11 @@ class TimeBlocksController < ApplicationController
     shown != schedule_mode
   end
 
+  def longest_duration
+    @edits_actual ? MAX_ACTUAL_MINUTES : MAX_PLANNED_CLOCK_MINUTES
+  end
+  helper_method :longest_duration
+
   def schedule_mode
     @edits_actual ? "actual" : "planned"
   end
@@ -266,9 +274,9 @@ class TimeBlocksController < ApplicationController
     clock_match = @start_clock.match(/\A([01]\d|2[0-3]):([0-5]\d)\z/)
     duration = Integer(@duration_minutes, exception: false)
 
-    # A plan lasts at most 16 h; real times may fill the whole day.
-    longest = @edits_actual ? MAX_ACTUAL_MINUTES : MAX_PLANNED_MINUTES
-    unless day && clock_match && duration && duration.between?(1, longest)
+    # A plan lasts at most 16 h (checked exactly by the model); real times
+    # may fill the whole day.
+    unless day && clock_match && duration && duration.between?(1, longest_duration)
       @block.errors.add(:base, t("time_blocks.errors.invalid_schedule"))
       return false
     end
