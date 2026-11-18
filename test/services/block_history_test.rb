@@ -5,7 +5,8 @@ class BlockHistoryTest < ActiveSupport::TestCase
     @user = User.create!(
       email: "history@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     @history = BlockHistory.new(@user)
     @block = @user.time_blocks.create!(

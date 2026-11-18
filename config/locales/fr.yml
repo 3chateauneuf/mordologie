@@ -1,21 +1,266 @@
+# Textes de l'interface en français.
+# Même structure que es.yml : toute clé ajoutée ici doit l'être aussi là-bas
+# (test/i18n/locale_files_test.rb le vérifie).
+# Les dates, nombres et messages de validation standard viennent de la gem rails-i18n.
 fr:
-  date:
-    formats:
-      default: "%d/%m/%Y"
-    day_names: [dimanche, lundi, mardi, mercredi, jeudi, vendredi, samedi]
-    abbr_day_names: [dim., lun., mar., mer., jeu., ven., sam.]
-    month_names: [~, janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre]
-    abbr_month_names: [~, janv., févr., mars, avr., mai, juin, juil., août, sept., oct., nov., déc.]
-  time:
-    formats:
-      default: "%d/%m/%Y %H:%M"
-  errors:
-    format: "%{attribute} %{message}"
-    messages:
-      blank: "ne peut pas être vide"
-      invalid: "est invalide"
-      taken: "est déjà utilisé"
-      too_short: "est trop court"
-      inclusion: "n'est pas inclus dans la liste"
-      not_a_number: "doit être un nombre"
-      greater_than_or_equal_to: "doit être supérieur ou égal à %{count}"
+  locales:
+    es: "Español"
+    fr: "Français"
+
+  categories:
+    travail: "Travail"
+    reunion: "Réunion"
+    personnel: "Personnel"
+    pause: "Pause"
+
+  layouts:
+    application:
+      title: "Planner — Organiser le temps"
+      planning: "Planning"
+      search: "Recherche"
+      new_block: "+ Créneau"
+      new_block_long: "Nouveau créneau"
+      logout: "Déconnexion"
+      open_menu: "Ouvrir le menu"
+
+  sessions:
+    new:
+      title: "Connexion"
+      intro: "Retrouvez votre planning personnel."
+      email: "Email"
+      password: "Mot de passe"
+      submit: "Se connecter"
+    flash:
+      failed: "Email ou mot de passe incorrect."
+      logged_out: "Déconnecté."
+
+  registrations:
+    new:
+      title: "Initialiser Planner"
+      intro: "Créez votre compte personnel. Cette page est désactivée après la première inscription."
+      setup_token: "Code d'installation"
+      email: "Email"
+      password: "Mot de passe (12 caractères minimum)"
+      password_confirmation: "Confirmer le mot de passe"
+      submit: "Créer mon compte"
+      note: "Vos informations sont stockées sur le serveur Planner, distinct de l'ancienne base Mordologie."
+    flash:
+      wrong_token: "Code d'installation incorrect."
+      welcome: "Bienvenue dans Planner."
+
+  planner:
+    week_header:
+      title: "Ma semaine"
+      week_number: "Semaine %{number}"
+      range: "Du %{from} au %{to} · Organiser, puis comprendre le temps réellement utilisé."
+      search: "Rechercher"
+      plan: "+ Planifier un créneau"
+    week_summary:
+      label: "Résumé de la semaine"
+      planned: "Planifié"
+      actual: "Réalisé"
+      actual_hint: "Temps réellement déclaré"
+      blocks: "Créneaux"
+    calendar:
+      title: "Planning hebdomadaire"
+      title_mobile: "Agenda"
+      start: "Début"
+      start_label: "Première heure affichée dans le planning"
+      language: "Langue"
+      apply: "Appliquer"
+      previous_week: "Semaine précédente"
+      today: "Aujourd'hui"
+      next_week: "Semaine suivante"
+      earlier:
+        one: "1 créneau avant %{hour}"
+        other: "%{count} créneaux avant %{hour}"
+      back_to: "Revenir à %{hour}"
+      show_earlier: "Afficher les heures précédentes"
+      choose_day: "Choisir un jour de la semaine"
+      day_hint: "Glissez pour choisir une durée ou double-cliquez pour créer un créneau"
+      help_desktop: "Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier, sur son heure de fin pour la changer, ou tirez son bord inférieur. Maj + glisser duplique un bloc ; Ctrl+Z annule."
+      help_mobile: "Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier, ou son heure de fin pour la changer."
+    calendar_event:
+      planned: "Prévu : %{range}"
+      end_actual: "Fin réelle"
+      end_planned: "Fin prévue"
+      change_end: "%{kind} : %{time}. Modifier"
+      finish_now: "Terminer maintenant"
+    end_time_popover:
+      title: "Fin réelle"
+      end_time: "Heure de fin"
+      extend: "Prolonger"
+      finish_now: "Terminer maintenant"
+      cancel: "Annuler"
+      save: "Enregistrer"
+    pending_tasks:
+      title: "À planifier"
+      add: "+ Ajouter"
+      activity: "Activité"
+      activity_placeholder: "Qu'avez-vous à faire ?"
+      estimated_minutes: "Durée estimée (min)"
+      category: "Catégorie"
+      submit: "Ajouter"
+      empty: "Rien en attente. Ajoutez une activité sans lui donner de date."
+      plan: "Planifier"
+      plan_label: "Planifier %{title}"
+      remove_confirm: "Supprimer définitivement cette tâche ?"
+      remove_title: "Supprimer la tâche"
+      remove_label: "Supprimer %{title}"
+      drop_back: "Déposez ici pour remettre en attente"
+      hint: "Glissez une tâche sur une heure pour la planifier directement. « Planifier » permet de personnaliser."
+    search:
+      title: "Rechercher une activité"
+      intro: "Retrouvez vos créneaux par nom, notes ou tags, quelle que soit la semaine."
+      back: "← Retour au planning"
+      keyword: "Mot-clé"
+      keyword_placeholder: "Titre, notes, #tag…"
+      tag: "Tag"
+      all_tags: "Tous les tags"
+      submit: "Rechercher"
+      clear: "Effacer"
+      quick_tags: "Accès rapide aux tags"
+      results: "Activités trouvées (%{count})"
+      results_note: "Résultats les plus récents en premier · maximum 100."
+      empty: "Aucun créneau trouvé avec ces critères."
+      edit: "Modifier"
+
+  time_blocks:
+    new:
+      title: "Nouveau créneau"
+    edit:
+      title: "Modifier le créneau"
+    dialog:
+      back: "← Planning"
+      close: "Fermer le dialogue"
+      close_title: "Fermer (Échap)"
+    form:
+      check: "Vérifiez les informations :"
+      activity: "Activité"
+      activity_placeholder: "Que voulez-vous faire ?"
+      date: "Date"
+      start: "Début"
+      duration: "Durée"
+      quick_durations: "Durées rapides"
+      planned_duration: "Durée prévue"
+      duration_minutes: "Durée en minutes"
+      end: "Fin"
+      category: "Catégorie"
+      tags: "Tags"
+      optional: "· facultatif"
+      tags_placeholder: "Ex. vidéo, youtube, sin rueditas"
+      add_tag: "+ Ajouter un tag"
+      add_tag_label: "Ajouter un tag puis Entrée"
+      reuse_tag: "Réutiliser un tag"
+      details: "Notes et temps réel"
+      details_optional: "Facultatif"
+      notes: "Notes"
+      notes_placeholder: "Informations utiles pour cette activité"
+      actual_times: "Horaires réels"
+      actual_start: "Début réel"
+      actual_end: "Fin réelle"
+      actual_duration: "Durée réelle : %{duration}"
+      legacy_duration: "Ancienne durée enregistrée : %{duration}. Saisissez les deux heures pour la remplacer."
+      return_to_inbox: "Remettre en attente"
+      delete: "Supprimer définitivement"
+      delete_confirm: "Supprimer définitivement cette activité et son éventuel rappel en attente ? Cette action est irréversible."
+      save: "Enregistrer"
+      create: "Créer le créneau"
+    flash:
+      created: "Créneau ajouté."
+      updated: "Créneau mis à jour."
+      deleted: "Activité supprimée définitivement."
+      moved: "Créneau déplacé."
+      overlap: "Attention : ce créneau chevauche une autre activité."
+      duplicated: "Créneau dupliqué."
+      returned_to_inbox: "Activité remise en attente."
+      end_saved: "%{kind} : %{time}."
+    errors:
+      already_scheduled: "Cette activité est déjà planifiée."
+      invalid_schedule: "Indiquez une date, une heure de début et une durée valide (1 à 960 minutes)."
+      quarter_hour: "Choisissez une date et une heure par quart d'heure."
+      past_midnight: "Ce créneau dépasse minuit. Choisissez une heure plus tôt."
+      finish_now_today_only: "« Terminer maintenant » ne fonctionne que pour une activité d'aujourd'hui."
+      end_clock_format: "Indiquez une heure de fin au format HH:MM."
+
+  planning_tasks:
+    flash:
+      added: "Ajouté aux choses à planifier."
+      scheduled: "Activité planifiée."
+      remove_from_calendar_first: "Retirez d'abord cette activité du planning."
+      deleted: "Tâche supprimée."
+    errors:
+      quarter_hour: "Choisissez un jour et une heure par quart d'heure."
+      past_midnight: "Cette activité dépasse minuit. Choisissez une heure plus tôt."
+
+  calendar_preferences:
+    flash:
+      saved: "Préférences enregistrées."
+      invalid_hour: "Choisissez une heure entre 00:00 et 23:00."
+      invalid_locale: "Choisissez une langue de la liste."
+
+  block_history:
+    actions:
+      move: "déplacement de « %{title} »"
+      resize: "changement de fin de « %{title} »"
+      create: "création de « %{title} »"
+      duplicate: "duplication de « %{title} »"
+    flash:
+      undone: "Annulé : %{change}. Ctrl+Maj+Z pour rétablir."
+      redone: "Rétabli : %{change}."
+      nothing_to_undo: "Rien à annuler."
+      nothing_to_redo: "Rien à rétablir."
+
+  # Textes des scripts du navigateur (public/scripts), transmis par <body data-i18n>.
+  js:
+    end_actual: "Fin réelle"
+    end_planned: "Fin prévue"
+    start_hint: "Début : %{time}"
+    end_after_start: "La fin doit être après le début (%{time})."
+    past_midnight: "Dépasse minuit"
+    after_midnight: "Après minuit"
+    copy: "Copie · "
+    actual_duration: "Durée réelle : %{duration}"
+    actual_waiting: "Durée réelle : — (en attente des deux heures)"
+    invalid_clocks: "Indiquez des heures valides."
+    end_after_start_same_day: "La fin doit être après le début, le même jour."
+    tag_too_long: "40 caractères maximum par tag."
+    too_many_tags: "12 tags maximum."
+
+  activerecord:
+    models:
+      time_block: "Créneau"
+      planning_task: "Tâche"
+      user: "Compte"
+    attributes:
+      time_block:
+        title: "Activité"
+        category: "Catégorie"
+        start_at: "Début"
+        end_at: "Fin"
+        tags: "Tags"
+        notes: "Notes"
+        actual_start_clock: "Début réel"
+        actual_end_clock: "Fin réelle"
+        actual_minutes: "Durée réelle"
+      planning_task:
+        title: "Activité"
+        category: "Catégorie"
+        estimated_minutes: "Durée estimée"
+        tags: "Tags"
+        scheduled_block: "Créneau"
+      user:
+        email: "Email"
+        password: "Mot de passe"
+        password_confirmation: "Confirmation du mot de passe"
+        locale: "Langue"
+    errors:
+      messages:
+        clock_format: "doit être au format HH:MM"
+        too_many_tags: "ne peuvent pas dépasser 12 étiquettes"
+        tag_too_long: "doivent contenir 40 caractères maximum chacune"
+        after_start: "doit être après le début"
+        same_day: "doit être le même jour"
+        too_long_block: "ne peut dépasser 16 heures"
+        actual_end_after_start: "La fin réelle doit être après le début réel, le même jour."
+        same_account: "doit appartenir au même compte"

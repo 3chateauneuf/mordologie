@@ -5,7 +5,7 @@ class PlanningTasksController < ApplicationController
     @task = current_user.planning_tasks.new(task_params)
 
     if @task.save
-      redirect_to return_to_calendar, notice: "Ajouté aux choses à planifier."
+      redirect_to return_to_calendar, notice: t("planning_tasks.flash.added")
     else
       redirect_to return_to_calendar, alert: @task.errors.full_messages.to_sentence
     end
@@ -25,17 +25,17 @@ class PlanningTasksController < ApplicationController
     end
 
     day = result.block.start_at.in_time_zone.to_date.iso8601
-    message = "Activité planifiée."
-    message += " Attention : ce créneau chevauche une autre activité." if result.overlap
+    message = t("planning_tasks.flash.scheduled")
+    message += " #{t('time_blocks.flash.overlap')}" if result.overlap
     redirect_to root_path(week: day, day: day), notice: message
   end
 
   def destroy
     if @task.scheduled?
-      redirect_to return_to_calendar, alert: "Retirez d'abord cette activité du planning."
+      redirect_to return_to_calendar, alert: t("planning_tasks.flash.remove_from_calendar_first")
     else
       @task.destroy!
-      redirect_to return_to_calendar, notice: "Tâche supprimée."
+      redirect_to return_to_calendar, notice: t("planning_tasks.flash.deleted")
     end
   end
 

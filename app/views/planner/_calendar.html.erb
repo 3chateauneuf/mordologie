@@ -1,39 +1,43 @@
 <div class="calendar-shell" data-calendar data-new-block-url="<%= new_time_block_path %>">
   <div class="calendar-header">
-    <strong><span class="desktop-calendar-label">Planning hebdomadaire</span><span class="mobile-calendar-label">Agenda</span></strong>
+    <strong><span class="desktop-calendar-label"><%= t(".title") %></span><span class="mobile-calendar-label"><%= t(".title_mobile") %></span></strong>
     <%= form_with url: calendar_preferences_path, method: :patch, class: "calendar-start-form", data: { calendar_start_form: true } do %>
       <%= hidden_field_tag :week, @week_start.iso8601 %>
       <%= hidden_field_tag :day, @selected_day.iso8601 %>
-      <%= label_tag :calendar_start_hour, "Début" %>
+      <%= label_tag :calendar_start_hour, t(".start") %>
       <%= select_tag :calendar_start_hour,
             options_for_select(User::CALENDAR_START_HOURS.map { |hour| [format("%02d:00", hour), hour] }, current_user.calendar_start_hour),
-            aria: { label: "Première heure affichée dans le planning" } %>
-      <%= button_tag "Appliquer", type: "submit" %>
+            aria: { label: t(".start_label") } %>
+      <%= label_tag :locale, t(".language"), class: "calendar-language-label" %>
+      <%= select_tag :locale,
+            options_for_select(User::LOCALES.map { |code| [t("locales.#{code}"), code] }, current_user.locale) %>
+      <%= button_tag t(".apply"), type: "submit" %>
     <% end %>
     <div class="week-nav">
-      <%= link_to "←", root_path(week: (@week_start - 7).iso8601), aria: { label: "Semaine précédente" } %>
-      <%= link_to "Aujourd'hui", root_path %>
-      <%= link_to "→", root_path(week: (@week_start + 7).iso8601), aria: { label: "Semaine suivante" } %>
+      <%= link_to "←", root_path(week: (@week_start - 7).iso8601), aria: { label: t(".previous_week") } %>
+      <%= link_to t(".today"), root_path %>
+      <%= link_to "→", root_path(week: (@week_start + 7).iso8601), aria: { label: t(".next_week") } %>
     </div>
   </div>
   <% if @earlier_blocks.any? %>
     <div class="calendar-earlier-bar">
-      <span><%= pluralize(@earlier_blocks.length, "créneau") %> avant <%= format("%02d:00", current_user.calendar_start_hour) %></span>
+      <% start_hour = format("%02d:00", current_user.calendar_start_hour) %>
+      <span><%= t(".earlier", count: @earlier_blocks.length, hour: start_hour) %></span>
       <% if @show_early %>
-        <%= link_to "Revenir à #{format('%02d:00', current_user.calendar_start_hour)}",
+        <%= link_to t(".back_to", hour: start_hour),
               root_path(week: @week_start.iso8601, day: @selected_day.iso8601) %>
       <% else %>
-        <%= link_to "Afficher les heures précédentes",
+        <%= link_to t(".show_earlier"),
               root_path(week: @week_start.iso8601, day: @selected_day.iso8601, show_early: "1") %>
       <% end %>
     </div>
   <% end %>
-  <nav class="mobile-day-picker" aria-label="Choisir un jour de la semaine">
-    <% @days.each_with_index do |day, idx| %>
+  <nav class="mobile-day-picker" aria-label="<%= t(".choose_day") %>">
+    <% @days.each do |day| %>
       <%= link_to root_path(week: @week_start.iso8601, day: day.iso8601, show_early: (@show_early ? "1" : nil)),
           class: "mobile-day #{'is-selected' if day == @selected_day}",
-          aria: { current: (day == @selected_day ? "date" : nil), label: "#{%w[Lundi Mardi Mercredi Jeudi Vendredi Samedi Dimanche][idx]} #{day.day}" } do %>
-        <span class="mobile-day-label"><%= %w[L M M J V S D][idx] %></span>
+          aria: { current: (day == @selected_day ? "date" : nil), label: "#{planner_weekday(day, :long)} #{day.day}" } do %>
+        <span class="mobile-day-label"><%= planner_weekday(day, :letter) %></span>
         <strong><%= day.day %></strong>
         <% if @blocks_by_day.fetch(day, []).any? %><span class="mobile-day-dot" aria-hidden="true"></span><% end %>
       <% end %>
@@ -42,9 +46,9 @@
   <div class="calendar-scroll">
     <div class="week-grid">
       <div class="hour-header"></div>
-      <% @days.each_with_index do |day, idx| %>
+      <% @days.each do |day| %>
         <div class="day-heading <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>">
-          <em><%= %w[Lun Mar Mer Jeu Ven Sam Dim][idx] %></em>
+          <em><%= planner_weekday(day) %></em>
           <strong><%= day.day %></strong>
         </div>
       <% end %>
@@ -52,7 +56,7 @@
         <% (@calendar_start_hour...@calendar_end_hour).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
       </div>
       <% @days.each do |day| %>
-        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Glissez pour choisir une durée ou double-cliquez pour créer un créneau">
+        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="<%= t(".day_hint") %>">
           <% @day_layouts.fetch(day).entries.each do |entry| %>
             <%= render "calendar_event", entry: entry %>
           <% end %>
@@ -66,5 +70,5 @@
   <%= render "duplicate_forms" %>
   <%= render "history_forms" %>
   <%= render "end_time_popover" %>
-  <p class="help"><span class="desktop-help">Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier, sur son heure de fin pour la changer, ou tirez son bord inférieur. Maj + glisser duplique un bloc ; Ctrl+Z annule.</span><span class="mobile-help">Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier, ou son heure de fin pour la changer.</span></p>
+  <p class="help"><span class="desktop-help"><%= t(".help_desktop") %></span><span class="mobile-help"><%= t(".help_mobile") %></span></p>
 </div>

@@ -1,11 +1,22 @@
 class TimeBlock < ApplicationRecord
   include ActualTimeTracking
+  # Category key => calendar colour. Names are translated (categories.* in
+  # config/locales); use TimeBlock.category_label(key).
   CATEGORIES = {
-    "travail" => { label: "Travail", color: "#5268ca" },
-    "reunion" => { label: "Réunion", color: "#a47b38" },
-    "personnel" => { label: "Personnel", color: "#348e80" },
-    "pause" => { label: "Pause", color: "#956c97" }
+    "travail" => { color: "#5268ca" },
+    "reunion" => { color: "#a47b38" },
+    "personnel" => { color: "#348e80" },
+    "pause" => { color: "#956c97" }
   }.freeze
+
+  def self.category_label(key)
+    I18n.t("categories.#{key}")
+  end
+
+  # [[label, key], ...] for select menus, in the current language.
+  def self.category_options
+    CATEGORIES.keys.map { |key| [category_label(key), key] }
+  end
 
   # A block can have multiple independent, searchable tags.
   # Categories remain separate: they define the calendar's colour.
@@ -82,17 +93,17 @@ class TimeBlock < ApplicationRecord
 
   def valid_tags
     if tags.length > 12
-      errors.add(:tags, "ne peuvent pas dépasser 12 étiquettes")
+      errors.add(:tags, :too_many_tags)
     end
     if tags.any? { |tag| tag.length > 40 }
-      errors.add(:tags, "doivent contenir 40 caractères maximum chacune")
+      errors.add(:tags, :tag_too_long)
     end
   end
 
   def valid_interval
     return unless start_at && end_at
-    errors.add(:end_at, "doit être après le début") unless end_at > start_at
-    errors.add(:end_at, "doit être le même jour") unless start_at.in_time_zone.to_date == end_at.in_time_zone.to_date
-    errors.add(:end_at, "ne peut dépasser 16 heures") if end_at - start_at > 16.hours
+    errors.add(:end_at, :after_start) unless end_at > start_at
+    errors.add(:end_at, :same_day) unless start_at.in_time_zone.to_date == end_at.in_time_zone.to_date
+    errors.add(:end_at, :too_long_block) if end_at - start_at > 16.hours
   end
 end

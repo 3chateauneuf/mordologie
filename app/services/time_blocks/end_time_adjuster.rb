@@ -24,11 +24,11 @@ module TimeBlocks
 
     def call
       if @finish_now && @block.start_at.in_time_zone.to_date != @now.to_date
-        return Result.new(error: "« Terminer maintenant » ne fonctionne que pour une activité d'aujourd'hui.")
+        return Result.new(error: I18n.t("time_blocks.errors.finish_now_today_only"))
       end
 
       clock = @finish_now ? @now.strftime("%H:%M") : @end_clock
-      return Result.new(error: "Indiquez une heure de fin au format HH:MM.") unless clock.match?(CLOCK)
+      return Result.new(error: I18n.t("time_blocks.errors.end_clock_format")) unless clock.match?(CLOCK)
 
       @block.with_lock do
         @block.started?(@now) ? set_actual_end(clock) : set_planned_end(clock)

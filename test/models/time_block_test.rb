@@ -5,7 +5,8 @@ class TimeBlockTest < ActiveSupport::TestCase
     @user = User.create!(
       email: "test-owner@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
   end
 

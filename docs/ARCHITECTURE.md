@@ -26,6 +26,10 @@ Conservar el comportamiento y los datos durante refactorizaciones.
 - `public/scripts/week-calendar.js`: selección de horario y navegación de agenda.
 - `public/scripts/time-block-form.js`: duración, tags y validación en el navegador.
 - `public/planner-dialog.js`: cierre compartido de diálogos en escritorio.
+- `config/locales/es.yml`, `fr.yml`: todos los textos de la interfaz, con las
+  mismas claves en cada idioma. Los textos de los scripts están bajo `js`.
+- `public/scripts/i18n.js`: `plannerText(clave, valores)` para los scripts;
+  se carga antes que los demás.
 - `test/`: pruebas de validación, autenticación y operaciones críticas.
 
 Estas rutas estáticas están servidas por Rails desde `public/`. Los scripts
@@ -45,6 +49,14 @@ No modificar la base antigua de Dodonews ni las tablas del Mordologie original.
 La rama `planner-rails` se despliega en Railway. Antes de dar una tarea por
 finalizada, comprobar las pruebas pertinentes y el estado del despliegue;
 un estado `SUCCESS` no equivale a una prueba de interacción en navegador.
+
+## Idiomas
+
+Ningún texto visible se escribe directamente en vistas, controladores,
+modelos, servicios ni scripts: va en `config/locales/<idioma>.yml`, en los
+dos idiomas a la vez. En las vistas, `t(".clave")`; en el resto,
+`I18n.t("ruta.clave")`; en los scripts, `plannerText("clave")`. Los errores
+de validación usan símbolos (`errors.add(:end_at, :after_start)`).
 
 ## Checklist para cada cambio
 

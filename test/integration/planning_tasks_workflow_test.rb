@@ -5,7 +5,8 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       email: "pending-owner@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     post session_path, params: {
       email: @user.email,
@@ -304,7 +305,8 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     another = User.create!(
       email: "inbox-isolation@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     private_block = another.time_blocks.create!(
       title: "Privé", category: "personnel",
@@ -352,7 +354,8 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     other = User.create!(
       email: "other-pending-owner@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     task = other.planning_tasks.create!(
       title: "Privé", category: "travail", estimated_minutes: 60

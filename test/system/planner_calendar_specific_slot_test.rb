@@ -5,7 +5,8 @@ class PlannerCalendarSpecificSlotTest < ApplicationSystemTestCase
     @user = User.create!(
       email: "browser-slot@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     @block = @user.time_blocks.create!(
       title: "Déplacer le bloc", category: "travail",

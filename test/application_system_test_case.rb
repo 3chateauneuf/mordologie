@@ -20,10 +20,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   end
 
   def login
+    # Signed out, the page follows the browser's language; the test browser
+    # asks for English, which we don't offer, so it shows Spanish (default).
     visit connexion_path
     fill_in "Email", with: @user.email
-    fill_in "Mot de passe", with: "test-password-1234"
-    click_button "Se connecter"
+    fill_in "Contraseña", with: "test-password-1234"
+    click_button "Entrar"
     assert_current_path root_path
   end
 

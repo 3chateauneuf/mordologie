@@ -50,6 +50,7 @@ jobs:
           retention-days: 7
       - name: Validate browser scripts
         run: |
+          node --check public/scripts/i18n.js
           node --check public/scripts/week-calendar.js
           node --check public/scripts/pending-calendar-drag.js
           node --check public/scripts/calendar-to-inbox.js

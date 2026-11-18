@@ -5,7 +5,8 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       email: "planner-owner@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     post session_path, params: {
       email: @user.email,
@@ -168,7 +169,8 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     other_user = User.create!(
       email: "another-user@example.test",
       password: "another-test-password",
-      password_confirmation: "another-test-password"
+      password_confirmation: "another-test-password",
+      locale: "fr"
     )
     assert_equal 6, other_user.calendar_start_hour
   end

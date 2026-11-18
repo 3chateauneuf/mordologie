@@ -9,7 +9,10 @@ module Planner
     config.time_zone = "Paris"
     config.active_record.default_timezone = :utc
     config.active_job.queue_adapter = :async
-    config.i18n.default_locale = :fr
+    # Interface languages. Each person picks theirs in the calendar settings;
+    # texts live in config/locales/<language>.yml.
+    config.i18n.available_locales = [:es, :fr]
+    config.i18n.default_locale = :es
     config.autoload_paths << Rails.root.join("app", "models")
     config.generators.system_tests = nil
   end

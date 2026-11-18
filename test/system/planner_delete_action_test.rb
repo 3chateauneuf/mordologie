@@ -5,7 +5,8 @@ class PlannerDeleteActionTest < ApplicationSystemTestCase
     @user = User.create!(
       email: "browser-delete@example.test",
       password: "test-password-1234",
-      password_confirmation: "test-password-1234"
+      password_confirmation: "test-password-1234",
+      locale: "fr"
     )
     @task = @user.planning_tasks.create!(
       title: "À supprimer", category: "travail", estimated_minutes: 45

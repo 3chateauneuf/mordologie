@@ -36,7 +36,7 @@ class TimeBlocksController < ApplicationController
       # back to the inbox); a plain new block is.
       history.record("create", @block, before: nil) unless @planning_task
       day = @block.start_at.in_time_zone.to_date.iso8601
-      redirect_to root_path(week: day, day: day), notice: "Créneau ajouté."
+      redirect_to root_path(week: day, day: day), notice: t("time_blocks.flash.created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -50,7 +50,7 @@ class TimeBlocksController < ApplicationController
     @block.assign_attributes(block_details)
     @block.tag_list = submitted_tag_list
     if apply_schedule_params && @block.save
-      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601, day: @block.start_at.in_time_zone.to_date.iso8601), notice: "Créneau mis à jour."
+      redirect_to root_path(week: @block.start_at.in_time_zone.to_date.iso8601, day: @block.start_at.in_time_zone.to_date.iso8601), notice: t("time_blocks.flash.updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -63,7 +63,7 @@ class TimeBlocksController < ApplicationController
     TimeBlocks::DeletePermanently.new(block: @block).call
 
     redirect_to root_path(week: day, day: day),
-                notice: "Activité supprimée définitivement."
+                notice: t("time_blocks.flash.deleted")
   end
 
   def reschedule
@@ -82,8 +82,8 @@ class TimeBlocksController < ApplicationController
 
     history.record("move", result.block, before: before)
     selected_day = result.block.start_at.in_time_zone.to_date.iso8601
-    notice = "Créneau déplacé."
-    notice += " Attention : ce créneau chevauche une autre activité." if result.overlap
+    notice = t("time_blocks.flash.moved")
+    notice += " #{t('time_blocks.flash.overlap')}" if result.overlap
     redirect_to root_path(week: selected_day, day: selected_day), notice: notice
   end
 
@@ -100,9 +100,10 @@ class TimeBlocksController < ApplicationController
     day = @block.start_at.in_time_zone.to_date.iso8601
     if result.success?
       history.record("resize", result.block, before: before)
-      label = result.kind == :actual ? "Fin réelle" : "Fin prévue"
+      kind = t(result.kind == :actual ? "planner.calendar_event.end_actual" : "planner.calendar_event.end_planned")
       redirect_to root_path(week: day, day: day),
-                  notice: "#{label} : #{result.block.displayed_end_at.in_time_zone.strftime('%H:%M')}."
+                  notice: t("time_blocks.flash.end_saved", kind: kind,
+                            time: result.block.displayed_end_at.in_time_zone.strftime("%H:%M"))
     else
       redirect_to root_path(week: day, day: day), alert: result.error
     end
@@ -117,7 +118,7 @@ class TimeBlocksController < ApplicationController
     if result.success?
       history.record("duplicate", result.block, before: nil)
       day = result.block.start_at.in_time_zone.to_date.iso8601
-      redirect_to root_path(week: day, day: day), notice: "Créneau dupliqué."
+      redirect_to root_path(week: day, day: day), notice: t("time_blocks.flash.duplicated")
     else
       day = @block.start_at.in_time_zone.to_date.iso8601
       redirect_to root_path(week: day, day: day), alert: result.error
@@ -132,7 +133,7 @@ class TimeBlocksController < ApplicationController
     PlanningTasks::ReturnToInbox.new(block: @block).call
 
     redirect_to root_path(week: selected_week.iso8601, day: selected_day.iso8601),
-                notice: "Activité remise en attente."
+                notice: t("time_blocks.flash.returned_to_inbox")
   end
 
   private
@@ -154,7 +155,7 @@ class TimeBlocksController < ApplicationController
     # not be able to schedule the same pending item twice.
     @planning_task.with_lock do
       if @planning_task.scheduled?
-        @block.errors.add(:base, "Cette activité est déjà planifiée.")
+        @block.errors.add(:base, t("time_blocks.errors.already_scheduled"))
         next false
       end
 
@@ -208,7 +209,7 @@ class TimeBlocksController < ApplicationController
     duration = Integer(@duration_minutes, exception: false)
 
     unless day && clock_match && duration && duration.between?(1, 960)
-      @block.errors.add(:base, "Indiquez une date, une heure de début et une durée valide (1 à 960 minutes).")
+      @block.errors.add(:base, t("time_blocks.errors.invalid_schedule"))
       return false
     end
 

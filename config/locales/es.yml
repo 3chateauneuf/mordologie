@@ -1,0 +1,266 @@
+# Textos de la interfaz en español (de España).
+# Misma estructura que fr.yml: toda clave añadida aquí debe estar también allí
+# (test/i18n/locale_files_test.rb lo comprueba).
+# Las fechas, números y mensajes de validación estándar vienen de la gema rails-i18n.
+es:
+  locales:
+    es: "Español"
+    fr: "Français"
+
+  categories:
+    travail: "Trabajo"
+    reunion: "Reunión"
+    personnel: "Personal"
+    pause: "Pausa"
+
+  layouts:
+    application:
+      title: "Planner — Organizar el tiempo"
+      planning: "Agenda"
+      search: "Buscar"
+      new_block: "+ Bloque"
+      new_block_long: "Nuevo bloque"
+      logout: "Cerrar sesión"
+      open_menu: "Abrir el menú"
+
+  sessions:
+    new:
+      title: "Iniciar sesión"
+      intro: "Vuelve a tu agenda personal."
+      email: "Email"
+      password: "Contraseña"
+      submit: "Entrar"
+    flash:
+      failed: "Email o contraseña incorrectos."
+      logged_out: "Sesión cerrada."
+
+  registrations:
+    new:
+      title: "Configurar Planner"
+      intro: "Crea tu cuenta personal. Esta página se desactiva después del primer registro."
+      setup_token: "Código de instalación"
+      email: "Email"
+      password: "Contraseña (12 caracteres como mínimo)"
+      password_confirmation: "Confirmar la contraseña"
+      submit: "Crear mi cuenta"
+      note: "Tus datos se guardan en el servidor de Planner, separado de la antigua base de Mordologie."
+    flash:
+      wrong_token: "Código de instalación incorrecto."
+      welcome: "Bienvenido a Planner."
+
+  planner:
+    week_header:
+      title: "Mi semana"
+      week_number: "Semana %{number}"
+      range: "Del %{from} al %{to} · Organizar y luego entender el tiempo que de verdad dedicas."
+      search: "Buscar"
+      plan: "+ Planificar un bloque"
+    week_summary:
+      label: "Resumen de la semana"
+      planned: "Previsto"
+      actual: "Real"
+      actual_hint: "Tiempo realmente registrado"
+      blocks: "Bloques"
+    calendar:
+      title: "Agenda semanal"
+      title_mobile: "Agenda"
+      start: "Inicio"
+      start_label: "Primera hora que se muestra en la agenda"
+      language: "Idioma"
+      apply: "Aplicar"
+      previous_week: "Semana anterior"
+      today: "Hoy"
+      next_week: "Semana siguiente"
+      earlier:
+        one: "1 bloque antes de las %{hour}"
+        other: "%{count} bloques antes de las %{hour}"
+      back_to: "Volver a las %{hour}"
+      show_earlier: "Mostrar las horas anteriores"
+      choose_day: "Elegir un día de la semana"
+      day_hint: "Arrastra para elegir una duración o haz doble clic para crear un bloque"
+      help_desktop: "Arrastra sobre un hueco libre para elegir un horario o haz doble clic para crear una hora. Haz clic en un bloque para editarlo, en su hora de fin para cambiarla, o tira de su borde inferior. Shift + arrastrar duplica un bloque; Ctrl+Z deshace."
+      help_mobile: "Toca una hora libre para añadir un bloque. Toca un bloque para editarlo, o su hora de fin para cambiarla."
+    calendar_event:
+      planned: "Previsto: %{range}"
+      end_actual: "Fin real"
+      end_planned: "Fin prevista"
+      change_end: "%{kind}: %{time}. Cambiar"
+      finish_now: "Terminar ahora"
+    end_time_popover:
+      title: "Fin real"
+      end_time: "Hora de fin"
+      extend: "Alargar"
+      finish_now: "Terminar ahora"
+      cancel: "Cancelar"
+      save: "Guardar"
+    pending_tasks:
+      title: "Por planificar"
+      add: "+ Añadir"
+      activity: "Actividad"
+      activity_placeholder: "¿Qué tienes que hacer?"
+      estimated_minutes: "Duración estimada (min)"
+      category: "Categoría"
+      submit: "Añadir"
+      empty: "Nada pendiente. Añade una actividad sin ponerle fecha."
+      plan: "Planificar"
+      plan_label: "Planificar %{title}"
+      remove_confirm: "¿Eliminar definitivamente esta tarea?"
+      remove_title: "Eliminar la tarea"
+      remove_label: "Eliminar %{title}"
+      drop_back: "Suelta aquí para dejarla pendiente"
+      hint: "Arrastra una tarea a una hora para planificarla directamente. «Planificar» te deja ajustarla."
+    search:
+      title: "Buscar una actividad"
+      intro: "Encuentra tus bloques por nombre, notas o etiquetas, sea cual sea la semana."
+      back: "← Volver a la agenda"
+      keyword: "Palabra clave"
+      keyword_placeholder: "Título, notas, #etiqueta…"
+      tag: "Etiqueta"
+      all_tags: "Todas las etiquetas"
+      submit: "Buscar"
+      clear: "Borrar"
+      quick_tags: "Acceso rápido a las etiquetas"
+      results: "Actividades encontradas (%{count})"
+      results_note: "Primero los resultados más recientes · máximo 100."
+      empty: "No hay ningún bloque con estos criterios."
+      edit: "Editar"
+
+  time_blocks:
+    new:
+      title: "Nuevo bloque"
+    edit:
+      title: "Editar el bloque"
+    dialog:
+      back: "← Agenda"
+      close: "Cerrar el diálogo"
+      close_title: "Cerrar (Esc)"
+    form:
+      check: "Revisa los datos:"
+      activity: "Actividad"
+      activity_placeholder: "¿Qué quieres hacer?"
+      date: "Fecha"
+      start: "Inicio"
+      duration: "Duración"
+      quick_durations: "Duraciones rápidas"
+      planned_duration: "Duración prevista"
+      duration_minutes: "Duración en minutos"
+      end: "Fin"
+      category: "Categoría"
+      tags: "Etiquetas"
+      optional: "· opcional"
+      tags_placeholder: "Ej. vídeo, youtube, sin rueditas"
+      add_tag: "+ Añadir una etiqueta"
+      add_tag_label: "Añade una etiqueta y pulsa Intro"
+      reuse_tag: "Reutilizar una etiqueta"
+      details: "Notas y tiempo real"
+      details_optional: "Opcional"
+      notes: "Notas"
+      notes_placeholder: "Información útil para esta actividad"
+      actual_times: "Horario real"
+      actual_start: "Inicio real"
+      actual_end: "Fin real"
+      actual_duration: "Duración real: %{duration}"
+      legacy_duration: "Duración guardada anteriormente: %{duration}. Escribe las dos horas para sustituirla."
+      return_to_inbox: "Dejar pendiente"
+      delete: "Eliminar definitivamente"
+      delete_confirm: "¿Eliminar definitivamente esta actividad y su posible tarea pendiente? No se puede deshacer."
+      save: "Guardar"
+      create: "Crear el bloque"
+    flash:
+      created: "Bloque añadido."
+      updated: "Bloque actualizado."
+      deleted: "Actividad eliminada definitivamente."
+      moved: "Bloque movido."
+      overlap: "Atención: este bloque se solapa con otra actividad."
+      duplicated: "Bloque duplicado."
+      returned_to_inbox: "Actividad pendiente de nuevo."
+      end_saved: "%{kind}: %{time}."
+    errors:
+      already_scheduled: "Esta actividad ya está planificada."
+      invalid_schedule: "Indica una fecha, una hora de inicio y una duración válida (de 1 a 960 minutos)."
+      quarter_hour: "Elige una fecha y una hora en cuartos de hora."
+      past_midnight: "Este bloque pasa de medianoche. Elige una hora más temprana."
+      finish_now_today_only: "«Terminar ahora» solo funciona con una actividad de hoy."
+      end_clock_format: "Indica una hora de fin con el formato HH:MM."
+
+  planning_tasks:
+    flash:
+      added: "Añadido a lo que hay que planificar."
+      scheduled: "Actividad planificada."
+      remove_from_calendar_first: "Primero quita esta actividad de la agenda."
+      deleted: "Tarea eliminada."
+    errors:
+      quarter_hour: "Elige un día y una hora en cuartos de hora."
+      past_midnight: "Esta actividad pasa de medianoche. Elige una hora más temprana."
+
+  calendar_preferences:
+    flash:
+      saved: "Preferencias guardadas."
+      invalid_hour: "Elige una hora entre las 00:00 y las 23:00."
+      invalid_locale: "Elige un idioma de la lista."
+
+  block_history:
+    actions:
+      move: "movimiento de «%{title}»"
+      resize: "cambio de fin de «%{title}»"
+      create: "creación de «%{title}»"
+      duplicate: "duplicado de «%{title}»"
+    flash:
+      undone: "Deshecho: %{change}. Ctrl+Shift+Z para rehacer."
+      redone: "Rehecho: %{change}."
+      nothing_to_undo: "No hay nada que deshacer."
+      nothing_to_redo: "No hay nada que rehacer."
+
+  # Textos de los scripts del navegador (public/scripts), que llegan por <body data-i18n>.
+  js:
+    end_actual: "Fin real"
+    end_planned: "Fin prevista"
+    start_hint: "Inicio: %{time}"
+    end_after_start: "La hora de fin tiene que ser posterior al inicio (%{time})."
+    past_midnight: "Pasa de medianoche"
+    after_midnight: "Después de medianoche"
+    copy: "Copia · "
+    actual_duration: "Duración real: %{duration}"
+    actual_waiting: "Duración real: — (faltan las dos horas)"
+    invalid_clocks: "Indica horas válidas."
+    end_after_start_same_day: "La hora de fin tiene que ser posterior al inicio, el mismo día."
+    tag_too_long: "40 caracteres como máximo por etiqueta."
+    too_many_tags: "12 etiquetas como máximo."
+
+  activerecord:
+    models:
+      time_block: "Bloque"
+      planning_task: "Tarea"
+      user: "Cuenta"
+    attributes:
+      time_block:
+        title: "Actividad"
+        category: "Categoría"
+        start_at: "Inicio"
+        end_at: "Fin"
+        tags: "Etiquetas"
+        notes: "Notas"
+        actual_start_clock: "Inicio real"
+        actual_end_clock: "Fin real"
+        actual_minutes: "Duración real"
+      planning_task:
+        title: "Actividad"
+        category: "Categoría"
+        estimated_minutes: "Duración estimada"
+        tags: "Etiquetas"
+        scheduled_block: "Bloque"
+      user:
+        email: "Email"
+        password: "Contraseña"
+        password_confirmation: "Confirmación de la contraseña"
+        locale: "Idioma"
+    errors:
+      messages:
+        clock_format: "tiene que tener el formato HH:MM"
+        too_many_tags: "no pueden ser más de 12"
+        tag_too_long: "tienen que tener 40 caracteres como máximo cada una"
+        after_start: "tiene que ser posterior al inicio"
+        same_day: "tiene que ser el mismo día"
+        too_long_block: "no puede superar las 16 horas"
+        actual_end_after_start: "La hora de fin real tiene que ser posterior al inicio real, el mismo día."
+        same_account: "tiene que pertenecer a la misma cuenta"
