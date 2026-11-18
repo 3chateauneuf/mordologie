@@ -66,11 +66,14 @@ class TimeBlock < ApplicationRecord
   private
 
   # Real clocks are stored as "HH:MM" on the block's own day.
+  # Built from date + clock (not midnight + minutes) so that days when
+  # the clocks change keep the same wall-clock time.
   def actual_clock_time(clock)
     minutes = clock_minutes(clock)
     return nil unless minutes && start_at
 
-    start_at.in_time_zone.beginning_of_day + minutes.minutes
+    day = start_at.in_time_zone.to_date
+    Time.zone.local(day.year, day.month, day.day, minutes / 60, minutes % 60)
   end
 
   def valid_tags

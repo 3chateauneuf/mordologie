@@ -45,7 +45,8 @@ module TimeBlocks
 
     def set_planned_end(clock)
       hours, minutes = clock.split(":").map(&:to_i)
-      @block.end_at = @block.start_at.in_time_zone.beginning_of_day + hours.hours + minutes.minutes
+      day = @block.start_at.in_time_zone.to_date
+      @block.end_at = Time.zone.local(day.year, day.month, day.day, hours, minutes)
       save(:planned)
     end
 

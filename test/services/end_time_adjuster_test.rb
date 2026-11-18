@@ -71,6 +71,18 @@ class EndTimeAdjusterTest < ActiveSupport::TestCase
     assert_nil @block.actual_end_clock
   end
 
+  test "a planned end keeps its wall-clock time on daylight-saving days" do
+    autumn = @user.time_blocks.create!(
+      title: "Changement d'heure", category: "travail",
+      start_at: Time.zone.local(2026, 10, 25, 9, 0),
+      end_at: Time.zone.local(2026, 10, 25, 10, 0)
+    )
+    TimeBlocks::EndTimeAdjuster.new(block: autumn, end_clock: "10:45",
+                                    now: Time.zone.local(2026, 10, 24, 18, 0)).call
+
+    assert_equal "10:45", autumn.reload.end_at.in_time_zone.strftime("%H:%M")
+  end
+
   test "an invalid clock is refused" do
     assert_not adjust(end_clock: "25:00", now: Time.zone.local(2026, 11, 2, 12, 0)).success?
   end

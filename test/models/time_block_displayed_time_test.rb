@@ -39,4 +39,17 @@ class TimeBlockDisplayedTimeTest < ActiveSupport::TestCase
     assert @block.started?(Time.zone.local(2026, 11, 2, 9, 0))
     assert_not @block.started?(Time.zone.local(2026, 11, 2, 8, 59))
   end
+
+  test "real clocks keep their wall-clock time on daylight-saving days" do
+    spring = @user.time_blocks.create!(
+      title: "Changement d'heure", category: "travail",
+      start_at: Time.zone.local(2026, 3, 29, 9, 0),
+      end_at: Time.zone.local(2026, 3, 29, 10, 0),
+      actual_start_clock: "09:00", actual_end_clock: "10:30"
+    )
+
+    assert_equal "09:00", spring.displayed_start_at.strftime("%H:%M")
+    assert_equal "10:30", spring.displayed_end_at.strftime("%H:%M")
+    assert_equal spring.start_at, spring.displayed_start_at
+  end
 end
