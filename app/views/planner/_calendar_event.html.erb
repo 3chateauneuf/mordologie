@@ -1,0 +1,42 @@
+<%# One block of the calendar, placed by PlannerCalendar::DayLayout.
+    The title link covers the whole block (click = edit); the end time,
+    "Terminer maintenant" and the bottom handle sit above it. %>
+<% block = entry.block %>
+<% category_label = TimeBlock::CATEGORIES.fetch(block.category)[:label] %>
+<% end_kind = block.started? ? "actual" : "planned" %>
+<% lane_style = "--lane:#{entry.lane};--lanes:#{entry.lanes};--event-color:#{block.color}" %>
+<% tooltip = ["#{block.title} · #{entry.start_label} – #{entry.end_label} · #{category_label}"]
+   tooltip << "##{block.tags.join(' #')}" if block.tags.any?
+   tooltip << "Prévu : #{entry.planned_label}" if entry.planned_ghost? %>
+
+<% if entry.planned_ghost? %>
+  <div class="event-planned-ghost" aria-hidden="true"
+       style="top:<%= entry.planned_top %>px;height:<%= entry.planned_height %>px;<%= lane_style %>"></div>
+<% end %>
+
+<div class="event <%= 'is-compact' if entry.compact? %> <%= 'is-actual' if block.shows_actual_time? %>"
+     draggable="true"
+     style="top:<%= entry.top %>px;height:<%= entry.height %>px;<%= lane_style %>"
+     title="<%= tooltip.join(' · ') %>"
+     data-calendar-block-id="<%= block.id %>"
+     data-calendar-start-clock="<%= block.start_at.in_time_zone.strftime('%H:%M') %>"
+     data-calendar-start-date="<%= block.start_at.in_time_zone.to_date.iso8601 %>"
+     data-calendar-duration="<%= block.duration_minutes %>"
+     data-display-start-clock="<%= entry.start_label %>"
+     data-end-clock="<%= entry.end_label %>"
+     data-end-kind="<%= end_kind %>"
+     data-finish-now="<%= entry.finish_now? %>">
+  <%= link_to edit_time_block_path(block), class: "event-link" do %><strong><%= block.title %></strong><% end %>
+  <small class="event-times">
+    <%= entry.start_label %> –
+    <button type="button" class="event-end-time" data-end-time-trigger
+            aria-label="<%= end_kind == 'actual' ? 'Fin réelle' : 'Fin prévue' %> : <%= entry.end_label %>. Modifier"><%= entry.end_label %></button>
+  </small>
+  <% if entry.height >= 82 %><span class="category"><%= category_label %></span><% end %>
+  <% if entry.finish_now? && entry.height >= 70 %>
+    <%= button_to "Terminer maintenant", end_time_time_block_path(block),
+          method: :patch, params: { finish_now: "1" },
+          class: "event-finish-now", form_class: "event-finish-form" %>
+  <% end %>
+  <span class="event-resize-handle" data-end-time-resize aria-hidden="true"></span>
+</div>

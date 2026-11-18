@@ -321,9 +321,11 @@ p {
   font-size:13px
 }
 .event {
+  /* Overlapping blocks share the column side by side:
+     --lane is this block's position, --lanes the number of lanes. */
   position:absolute;
-  left:5px;
-  right:5px;
+  left:calc(5px + (100% - 8px) * var(--lane,0) / var(--lanes,1));
+  width:calc((100% - 8px) / var(--lanes,1) - 2px);
   overflow:hidden;
   border-radius:8px;
   border-left:3px solid var(--event-color);

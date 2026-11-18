@@ -50,19 +50,26 @@ class PlannerController < ApplicationController
     # silently overriding the user's preference.
     preferred_start = current_user.calendar_start_hour
     @earlier_blocks = @blocks.select do |block|
-      block.start_at.in_time_zone.hour < preferred_start
+      block.displayed_start_at.in_time_zone.hour < preferred_start
     end
     @show_early = params[:show_early] == "1" && @earlier_blocks.any?
     @calendar_start_hour = if @show_early
-      @earlier_blocks.map { |block| block.start_at.in_time_zone.hour }.min
+      @earlier_blocks.map { |block| block.displayed_start_at.in_time_zone.hour }.min
     else
       preferred_start
     end
+    # Leave room for both the real and the planned slot.
     latest_hours = @blocks.map do |block|
-      finish = block.end_at.in_time_zone
+      finish = [block.end_at, block.displayed_end_at].max.in_time_zone
       finish.hour + (finish.min.positive? || finish.sec.positive? ? 1 : 0)
     end
     @calendar_end_hour = ([21, @calendar_start_hour + 1] + latest_hours).max
     @calendar_height = (@calendar_end_hour - @calendar_start_hour) * 66
+    @day_layouts = @days.index_with do |day|
+      PlannerCalendar::DayLayout.new(
+        blocks: @blocks_by_day.fetch(day, []), day: day,
+        start_hour: @calendar_start_hour, calendar_height: @calendar_height
+      )
+    end
   end
 end

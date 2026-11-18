@@ -53,25 +53,8 @@
       </div>
       <% @days.each do |day| %>
         <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>" title="Glissez pour choisir une durée ou double-cliquez pour créer un créneau">
-          <% @blocks_by_day.fetch(day, []).each do |block| %>
-            <% local_start = block.start_at.in_time_zone %>
-            <% local_end = block.end_at.in_time_zone %>
-            <% visible_start = day.in_time_zone + @calendar_start_hour.hours %>
-            <% next if local_end <= visible_start %>
-            <% visible_minutes = ((local_end - [local_start, visible_start].max) / 60).round %>
-            <% top = (([local_start, visible_start].max - visible_start) / 60) * 1.1 %>
-            <% height = [[visible_minutes * 1.1, 34].max, [@calendar_height - top, 15].max].min %>
-            <% category_label = TimeBlock::CATEGORIES.fetch(block.category)[:label] %>
-            <% time_label = "#{local_start.strftime('%H:%M')} – #{block.end_at.in_time_zone.strftime('%H:%M')}" %>
-            <%= link_to edit_time_block_path(block), class: "event", draggable: true,
-                  data: { calendar_block_id: block.id,
-                          calendar_start_clock: local_start.strftime("%H:%M"),
-                          calendar_start_date: day.iso8601,
-                          calendar_duration: block.duration_minutes }, style: "top:#{top}px;height:#{height}px;--event-color:#{block.color}", title: "#{block.title} · #{time_label} · #{category_label}#{block.tags.any? ? ' · #' + block.tags.join(' #') : ''} — Modifier" do %>
-              <strong><%= block.title %></strong>
-              <% if height >= 55 %><small><%= time_label %></small><% end %>
-              <% if height >= 82 %><span class="category"><%= category_label %></span><% end %>
-            <% end %>
+          <% @day_layouts.fetch(day).entries.each do |entry| %>
+            <%= render "calendar_event", entry: entry %>
           <% end %>
         </div>
       <% end %>
@@ -79,5 +62,7 @@
   </div>
   <%= render "return_to_inbox_forms" %>
   <%= render "reschedule_forms" %>
-  <p class="help"><span class="desktop-help">Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier.</span><span class="mobile-help">Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier.</span></p>
+  <%= render "end_time_forms" %>
+  <%= render "end_time_popover" %>
+  <p class="help"><span class="desktop-help">Glissez sur un espace libre pour choisir un horaire, ou double-cliquez pour créer une heure. Cliquez sur un bloc pour le modifier, sur son heure de fin pour la changer, ou tirez son bord inférieur.</span><span class="mobile-help">Touchez une heure libre pour ajouter un créneau. Touchez un bloc pour le modifier, ou son heure de fin pour la changer.</span></p>
 </div>

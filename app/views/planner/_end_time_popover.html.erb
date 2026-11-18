@@ -1,0 +1,20 @@
+<%# Shared editor opened from a block's end time (see calendar-end-time.js). %>
+<div class="end-time-popover" data-end-time-popover hidden
+     role="dialog" aria-modal="false" aria-labelledby="end-time-popover-title">
+  <p class="end-time-popover-title" id="end-time-popover-title" data-end-time-title>Fin réelle</p>
+  <p class="end-time-popover-hint" data-end-time-hint></p>
+  <label class="end-time-popover-field">
+    <span>Heure de fin</span>
+    <input type="time" step="300" required data-end-time-input>
+  </label>
+  <div class="end-time-quick" role="group" aria-label="Prolonger">
+    <button type="button" data-end-time-add="15">+15 min</button>
+    <button type="button" data-end-time-add="30">+30 min</button>
+    <button type="button" data-end-time-add="60">+1 h</button>
+  </div>
+  <button type="button" class="end-time-finish-now" data-end-time-finish-now hidden>Terminer maintenant</button>
+  <div class="end-time-actions">
+    <button type="button" data-end-time-cancel>Annuler</button>
+    <button type="button" class="is-primary" data-end-time-save>Enregistrer</button>
+  </div>
+</div>

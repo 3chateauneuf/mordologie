@@ -1,5 +1,5 @@
 class TimeBlocksController < ApplicationController
-  before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule]
+  before_action :find_block, only: [:edit, :update, :destroy, :return_to_inbox, :reschedule, :end_time]
   before_action :load_tag_suggestions, only: [:new, :create, :edit, :update]
   before_action :load_planning_task, only: [:new, :create]
 
@@ -80,6 +80,25 @@ class TimeBlocksController < ApplicationController
     notice = "Créneau déplacé."
     notice += " Attention : ce créneau chevauche une autre activité." if result.overlap
     redirect_to root_path(week: selected_day, day: selected_day), notice: notice
+  end
+
+  # Quick end-time changes from the calendar: inline edit, "+15 / +30 / +1 h",
+  # resizing the block, or "Terminer maintenant".
+  def end_time
+    result = TimeBlocks::EndTimeAdjuster.new(
+      block: @block,
+      end_clock: params[:end_clock],
+      finish_now: params[:finish_now] == "1"
+    ).call
+
+    day = @block.start_at.in_time_zone.to_date.iso8601
+    if result.success?
+      label = result.kind == :actual ? "Fin réelle" : "Fin prévue"
+      redirect_to root_path(week: day, day: day),
+                  notice: "#{label} : #{result.block.displayed_end_at.in_time_zone.strftime('%H:%M')}."
+    else
+      redirect_to root_path(week: day, day: day), alert: result.error
+    end
   end
 
   def return_to_inbox

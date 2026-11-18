@@ -223,10 +223,6 @@
     grid-column:2;
     grid-row:1
   }
-  .event {
-    left:5px;
-    right:6px
-  }
   .help {
     padding:10px 12px;
     font-size:11px;

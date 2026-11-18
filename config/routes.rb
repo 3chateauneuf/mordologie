@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   resources :time_blocks, except: [:index, :show] do
     post :return_to_inbox, on: :member
     post :reschedule, on: :member
+    patch :end_time, on: :member
   end
   root "planner#index"
 end
