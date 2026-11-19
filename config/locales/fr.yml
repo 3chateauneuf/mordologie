@@ -88,11 +88,6 @@ fr:
           gesture: "Échap ou clic à l'extérieur"
           result: "Fermer une fenêtre sans enregistrer"
     calendar:
-      earlier:
-        one: "1 créneau avant %{hour}"
-        other: "%{count} créneaux avant %{hour}"
-      back_to: "Revenir à %{hour}"
-      show_earlier: "Afficher les heures précédentes"
       choose_day: "Choisir un jour de la semaine"
       day_totals: "%{actual} / %{planned}"
       day_totals_hint: "Réel / prévu"

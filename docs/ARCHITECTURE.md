@@ -25,6 +25,7 @@ Conservar el comportamiento y los datos durante refactorizaciones.
 - `public/styles/planner-toolbar.css`: barra de la agenda, menú de ajustes,
   totales por día y línea de la hora actual.
 - `public/scripts/calendar-now-line.js`: coloca la línea de la hora actual.
+- `public/scripts/calendar-scroll-anchor.js`: abre la cuadrícula de 24 h en la hora útil (hora actual − 1 en la semana en curso; si no, la hora de inicio).
 - `public/scripts/calendar-hovercard.js`: ficha de cada bloque al pasar el ratón.
 - `public/styles/time-block-editor.css`: formulario y reglas responsivas del editor.
 - `public/styles/mobile.css`: barra de navegación y vista diaria móvil.
@@ -76,11 +77,12 @@ de validación usan símbolos (`errors.add(:end_at, :after_start)`).
 
 `users.calendar_start_hour` guarda la preferencia horaria (00–23), con
 06:00 por defecto. `CalendarPreferencesController` valida y guarda únicamente
-en la cuenta autenticada. La agenda muestra desde esa hora y amplía el rango
-automáticamente cuando hay bloques anteriores. En móvil no se autodesplaza al
-primer bloque; se respeta el inicio de jornada. Las actividades anteriores
-no fuerzan el comienzo del calendario: aparece un acceso explícito para mostrar
-las horas previas, y las actividades que cruzan el inicio siguen visibles.
+en la cuenta autenticada. Cada día muestra siempre de 00:00 a 24:00; la hora
+de inicio es la hora en la que se abre el calendario (`data-scroll-hour`,
+`calendar-scroll-anchor.js`). En la semana en curso se abre en la hora actual
+con una hora de margen. En escritorio la cuadrícula se desplaza en su propio
+marco con los encabezados de día fijos; en móvil se desplaza la página. Un
+bloque no cruza la medianoche: si el trabajo sigue, son dos bloques.
 La hora de inicio y el idioma están en el menú de ajustes de la barra; se
 guardan al cambiar (`public/scripts/calendar-preferences.js`) y conservan un
 botón accesible sin JS.

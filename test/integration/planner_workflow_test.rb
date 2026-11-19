@@ -92,8 +92,11 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     assert_select ".settings-form select option[selected][value='6']", count: 1
     assert_select "script[src^='/scripts/calendar-preferences.js?v=']", count: 1
     assert_select "link[href^='/styles/planner-toolbar.css?v=']", count: 1
-    assert_select ".time-rail .hour:first-child", text: "06:00"
-    assert_select ".hour", text: "05:00", count: 0
+    # The whole day is drawn; the page opens at the start hour.
+    assert_select ".time-rail .hour", count: 24
+    assert_select ".time-rail .hour:first-child", text: "00:00"
+    assert_select ".calendar-scroll[data-scroll-hour='6']", count: 1
+    assert_select "script[src^='/scripts/calendar-scroll-anchor.js?v=']", count: 1
     assert_select "form[action='#{calendar_preferences_path}']", count: 1
   end
 
@@ -107,9 +110,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     get root_path(week: "2026-11-02", day: "2026-11-03")
     assert_response :success
     assert_select ".settings-form select option[selected][value='5']", count: 1
-    assert_select ".time-rail .hour:first-child", text: "05:00"
-    assert_select ".hour", text: "05:00"
-    assert_select ".hour", text: "04:00", count: 0
+    assert_select ".calendar-scroll[data-scroll-hour='5']", count: 1
     assert_select ".mobile-day.is-selected strong", text: "3"
   end
 
@@ -121,7 +122,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "an early block does not override the configured first row" do
+  test "an early block is in the grid and the page still opens at the start hour" do
     @user.time_blocks.create!(
       title: "Livraison tôt",
       category: "travail",
@@ -131,41 +132,28 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
 
     get root_path(week: "2026-11-02")
     assert_response :success
-    assert_select ".time-rail .hour:first-child", text: "06:00"
-    assert_select ".hour", text: "01:00", count: 0
-    assert_select ".calendar-earlier-bar", text: /1 créneau avant 06:00/
-    assert_select ".calendar-earlier-bar a[href*='show_early=1']", count: 1
-    assert_select ".day-body .event", text: /Livraison tôt/, count: 0
-
-    get root_path(week: "2026-11-02", show_early: "1")
-    assert_response :success
-    assert_select ".time-rail .hour:first-child", text: "01:00"
+    assert_select ".time-rail .hour:first-child", text: "00:00"
     assert_select ".day-body .event", text: /Livraison tôt/
-    assert_select ".calendar-earlier-bar a", text: /Revenir à 06:00/
+    assert_select ".calendar-scroll[data-scroll-hour='6']", count: 1
   end
 
-  test "an earlier block crossing the preferred start remains visible in the grid" do
-    @user.update!(calendar_start_hour: 9)
-    @user.time_blocks.create!(
-      title: "Livraison en cours",
-      category: "travail",
-      start_at: Time.zone.local(2026, 11, 2, 8, 45),
-      end_at: Time.zone.local(2026, 11, 2, 9, 30)
-    )
-
-    get root_path(week: "2026-11-02")
-    assert_response :success
-    assert_select ".time-rail .hour:first-child", text: "09:00"
-    assert_select ".day-body .event", text: /Livraison en cours/
-    assert_select ".calendar-earlier-bar", text: /1 créneau avant 09:00/
+  test "the current week opens one hour before the current time" do
+    travel_to Time.zone.local(2026, 11, 4, 23, 10) do
+      get root_path(week: "2026-11-02")
+      assert_select ".calendar-scroll[data-scroll-hour='22']", count: 1
+    end
+    travel_to Time.zone.local(2026, 11, 4, 0, 20) do
+      get root_path(week: "2026-11-02")
+      assert_select ".calendar-scroll[data-scroll-hour='0']", count: 1
+    end
   end
 
   test "late calendar start still shows a valid day and is private" do
     @user.update!(calendar_start_hour: 23)
     get root_path(week: "2026-11-02")
     assert_response :success
-    assert_select ".time-rail .hour:first-child", text: "23:00"
-    assert_select ".day-body[data-start-hour='23'][data-end-hour='24']", count: 7
+    assert_select ".day-body[data-start-hour='0'][data-end-hour='24']", count: 7
+    assert_select ".calendar-scroll[data-scroll-hour='23']", count: 1
 
     other_user = User.create!(
       email: "another-user@example.test",

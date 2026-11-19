@@ -88,11 +88,6 @@ es:
           gesture: "Escape o clic fuera"
           result: "Cerrar un diálogo sin guardar"
     calendar:
-      earlier:
-        one: "1 bloque antes de las %{hour}"
-        other: "%{count} bloques antes de las %{hour}"
-      back_to: "Volver a las %{hour}"
-      show_earlier: "Mostrar las horas anteriores"
       choose_day: "Elegir un día de la semana"
       day_totals: "%{actual} / %{planned}"
       day_totals_hint: "Real / previsto"

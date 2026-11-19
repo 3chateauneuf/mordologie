@@ -1,20 +1,7 @@
 <div class="calendar-shell" data-calendar data-new-block-url="<%= new_time_block_path %>">
-  <% if @earlier_blocks.any? %>
-    <div class="calendar-earlier-bar">
-      <% start_hour = format("%02d:00", current_user.calendar_start_hour) %>
-      <span><%= t(".earlier", count: @earlier_blocks.length, hour: start_hour) %></span>
-      <% if @show_early %>
-        <%= link_to t(".back_to", hour: start_hour),
-              root_path(week: @week_start.iso8601, day: @selected_day.iso8601) %>
-      <% else %>
-        <%= link_to t(".show_earlier"),
-              root_path(week: @week_start.iso8601, day: @selected_day.iso8601, show_early: "1") %>
-      <% end %>
-    </div>
-  <% end %>
   <nav class="mobile-day-picker" aria-label="<%= t(".choose_day") %>">
     <% @days.each do |day| %>
-      <%= link_to root_path(week: @week_start.iso8601, day: day.iso8601, show_early: (@show_early ? "1" : nil)),
+      <%= link_to root_path(week: @week_start.iso8601, day: day.iso8601),
           class: "mobile-day #{'is-selected' if day == @selected_day}",
           aria: { current: (day == @selected_day ? "date" : nil), label: "#{planner_weekday(day, :long)} #{day.day}" } do %>
         <span class="mobile-day-label"><%= planner_weekday(day, :letter) %></span>
@@ -23,7 +10,8 @@
       <% end %>
     <% end %>
   </nav>
-  <div class="calendar-scroll">
+  <%# calendar-scroll-anchor.js opens the grid at data-scroll-hour. %>
+  <div class="calendar-scroll" data-calendar-scroll data-scroll-hour="<%= @scroll_hour %>">
     <div class="week-grid">
       <div class="hour-header"></div>
       <% @days.each do |day| %>
@@ -42,7 +30,7 @@
         <% (@calendar_start_hour...@calendar_end_hour).each do |hour| %><div class="hour"><%= format("%02d:00", hour) %></div><% end %>
       </div>
       <% @days.each do |day| %>
-        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-first-event-hour="<%= @blocks_by_day.fetch(day, []).first&.start_at&.in_time_zone&.hour || 8 %>" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>">
+        <div class="day-body <%= 'today' if day == Date.current %> <%= 'is-active-day' if day == @selected_day %>" style="height:<%= @calendar_height %>px" data-day="<%= day.iso8601 %>" data-start-hour="<%= @calendar_start_hour %>" data-end-hour="<%= @calendar_end_hour %>">
           <% @day_layouts.fetch(day).entries.each do |entry| %>
             <%= render "calendar_event", entry: entry %>
           <% end %>
