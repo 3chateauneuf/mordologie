@@ -79,6 +79,12 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     assert_equal "Activité nocturne", @block.reload.title
   end
 
+  test "today's column shows the current-time line with its time" do
+    visit root_path(week: Date.current.iso8601, day: Date.current.iso8601)
+    assert_selector ".day-body.today .now-line span", text: /\A\d{2}:\d{2}\z/, visible: :all
+    assert_equal false, page.evaluate_script("document.querySelector('.now-line').hidden")
+  end
+
   test "mobile keeps the calendar in one column and the settings usable" do
     page.driver.browser.manage.window.resize_to(390, 844)
     visit root_path(week: "2026-11-02", day: "2026-11-02")
