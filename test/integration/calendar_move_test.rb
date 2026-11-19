@@ -13,7 +13,7 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to root_path
     @block = @user.time_blocks.create!(
-      title: "Travail important", category: "travail",
+      title: "Travail important", category: "work",
       notes: "Ne pas oublier", tags: ["projet", "priorité"],
       actual_minutes: 27,
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
@@ -23,7 +23,7 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
 
   test "moving a linked block retains identity, duration and contents" do
     task = @user.planning_tasks.create!(
-      title: @block.title, category: "travail",
+      title: @block.title, category: "work",
       estimated_minutes: 75, scheduled_block: @block
     )
     assert_no_difference("TimeBlock.count") do
@@ -56,7 +56,7 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
 
   test "overlap is allowed but warned about" do
     @user.time_blocks.create!(
-      title: "Autre activité", category: "apprentissage",
+      title: "Autre activité", category: "learning",
       start_at: Time.zone.local(2026, 11, 3, 14, 0),
       end_at: Time.zone.local(2026, 11, 3, 15, 0)
     )
@@ -75,7 +75,7 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
       locale: "fr"
     )
     block = other.time_blocks.create!(
-      title: "Privé", category: "travail",
+      title: "Privé", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )

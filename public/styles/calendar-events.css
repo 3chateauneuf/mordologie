@@ -1,0 +1,102 @@
+/* Calendar blocks: what a block shows and how it is laid out.
+   (Foundation colours and positions are in foundation.css; end-time
+   editing is in calendar-end-time.css.) */
+
+/* The title link covers the whole block: a click anywhere edits it.
+   Controls that sit above it (z-index 1) keep their own action. */
+.event-link {
+  color:inherit;
+  text-decoration:none;
+  min-width:0;
+}
+.event-link::after {
+  content:"";
+  position:absolute;
+  inset:0;
+}
+.event-times {
+  position:relative;
+  z-index:1;
+  pointer-events:none;
+}
+/* The time range never breaks; the icons after it wrap when the lane is narrow. */
+.event-range {
+  white-space:nowrap;
+}
+/* Too short for two lines: title and times share one. */
+.event.is-compact {
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+}
+.event.is-compact .event-link {
+  flex:1 1 auto;
+  overflow:hidden;
+}
+.event.is-compact .event-times {
+  flex:0 0 auto;
+}
+
+/* A block with room shows a long title on up to two lines. */
+.event.is-roomy:not(.is-compact) strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Note and tag icons, on the time line */
+.event-badges {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 6px;
+  gap: 3px;
+  color: color-mix(in srgb, var(--event-color) 70%, #263044);
+}
+
+/* The card shown when hovering a block (calendar-hovercard.js) */
+.event-hovercard {
+  position: fixed;
+  z-index: 45;
+  width: 260px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px #1b22381f;
+  display: grid;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.event-hovercard[hidden] {
+  display: none;
+}
+
+.event-hovercard strong {
+  font-size: 13px;
+}
+
+.event-hovercard-times {
+  color: var(--sub);
+  font-size: 11px;
+}
+
+.event-hovercard-tags {
+  color: #3b4fb0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.event-hovercard-notes {
+  margin: 2px 0 0;
+  color: #263044;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  max-height: 160px;
+  overflow: hidden;
+}

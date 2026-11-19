@@ -16,7 +16,7 @@ class TimeBlockTest < ActiveSupport::TestCase
     assert block.valid?, block.errors.full_messages.join(", ")
     assert_equal ["youtube", "projet"], block.tags
     assert_equal 45, block.duration_minutes
-    assert_equal "travail", block.category
+    assert_equal "work", block.category
   end
 
   test "block must end after its start on the same day" do
@@ -42,7 +42,7 @@ class TimeBlockTest < ActiveSupport::TestCase
     TimeBlock.new(
       user: @user,
       title: "Écrire un script",
-      category: "travail",
+      category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 9, 45)
     )

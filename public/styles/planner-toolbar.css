@@ -1,6 +1,6 @@
-/* Calendar page: the single top bar (week, totals, search, settings,
-   "+ Bloque"), the earlier-hours bar, the totals in each day heading and
-   the current-time line. */
+/* Calendar page: the single top bar (week, totals, search, settings and
+   shortcuts, "+ Bloque"), the totals in each day heading and the
+   current-time line. Blocks are in calendar-events.css. */
 
 .planner-toolbar {
   flex: 1;
@@ -207,7 +207,6 @@
   cursor: pointer;
 }
 
-/* Bar shown when some blocks start before the first visible hour */
 /* Day headings: real / planned */
 .day-totals {
   color: var(--sub);
@@ -251,68 +250,6 @@
   color: #fff;
   font-size: 10px;
   font-weight: 700;
-}
-
-/* Note and tag icons in a block, and the card shown on hover */
-/* A block with room shows a long title on up to two lines. */
-.event.is-roomy:not(.is-compact) strong {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.event-badges {
-  display: inline-flex;
-  vertical-align: middle;
-  margin-left: 6px;
-  gap: 3px;
-  color: color-mix(in srgb, var(--event-color) 70%, #263044);
-}
-
-.event-hovercard {
-  position: fixed;
-  z-index: 45;
-  width: 260px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 12px 32px #1b22381f;
-  display: grid;
-  gap: 4px;
-  pointer-events: none;
-}
-
-.event-hovercard[hidden] {
-  display: none;
-}
-
-.event-hovercard strong {
-  font-size: 13px;
-}
-
-.event-hovercard-times {
-  color: var(--sub);
-  font-size: 11px;
-}
-
-.event-hovercard-tags {
-  color: #3b4fb0;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.event-hovercard-notes {
-  margin: 2px 0 0;
-  color: #263044;
-  font-size: 12px;
-  line-height: 1.45;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-  max-height: 160px;
-  overflow: hidden;
 }
 
 @media (max-width: 1080px) {

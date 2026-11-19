@@ -35,13 +35,13 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
 
   test "each day heading shows real / planned, or only planned" do
     @user.time_blocks.create!(
-      title: "Montage", category: "travail",
+      title: "Montage", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 11, 0),
       actual_start_clock: "09:00", actual_end_clock: "10:30"
     )
     @user.time_blocks.create!(
-      title: "Tournage", category: "travail",
+      title: "Tournage", category: "work",
       start_at: Time.zone.local(2026, 11, 3, 9, 0),
       end_at: Time.zone.local(2026, 11, 3, 13, 0)
     )
@@ -66,7 +66,7 @@ class EpureLayoutTest < ActionDispatch::IntegrationTest
 
   test "blocks explain their gestures on hover" do
     @user.time_blocks.create!(
-      title: "Montage", category: "travail",
+      title: "Montage", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )

@@ -10,7 +10,7 @@ class EndTimeTest < ActionDispatch::IntegrationTest
     )
     post session_path, params: { email: @user.email, password: "test-password-1234" }
     @block = @user.time_blocks.create!(
-      title: "Montage", category: "travail",
+      title: "Montage", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
@@ -43,7 +43,7 @@ class EndTimeTest < ActionDispatch::IntegrationTest
       locale: "fr"
     )
     foreign = other.time_blocks.create!(
-      title: "Privé", category: "travail",
+      title: "Privé", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )

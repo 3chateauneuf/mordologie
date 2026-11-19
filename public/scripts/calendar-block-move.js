@@ -19,8 +19,7 @@
     const minutes = first + index * 15;
     return {
       minutes,
-      clock: String(Math.floor(minutes / 60)).padStart(2, "0") +
-        ":" + String(minutes % 60).padStart(2, "0"),
+      clock: plannerClock.clock(minutes),
       top: index * slotHeight,
       heightPerMinute: slotHeight / 15
     };
@@ -57,8 +56,7 @@
     preview.classList.toggle("is-copy", isCopy(event));
     const end = slot.minutes + duration;
     preview.textContent = crossesMidnight ? plannerText("past_midnight") :
-      (isCopy(event) ? plannerText("copy") : "") + slot.clock + " – " + String(Math.floor(end / 60)).padStart(2, "0") +
-      ":" + String(end % 60).padStart(2, "0");
+      (isCopy(event) ? plannerText("copy") : "") + slot.clock + " – " + plannerClock.clock(end);
   }
 
   document.querySelectorAll("[data-calendar-block-id]").forEach(block => {

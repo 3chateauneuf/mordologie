@@ -14,9 +14,11 @@
     <link rel="stylesheet" href="<%= planner_asset("/styles/calendar-block-move.css") %>">
     <link rel="stylesheet" href="<%= planner_asset("/styles/calendar-end-time.css") %>">
     <link rel="stylesheet" href="<%= planner_asset("/styles/planner-toolbar.css") %>">
+    <link rel="stylesheet" href="<%= planner_asset("/styles/calendar-events.css") %>">
   <% end %>
   <%# Loaded first: the other scripts read their texts through it. %>
   <script src="<%= planner_asset("/scripts/i18n.js") %>" defer></script>
+  <script src="<%= planner_asset("/scripts/wall-clock.js") %>" defer></script>
   <script src="<%= planner_asset("/planner-dialog.js") %>" defer></script>
   <script src="<%= planner_asset("/scripts/confirm-destroy.js") %>" defer></script>
   <% if controller_name == "time_blocks" %>

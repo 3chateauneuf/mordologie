@@ -10,7 +10,7 @@ class BlockHistoryHttpTest < ActionDispatch::IntegrationTest
     )
     post session_path, params: { email: @user.email, password: "test-password-1234" }
     @block = @user.time_blocks.create!(
-      title: "Montage", category: "travail",
+      title: "Montage", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
@@ -43,7 +43,7 @@ class BlockHistoryHttpTest < ActionDispatch::IntegrationTest
   test "a new block created in the calendar can be undone" do
     assert_difference("TimeBlock.count", 1) do
       post time_blocks_path, params: { time_block: {
-        title: "Nouveau", category: "travail", schedule_date: "2026-11-04",
+        title: "Nouveau", category: "work", schedule_date: "2026-11-04",
         start_clock: "10:00", duration_minutes: "30"
       } }
     end

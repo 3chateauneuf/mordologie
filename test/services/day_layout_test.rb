@@ -64,7 +64,7 @@ class DayLayoutTest < ActiveSupport::TestCase
 
   def block(title, starts, ends)
     @user.time_blocks.create!(
-      title: title, category: "travail",
+      title: title, category: "work",
       start_at: Time.zone.parse("#{DAY} #{starts}"),
       end_at: Time.zone.parse("#{DAY} #{ends}")
     )

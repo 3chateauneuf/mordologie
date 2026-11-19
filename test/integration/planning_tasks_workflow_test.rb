@@ -22,7 +22,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
           planning_task: {
             title: "Préparer une présentation",
             estimated_minutes: "45",
-            category: "travail"
+            category: "work"
           },
           week: "2026-11-02",
           day: "2026-11-03"
@@ -46,7 +46,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     # A future block: its times are still the plan, which flows back to the task.
     task = @user.planning_tasks.create!(
       title: "Préparer une vidéo",
-      category: "travail",
+      category: "work",
       estimated_minutes: 90,
       notes: "Plan"
     )
@@ -59,7 +59,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
     attributes = {
       title: "Préparer une vidéo",
-      category: "travail",
+      category: "work",
       notes: "Plan",
       schedule_date: "2030-01-07",
       start_clock: "10:00",
@@ -111,7 +111,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "an invalid schedule does not consume a pending task" do
     task = @user.planning_tasks.create!(
-      title: "Préparer un atelier", category: "travail", estimated_minutes: 60
+      title: "Préparer un atelier", category: "work", estimated_minutes: 60
     )
     assert_no_difference("@user.time_blocks.count") do
       post time_blocks_path, params: {
@@ -138,7 +138,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     assert_response :redirect
 
     task = @user.planning_tasks.create!(
-      title: "Une tâche", category: "vie", estimated_minutes: 15
+      title: "Une tâche", category: "life", estimated_minutes: 15
     )
     assert_difference("@user.planning_tasks.count", -1) do
       delete planning_task_path(task)
@@ -147,7 +147,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "direct drop schedules the saved task immediately, without a create dialog" do
     task = @user.planning_tasks.create!(
-      title: "Préparer une proposition", category: "vie",
+      title: "Préparer une proposition", category: "life",
       estimated_minutes: 45, notes: "Version client"
     )
 
@@ -161,7 +161,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path(week: "2026-11-02", day: "2026-11-02")
     block = task.reload.scheduled_block
     assert_equal "Préparer une proposition", block.title
-    assert_equal "vie", block.category
+    assert_equal "life", block.category
     assert_equal "Version client", block.notes
     assert_equal "10:15", block.start_at.in_time_zone.strftime("%H:%M")
     assert_equal "11:00", block.end_at.in_time_zone.strftime("%H:%M")
@@ -174,7 +174,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "dropping a second time does not create another block" do
     task = @user.planning_tasks.create!(
-      title: "Un seul bloc", category: "travail", estimated_minutes: 30
+      title: "Un seul bloc", category: "work", estimated_minutes: 30
     )
     attrs = { schedule_date: "2026-11-02", start_clock: "08:30" }
     post schedule_planning_task_path(task), params: attrs
@@ -191,7 +191,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "an invalid drop keeps the task pending and gives a useful explanation" do
     task = @user.planning_tasks.create!(
-      title: "Quatre-vingt-dix minutes", category: "travail",
+      title: "Quatre-vingt-dix minutes", category: "work",
       estimated_minutes: 90
     )
 
@@ -211,12 +211,12 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "existing overlapping block remains unchanged and warning is shown" do
     previous = @user.time_blocks.create!(
-      title: "Travail existant", category: "travail",
+      title: "Travail existant", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
     task = @user.planning_tasks.create!(
-      title: "Second créneau", category: "apprentissage", estimated_minutes: 30
+      title: "Second créneau", category: "learning", estimated_minutes: 30
     )
 
     assert_difference("@user.time_blocks.count", 1) do
@@ -232,7 +232,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "dragging a standalone calendar block to the inbox preserves its details" do
     block = @user.time_blocks.create!(
-      title: "Étudier le projet", category: "apprentissage",
+      title: "Étudier le projet", category: "learning",
       notes: "Appeler le client", tags: ["client", "budget"],
       actual_minutes: 12,
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
@@ -251,7 +251,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     task = @user.planning_tasks.last
     assert_nil task.scheduled_block_id
     assert_equal "Étudier le projet", task.title
-    assert_equal "apprentissage", task.category
+    assert_equal "learning", task.category
     assert_equal 75, task.estimated_minutes
     assert_equal "Appeler le client", task.notes
     assert_equal ["client", "budget"], task.tags
@@ -275,7 +275,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "returning a linked block reuses the same pending task" do
     task = @user.planning_tasks.create!(
-      title: "Livraison", category: "travail", estimated_minutes: 30
+      title: "Livraison", category: "work", estimated_minutes: 30
     )
     post schedule_planning_task_path(task), params: {
       schedule_date: "2026-11-02", start_clock: "11:00"
@@ -310,7 +310,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       locale: "fr"
     )
     private_block = another.time_blocks.create!(
-      title: "Privé", category: "vie",
+      title: "Privé", category: "life",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 9, 30)
     )
@@ -321,7 +321,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     assert_predicate private_block.reload, :persisted?
 
     mine = @user.time_blocks.create!(
-      title: "Calendrier", category: "travail",
+      title: "Calendrier", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
@@ -335,7 +335,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "explicitly deleting a standalone block does not create a pending task" do
     block = @user.time_blocks.create!(
-      title: "Supprimer", category: "travail",
+      title: "Supprimer", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 12, 0),
       end_at: Time.zone.local(2026, 11, 2, 12, 30)
     )
@@ -359,7 +359,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       locale: "fr"
     )
     task = other.planning_tasks.create!(
-      title: "Privé", category: "travail", estimated_minutes: 60
+      title: "Privé", category: "work", estimated_minutes: 60
     )
     assert_no_difference("@user.time_blocks.count") do
       get new_time_block_path(planning_task_id: task.id)

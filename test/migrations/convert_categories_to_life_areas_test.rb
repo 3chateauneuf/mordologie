@@ -14,7 +14,7 @@ class ConvertCategoriesToLifeAreasTest < ActiveSupport::TestCase
     pause = old_block(@french, "pause", tags: ["pause"])
     personal = old_block(@spanish, "personnel")
     work = old_block(@french, "travail")
-    task = @spanish.planning_tasks.create!(title: "Llamada", category: "travail", estimated_minutes: 30)
+    task = @spanish.planning_tasks.create!(title: "Llamada", category: "work", estimated_minutes: 30)
     task.update_columns(category: "reunion")
 
     migrate
@@ -29,9 +29,10 @@ class ConvertCategoriesToLifeAreasTest < ActiveSupport::TestCase
   private
 
   # Old categories are no longer valid, so they are written past validation.
+  # (This migration produced the French keys; the next one renames them.)
   def old_block(user, category, tags: [])
     block = user.time_blocks.create!(
-      title: "Bloc #{category}", category: "travail", tags: tags,
+      title: "Bloc #{category}", category: "work", tags: tags,
       start_at: Time.zone.local(2026, 11, 2, 9, 0), end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
     block.update_columns(category: category)

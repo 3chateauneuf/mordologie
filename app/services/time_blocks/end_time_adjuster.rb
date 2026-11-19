@@ -1,14 +1,12 @@
 module TimeBlocks
   # Change when a block ends, from the calendar itself.
   #
-  # - A block that has already started gets a real end ("Fin réelle").
+  # - A block that has already started gets a real end.
   #   If no real start was entered, the planned start is used.
   # - A future block is still a plan: its planned end moves instead.
   #
   # Invalid values never modify the stored block.
   class EndTimeAdjuster
-    CLOCK = /\A([01]\d|2[0-3]):([0-5]\d)\z/
-
     Result = Struct.new(:block, :error, :kind, keyword_init: true) do
       def success?
         error.nil?
@@ -27,8 +25,8 @@ module TimeBlocks
         return Result.new(error: I18n.t("time_blocks.errors.finish_now_today_only"))
       end
 
-      clock = @finish_now ? @now.strftime("%H:%M") : @end_clock
-      return Result.new(error: I18n.t("time_blocks.errors.end_clock_format")) unless clock.match?(CLOCK)
+      clock = @finish_now ? WallClock.of(@now) : @end_clock
+      return Result.new(error: I18n.t("time_blocks.errors.end_clock_format")) unless WallClock.minutes(clock)
 
       @block.with_lock do
         @block.started?(@now) ? set_actual_end(clock) : set_planned_end(clock)
@@ -38,15 +36,13 @@ module TimeBlocks
     private
 
     def set_actual_end(clock)
-      @block.actual_start_clock = @block.start_at.in_time_zone.strftime("%H:%M") if @block.actual_start_clock.blank?
+      @block.actual_start_clock = WallClock.of(@block.start_at) if @block.actual_start_clock.blank?
       @block.actual_end_clock = clock
       save(:actual)
     end
 
     def set_planned_end(clock)
-      hours, minutes = clock.split(":").map(&:to_i)
-      day = @block.start_at.in_time_zone.to_date
-      @block.end_at = Time.zone.local(day.year, day.month, day.day, hours, minutes)
+      @block.end_at = WallClock.at(@block.start_at.in_time_zone.to_date, WallClock.minutes(clock))
       save(:planned)
     end
 

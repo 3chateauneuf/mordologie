@@ -12,7 +12,7 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     # Before the start hour: reachable by scrolling up.
     @block = @user.time_blocks.create!(
       title: "Activité nocturne",
-      category: "travail",
+      category: "work",
       start_at: Time.zone.local(2026, 11, 2, 1, 30),
       end_at: Time.zone.local(2026, 11, 2, 1, 45)
     )

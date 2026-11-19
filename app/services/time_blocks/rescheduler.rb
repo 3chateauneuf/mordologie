@@ -7,8 +7,6 @@ module TimeBlocks
   #
   # Invalid placements never modify the stored time block.
   class Rescheduler
-    MINUTES_PER_DAY = 24 * 60
-
     Result = Struct.new(:block, :error, :overlap, keyword_init: true) do
       def success?
         error.nil?
@@ -26,25 +24,25 @@ module TimeBlocks
       time_match = @clock.match(/\A([01]\d|2[0-3]):(00|15|30|45)\z/)
       return Result.new(error: I18n.t("time_blocks.errors.quarter_hour")) unless date && time_match
 
-      drop_minutes = time_match[1].to_i * 60 + time_match[2].to_i
+      drop_minutes = WallClock.minutes(@clock)
       @block.with_lock { move(date, drop_minutes) }
     end
 
     private
 
     def move(date, drop_minutes)
-      shift = drop_minutes - minutes_of_day(@block.displayed_start_at)
-      planned_start = minutes_of_day(@block.start_at) + shift
+      shift = drop_minutes - WallClock.minute_of_day(@block.displayed_start_at)
+      planned_start = WallClock.minute_of_day(@block.start_at) + shift
       planned_end = planned_start + @block.duration_minutes
       actual_start = shifted_clock(@block.actual_start_clock, shift)
       actual_end = shifted_clock(@block.actual_end_clock, shift)
 
-      if planned_start.negative? || planned_end >= MINUTES_PER_DAY ||
+      if planned_start.negative? || planned_end >= WallClock::MINUTES_PER_DAY ||
          actual_start == :outside_day || actual_end == :outside_day
         return Result.new(error: I18n.t("time_blocks.errors.past_midnight"))
       end
 
-      start_at = local_time(date, planned_start)
+      start_at = WallClock.at(date, planned_start)
       # Elapsed time, not wall-clock: the planned duration stays the same
       # even on the days when the clocks change.
       end_at = start_at + @block.duration_minutes.minutes
@@ -71,11 +69,10 @@ module TimeBlocks
     def shifted_clock(clock, shift)
       return clock if clock.blank?
 
-      hours, minutes = clock.split(":").map(&:to_i)
-      total = hours * 60 + minutes + shift
-      return :outside_day unless total.between?(0, MINUTES_PER_DAY - 1)
+      total = WallClock.minutes(clock) + shift
+      return :outside_day unless total.between?(0, WallClock::MINUTES_PER_DAY - 1)
 
-      format("%02d:%02d", total / 60, total % 60)
+      WallClock.clock(total)
     end
 
     def overlaps_another_block?
@@ -83,16 +80,6 @@ module TimeBlocks
             .where.not(id: @block.id)
             .where("start_at < ? AND end_at > ?", @block.end_at, @block.start_at)
             .exists?
-    end
-
-    def minutes_of_day(time)
-      local = time.in_time_zone
-      local.hour * 60 + local.min
-    end
-
-    # Built from date + clock so that daylight-saving days keep wall-clock times.
-    def local_time(date, minutes)
-      Time.zone.local(date.year, date.month, date.day, minutes / 60, minutes % 60)
     end
 
     def parse_date

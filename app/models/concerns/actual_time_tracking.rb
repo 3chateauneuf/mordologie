@@ -5,8 +5,6 @@
 module ActualTimeTracking
   extend ActiveSupport::Concern
 
-  CLOCK_PATTERN = /\A(?:[01]\d|2[0-3]):[0-5]\d\z/
-
   included do
     before_validation :derive_actual_minutes
     validate :valid_actual_clock_pair
@@ -18,10 +16,7 @@ module ActualTimeTracking
   private
 
   def clock_minutes(value)
-    return nil unless value.to_s.match?(CLOCK_PATTERN)
-
-    hours, minutes = value.split(":").map(&:to_i)
-    hours * 60 + minutes
+    WallClock.minutes(value)
   end
 
   def derive_actual_minutes

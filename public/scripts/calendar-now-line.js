@@ -27,9 +27,7 @@
     }
     if (line.parentElement !== day) day.appendChild(line);
 
-    const clock = clockFormat.format(now); // "14:07"
-    const [hours, minutes] = clock.split(":").map(Number);
-    const current = hours * 60 + minutes;
+    const current = plannerClock.minutes(clockFormat.format(now)); // "14:07" -> 847
     const first = Number(day.dataset.startHour) * 60;
     const last = Number(day.dataset.endHour) * 60;
     if (current < first || current >= last) {

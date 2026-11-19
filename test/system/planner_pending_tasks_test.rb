@@ -47,7 +47,7 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
   end
   test "return drag succeeds with CSRF protection enabled, as in production" do
     block = @user.time_blocks.create!(
-      title: "Tâche protégée", category: "travail",
+      title: "Tâche protégée", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 10, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 45)
     )
@@ -81,7 +81,7 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
 
   test "dragging an independent block to standby creates a pending task" do
     block = @user.time_blocks.create!(
-      title: "Réviser la semaine", category: "travail",
+      title: "Réviser la semaine", category: "work",
       notes: "Penser au client", tags: ["projet"],
       start_at: Time.zone.local(2026, 11, 2, 10, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 45)
@@ -112,7 +112,7 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
 
   test "dragging a linked reservation to standby never duplicates its task" do
     task = @user.planning_tasks.create!(
-      title: "Montage", category: "travail", estimated_minutes: 60
+      title: "Montage", category: "work", estimated_minutes: 60
     )
     visit root_path(week: "2026-11-02", day: "2026-11-02")
 
@@ -134,7 +134,7 @@ class PlannerPendingTasksTest < ApplicationSystemTestCase
   test "desktop dragging places a pending task immediately at its dropped time" do
     task = @user.planning_tasks.create!(
       title: "Préparer le montage",
-      category: "travail",
+      category: "work",
       estimated_minutes: 30
     )
 

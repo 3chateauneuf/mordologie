@@ -5,10 +5,11 @@ class TimeBlock < ApplicationRecord
   # Finer distinctions (#reunión, #pausa…) are tags. Names are translated
   # (categories.* in config/locales); use TimeBlock.category_label(key).
   CATEGORIES = {
-    "travail" => { color: "#5268ca" },       # Work: blue
-    "vie" => { color: "#348e80" },           # Life: green
-    "apprentissage" => { color: "#b5740e" }  # Learning: amber
+    "work" => { color: "#5268ca" },     # blue
+    "life" => { color: "#348e80" },     # green
+    "learning" => { color: "#b5740e" }  # amber
   }.freeze
+  DEFAULT_CATEGORY = "work"
 
   def self.category_label(key)
     I18n.t("categories.#{key}")
@@ -46,7 +47,7 @@ class TimeBlock < ApplicationRecord
   end
 
   def color
-    CATEGORIES.fetch(category, CATEGORIES.fetch("travail"))[:color]
+    CATEGORIES.fetch(category, CATEGORIES.fetch(DEFAULT_CATEGORY))[:color]
   end
 
   # The calendar draws what really happened when it is known,
@@ -82,14 +83,11 @@ class TimeBlock < ApplicationRecord
   private
 
   # Real clocks are stored as "HH:MM" on the block's own day.
-  # Built from date + clock (not midnight + minutes) so that days when
-  # the clocks change keep the same wall-clock time.
   def actual_clock_time(clock)
-    minutes = clock_minutes(clock)
+    minutes = WallClock.minutes(clock)
     return nil unless minutes && start_at
 
-    day = start_at.in_time_zone.to_date
-    Time.zone.local(day.year, day.month, day.day, minutes / 60, minutes % 60)
+    WallClock.at(start_at.in_time_zone.to_date, minutes)
   end
 
   def valid_tags

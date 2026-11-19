@@ -8,19 +8,25 @@ module PlannerCalendar
     PIXELS_PER_MINUTE = 1.1 # One grid hour is 66 px.
     MIN_HEIGHT = 34
 
+    # What fits in a block, by its height in pixels:
+    ONE_LINE_BELOW = 46       # under this, title and times share one line
+    FINISH_NOW_FROM = 70      # room for the "finish now" button
+    AREA_LABEL_FROM = 82      # room for the area name (Work, Life…)
+    TWO_LINE_TITLE_FROM = 96  # a long title may take two lines
+
     Entry = Struct.new(:block, :top, :height, :lane, :lanes,
                        :planned_top, :planned_height, :finish_now,
                        keyword_init: true) do
       def start_label
-        block.displayed_start_at.in_time_zone.strftime("%H:%M")
+        WallClock.of(block.displayed_start_at)
       end
 
       def end_label
-        block.displayed_end_at.in_time_zone.strftime("%H:%M")
+        WallClock.of(block.displayed_end_at)
       end
 
       def planned_label
-        "#{block.start_at.in_time_zone.strftime('%H:%M')} – #{block.end_at.in_time_zone.strftime('%H:%M')}"
+        "#{WallClock.of(block.start_at)} – #{WallClock.of(block.end_at)}"
       end
 
       # A dashed outline shows the planned slot when the real one differs.
@@ -30,11 +36,23 @@ module PlannerCalendar
 
       # Too short for two lines: title and times share one line.
       def compact?
-        height < 46
+        height < ONE_LINE_BELOW
       end
 
       def finish_now?
         finish_now
+      end
+
+      def shows_finish_now_button?
+        finish_now? && height >= FINISH_NOW_FROM
+      end
+
+      def shows_area_label?
+        height >= AREA_LABEL_FROM
+      end
+
+      def two_line_title?
+        height >= TWO_LINE_TITLE_FROM
       end
     end
 
@@ -97,7 +115,7 @@ module PlannerCalendar
       lane_of.each { |block, lane| result[block] = [lane, lane_ends.length] }
     end
 
-    # "Terminer maintenant" belongs to the task in progress: the last block
+    # "Finish now" belongs to the task in progress: the last block
     # of today that has started and has no real end yet.
     def in_progress_block
       return nil unless @day == @now.to_date

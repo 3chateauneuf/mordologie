@@ -9,7 +9,7 @@ class PlannerDeleteActionTest < ApplicationSystemTestCase
       locale: "fr"
     )
     @task = @user.planning_tasks.create!(
-      title: "À supprimer", category: "travail", estimated_minutes: 45
+      title: "À supprimer", category: "work", estimated_minutes: 45
     )
     @block = @user.time_blocks.create!(
       title: @task.title, category: @task.category,
