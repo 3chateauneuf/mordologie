@@ -15,7 +15,7 @@ class PlannerEndTimeTest < ApplicationSystemTestCase
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
     @next_block = @user.time_blocks.create!(
-      title: "Appel client", category: "reunion",
+      title: "Appel client", category: "apprentissage",
       start_at: Time.zone.local(2026, 11, 2, 10, 0),
       end_at: Time.zone.local(2026, 11, 2, 11, 0)
     )

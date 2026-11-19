@@ -65,7 +65,7 @@ class TimeBlockDeletionTest < ActionDispatch::IntegrationTest
 
   test "permanent deletion of standalone block does not create a pending task" do
     block = @user.time_blocks.create!(
-      title: "Bloc autonome", category: "personnel",
+      title: "Bloc autonome", category: "vie",
       start_at: Time.zone.local(2026, 11, 2, 14, 0),
       end_at: Time.zone.local(2026, 11, 2, 14, 30)
     )

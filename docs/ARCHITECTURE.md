@@ -90,6 +90,15 @@ botón accesible sin JS.
 Para cambiar este comportamiento, actualizar modelo, migración, controlador,
 vista y pruebas de forma conjunta. No guardar esta preferencia en localStorage.
 
+## Áreas de vida
+
+`TimeBlock::CATEGORIES` define tres áreas fijas, cada una con su color:
+`travail` (Trabajo, azul), `vie` (Vida, verde) y `apprentissage`
+(Aprendizaje, ámbar). Bloques y tareas pendientes tienen una sola área; los
+matices van en etiquetas. La migración `ConvertCategoriesToLifeAreas` pasó
+`reunion` a Trabajo con #reunión y `pause` a Vida con #pausa (etiqueta en el
+idioma del usuario), y `personnel` a Vida.
+
 ## Validación visual de la agenda
 
 Las pruebas de sistema con Chrome usan los mismos formularios y clics que un

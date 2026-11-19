@@ -8,6 +8,9 @@ valor. Ante la duda, quitar antes que añadir.
 
 ## En curso
 
+- **Áreas de vida.** Las categorías pasan a ser tres áreas fijas con colores
+  distintos: Trabajo (azul), Vida (verde) y Aprendizaje (ámbar). Reunión pasa
+  a Trabajo con #reunión y Pausa a Vida con #pausa.
 - **Diálogo más ligero e indicadores.**
   - en el diálogo, la hora de fin se edita a mano y recalcula la duración;
     desaparece el bloque «Horario real»;
@@ -22,9 +25,13 @@ valor. Ante la duda, quitar antes que añadir.
 
 - **Sección de análisis: previsto frente a real.** Una sección propia, aparte
   de la agenda:
-  - la diferencia por día y por categoría;
+  - el tiempo por área (Trabajo, Vida, Aprendizaje) cada semana, para ver el
+    equilibrio;
+  - la diferencia por día y por área;
   - las tareas que más se subestiman;
   - duraciones sugeridas a partir del historial al planificar una tarea.
+- **Áreas a medida.** Cambiar el nombre y el color de las tres áreas de base
+  (que no se pueden borrar) y crear áreas propias, hasta unas 6–8.
 - **Lo previsto desde Google Calendar.** Importar los eventos de la agenda de
   Google como bloques previstos; lo real se sigue registrando en Planner.
 

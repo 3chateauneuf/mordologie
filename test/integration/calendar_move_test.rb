@@ -56,7 +56,7 @@ class CalendarMoveTest < ActionDispatch::IntegrationTest
 
   test "overlap is allowed but warned about" do
     @user.time_blocks.create!(
-      title: "Autre activité", category: "reunion",
+      title: "Autre activité", category: "apprentissage",
       start_at: Time.zone.local(2026, 11, 3, 14, 0),
       end_at: Time.zone.local(2026, 11, 3, 15, 0)
     )
