@@ -57,6 +57,10 @@ module TimeBlocks
         return fail_with("time_blocks.errors.invalid_schedule")
       end
 
+      # A start inside the hour skipped when the clocks go forward (02:30)
+      # becomes 03:30; the end is counted from that real start.
+      start_minutes = WallClock.minute_of_day(WallClock.at(day, start_minutes))
+
       if @edits_actual
         apply_actual(day, start_minutes, duration)
       else

@@ -22,5 +22,8 @@ class RenameLifeAreasToEnglishTest < ActiveSupport::TestCase
     assert_equal "learning", block.reload.category
     assert_equal "life", task.reload.category
     assert_equal 0, @user.block_changes.count
+    # A task created without an area gets a valid one.
+    assert_equal "work", PlanningTask.columns_hash["category"].default
+    assert_equal "work", TimeBlock.columns_hash["category"].default
   end
 end

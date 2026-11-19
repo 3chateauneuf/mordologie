@@ -136,6 +136,17 @@ class ActualTimeTrackingTest < ActionDispatch::IntegrationTest
     assert_equal 60, future.reload.duration_minutes
   end
 
+  test "a start inside the skipped spring hour counts the end from the real start" do
+    post time_blocks_path, params: {
+      time_block: { title: "Heure sautée", category: "work", schedule_date: "2030-03-31",
+                    start_clock: "02:30", duration_minutes: "60" }
+    }
+
+    block = @user.time_blocks.find_by!(title: "Heure sautée")
+    assert_equal "03:30", WallClock.of(block.start_at)
+    assert_equal "04:30", WallClock.of(block.end_at)
+  end
+
   test "on a daylight-saving day the planned end entered is the end saved" do
     post time_blocks_path, params: {
       time_block: { title: "Nuit courte", category: "work", schedule_date: "2030-03-31",
