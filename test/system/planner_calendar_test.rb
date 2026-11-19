@@ -113,6 +113,10 @@ class PlannerCalendarTest < ApplicationSystemTestCase
     page.driver.browser.manage.window.resize_to(390, 844)
     visit root_path(week: "2026-11-02", day: "2026-11-02")
 
+    # Another day than Monday also opens at the start hour (Thursday here).
+    visit root_path(week: "2026-11-02", day: "2026-11-05")
+    assert_operator page.evaluate_script("window.scrollY"), :>, 5 * 66
+
     # One bar, one line: no separate header above the calendar.
     bar = position(".topbar")
     assert_operator bar["bottom"] - bar["top"], :<=, 64

@@ -11,7 +11,7 @@
 # A new action clears what could be redone, as in any editor.
 # Only the last LIMIT changes are kept.
 class BlockHistory
-  LIMIT = 20
+  LIMIT = 5 # A safety net for slips, not a full log.
   TIME_FIELDS = %w[start_at end_at actual_start_clock actual_end_clock actual_minutes].freeze
   FIELDS = (%w[title category notes tags] + TIME_FIELDS).freeze
 
