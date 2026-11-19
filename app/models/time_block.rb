@@ -1,12 +1,13 @@
 class TimeBlock < ApplicationRecord
   include ActualTimeTracking
-  # Category key => calendar colour. Names are translated (categories.* in
-  # config/locales); use TimeBlock.category_label(key).
+  # The three areas of life every block belongs to (work, life, learning),
+  # each with its own colour so the week's balance shows at a glance.
+  # Finer distinctions (#reunión, #pausa…) are tags. Names are translated
+  # (categories.* in config/locales); use TimeBlock.category_label(key).
   CATEGORIES = {
-    "travail" => { color: "#5268ca" },
-    "reunion" => { color: "#a47b38" },
-    "personnel" => { color: "#348e80" },
-    "pause" => { color: "#956c97" }
+    "travail" => { color: "#5268ca" },       # Work: blue
+    "vie" => { color: "#348e80" },           # Life: green
+    "apprentissage" => { color: "#b5740e" }  # Learning: amber
   }.freeze
 
   def self.category_label(key)

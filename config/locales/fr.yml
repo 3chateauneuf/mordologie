@@ -9,9 +9,8 @@ fr:
 
   categories:
     travail: "Travail"
-    reunion: "Réunion"
-    personnel: "Personnel"
-    pause: "Pause"
+    vie: "Vie"
+    apprentissage: "Apprentissage"
 
   layouts:
     application:

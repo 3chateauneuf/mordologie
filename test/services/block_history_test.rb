@@ -41,7 +41,7 @@ class BlockHistoryTest < ActiveSupport::TestCase
 
   test "undoing a creation removes the block and redo brings it back" do
     created = @user.time_blocks.create!(
-      title: "Nouveau", category: "personnel", tags: ["projet"],
+      title: "Nouveau", category: "vie", tags: ["projet"],
       start_at: Time.zone.local(2026, 11, 4, 9, 0),
       end_at: Time.zone.local(2026, 11, 4, 9, 30)
     )

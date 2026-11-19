@@ -138,7 +138,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     assert_response :redirect
 
     task = @user.planning_tasks.create!(
-      title: "Une tâche", category: "personnel", estimated_minutes: 15
+      title: "Une tâche", category: "vie", estimated_minutes: 15
     )
     assert_difference("@user.planning_tasks.count", -1) do
       delete planning_task_path(task)
@@ -147,7 +147,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "direct drop schedules the saved task immediately, without a create dialog" do
     task = @user.planning_tasks.create!(
-      title: "Préparer une proposition", category: "personnel",
+      title: "Préparer une proposition", category: "vie",
       estimated_minutes: 45, notes: "Version client"
     )
 
@@ -161,7 +161,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path(week: "2026-11-02", day: "2026-11-02")
     block = task.reload.scheduled_block
     assert_equal "Préparer une proposition", block.title
-    assert_equal "personnel", block.category
+    assert_equal "vie", block.category
     assert_equal "Version client", block.notes
     assert_equal "10:15", block.start_at.in_time_zone.strftime("%H:%M")
     assert_equal "11:00", block.end_at.in_time_zone.strftime("%H:%M")
@@ -216,7 +216,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
     task = @user.planning_tasks.create!(
-      title: "Second créneau", category: "reunion", estimated_minutes: 30
+      title: "Second créneau", category: "apprentissage", estimated_minutes: 30
     )
 
     assert_difference("@user.time_blocks.count", 1) do
@@ -232,7 +232,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
 
   test "dragging a standalone calendar block to the inbox preserves its details" do
     block = @user.time_blocks.create!(
-      title: "Étudier le projet", category: "reunion",
+      title: "Étudier le projet", category: "apprentissage",
       notes: "Appeler le client", tags: ["client", "budget"],
       actual_minutes: 12,
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
@@ -251,7 +251,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
     task = @user.planning_tasks.last
     assert_nil task.scheduled_block_id
     assert_equal "Étudier le projet", task.title
-    assert_equal "reunion", task.category
+    assert_equal "apprentissage", task.category
     assert_equal 75, task.estimated_minutes
     assert_equal "Appeler le client", task.notes
     assert_equal ["client", "budget"], task.tags
@@ -310,7 +310,7 @@ class PlanningTasksWorkflowTest < ActionDispatch::IntegrationTest
       locale: "fr"
     )
     private_block = another.time_blocks.create!(
-      title: "Privé", category: "personnel",
+      title: "Privé", category: "vie",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 9, 30)
     )
