@@ -11,7 +11,12 @@
   const frame = document.querySelector("[data-calendar-scroll]");
   if (!frame) return;
 
-  const day = frame.querySelector(".day-body");
+  // Measure a day column that is shown: on a phone only the selected day is
+  // (the others are display: none and measure 0).
+  const day = frame.querySelector(".day-body.is-active-day") ||
+    Array.from(frame.querySelectorAll(".day-body")).find(function (column) {
+      return column.offsetHeight > 0;
+    });
   if (!day) return;
 
   const hour = Number(frame.dataset.scrollHour);
