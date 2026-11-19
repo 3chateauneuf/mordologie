@@ -8,9 +8,9 @@ es:
     fr: "Français"
 
   categories:
-    travail: "Trabajo"
-    vie: "Vida"
-    apprentissage: "Aprendizaje"
+    work: "Trabajo"
+    life: "Vida"
+    learning: "Aprendizaje"
 
   layouts:
     application:

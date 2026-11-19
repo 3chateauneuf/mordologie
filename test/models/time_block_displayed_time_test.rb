@@ -10,7 +10,7 @@ class TimeBlockDisplayedTimeTest < ActiveSupport::TestCase
       locale: "fr"
     )
     @block = @user.time_blocks.create!(
-      title: "Rédaction", category: "travail",
+      title: "Rédaction", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
@@ -43,7 +43,7 @@ class TimeBlockDisplayedTimeTest < ActiveSupport::TestCase
 
   test "real clocks keep their wall-clock time on daylight-saving days" do
     spring = @user.time_blocks.create!(
-      title: "Changement d'heure", category: "travail",
+      title: "Changement d'heure", category: "work",
       start_at: Time.zone.local(2026, 3, 29, 9, 0),
       end_at: Time.zone.local(2026, 3, 29, 10, 0),
       actual_start_clock: "09:00", actual_end_clock: "10:30"

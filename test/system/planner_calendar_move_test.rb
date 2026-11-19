@@ -9,7 +9,7 @@ class PlannerCalendarMoveTest < ApplicationSystemTestCase
       locale: "fr"
     )
     @block = @user.time_blocks.create!(
-      title: "Préparer un dossier", category: "travail",
+      title: "Préparer un dossier", category: "work",
       notes: "À conserver", tags: ["important"],
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)

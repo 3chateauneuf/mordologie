@@ -13,16 +13,6 @@
   const submit = document.getElementById("planner-time-block-submit");
   const durationButtons = Array.from(form.querySelectorAll("[data-duration]"));
 
-  function minutesOf(clock) {
-    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(clock);
-    return match ? Number(match[1]) * 60 + Number(match[2]) : null;
-  }
-
-  function clockOf(totalMinutes) {
-    return String(Math.floor(totalMinutes / 60)).padStart(2, "0") + ":" +
-      String(totalMinutes % 60).padStart(2, "0");
-  }
-
   function showState(problem) {
     endMessage.textContent = problem || "";
     endBox.classList.toggle("is-invalid", Boolean(problem));
@@ -34,7 +24,7 @@
 
   // Start or duration changed: show the resulting end.
   function updateEnd() {
-    const start = minutesOf(time.value);
+    const start = plannerClock.minutes(time.value);
     const minutes = Number(duration.value);
     // The longest duration comes from the field (16 h for a plan, the whole
     // day for real times).
@@ -48,14 +38,14 @@
       showState(plannerText("after_midnight"));
       return;
     }
-    endInput.value = clockOf(start + minutes);
+    endInput.value = plannerClock.clock(start + minutes);
     showState("");
   }
 
   // End changed by hand: the duration follows.
   function updateDuration() {
-    const start = minutesOf(time.value);
-    const end = minutesOf(endInput.value);
+    const start = plannerClock.minutes(time.value);
+    const end = plannerClock.minutes(endInput.value);
     if (start === null) return;
     // An empty or incomplete end blocks saving, so the old duration is never
     // saved silently behind a cleared field.

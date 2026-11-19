@@ -9,7 +9,7 @@ class PlannerUndoDuplicateTest < ApplicationSystemTestCase
       locale: "fr"
     )
     @block = @user.time_blocks.create!(
-      title: "Préparer un dossier", category: "travail",
+      title: "Préparer un dossier", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )

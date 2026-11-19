@@ -9,7 +9,7 @@ class EndTimeAdjusterTest < ActiveSupport::TestCase
       locale: "fr"
     )
     @block = @user.time_blocks.create!(
-      title: "Montage", category: "travail",
+      title: "Montage", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
@@ -74,7 +74,7 @@ class EndTimeAdjusterTest < ActiveSupport::TestCase
 
   test "a planned end keeps its wall-clock time on daylight-saving days" do
     autumn = @user.time_blocks.create!(
-      title: "Changement d'heure", category: "travail",
+      title: "Changement d'heure", category: "work",
       start_at: Time.zone.local(2026, 10, 25, 9, 0),
       end_at: Time.zone.local(2026, 10, 25, 10, 0)
     )

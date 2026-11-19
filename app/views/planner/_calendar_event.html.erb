@@ -1,6 +1,6 @@
 <%# One block of the calendar, placed by PlannerCalendar::DayLayout.
     The title link covers the whole block (click = edit); the end time,
-    "Terminer maintenant" and the bottom handle sit above it. %>
+    "finish now" and the bottom handle sit above it. %>
 <% block = entry.block %>
 <% category_label = TimeBlock.category_label(block.category) %>
 <% end_kind = block.started? ? "actual" : "planned" %>
@@ -17,7 +17,7 @@
        style="top:<%= entry.planned_top %>px;height:<%= entry.planned_height %>px;<%= lane_style %>"></div>
 <% end %>
 
-<div class="event <%= 'is-compact' if entry.compact? %> <%= 'is-roomy' if entry.height >= 96 %> <%= 'is-actual' if block.shows_actual_time? %>"
+<div class="event <%= 'is-compact' if entry.compact? %> <%= 'is-roomy' if entry.two_line_title? %> <%= 'is-actual' if block.shows_actual_time? %>"
      draggable="true"
      style="top:<%= entry.top %>px;height:<%= entry.height %>px;<%= lane_style %>"
      data-preview
@@ -39,23 +39,23 @@
   <small class="event-times">
     <span class="event-range"><%= entry.start_label %> –
     <button type="button" class="event-end-time" data-end-time-trigger
-            aria-label="<%= t(".change_end", kind: t(end_kind == "actual" ? ".end_actual" : ".end_planned"), time: entry.end_label) %>"><svg class="event-end-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><%= entry.end_label %></button></span>
+            aria-label="<%= t(".change_end", kind: t(end_kind == "actual" ? ".end_actual" : ".end_planned"), time: entry.end_label) %>"><%= render "planner/icons/clock" %><%= entry.end_label %></button></span>
     <%# Icons sit on the time line so the title keeps the full width. In a
         narrow lane they wrap below the times. A compact block has no room:
         its hover card shows note and tags. %>
     <% if (has_notes || has_tags) && !entry.compact? %>
       <span class="event-badges">
         <% if has_notes %>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" role="img" aria-label="<%= t(".has_notes") %>"><path d="M4 5h16M4 11h16M4 17h10"/></svg>
+          <%= render "planner/icons/note", label: t(".has_notes") %>
         <% end %>
         <% if has_tags %>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="<%= t(".has_tags") %>"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/></svg>
+          <%= render "planner/icons/tag", label: t(".has_tags") %>
         <% end %>
       </span>
     <% end %>
   </small>
-  <% if entry.height >= 82 %><span class="category"><%= category_label %></span><% end %>
-  <% if entry.finish_now? && entry.height >= 70 %>
+  <% if entry.shows_area_label? %><span class="category"><%= category_label %></span><% end %>
+  <% if entry.shows_finish_now_button? %>
     <%= button_to t(".finish_now"), end_time_time_block_path(block),
           method: :patch, params: { finish_now: "1" },
           class: "event-finish-now", form_class: "event-finish-form" %>

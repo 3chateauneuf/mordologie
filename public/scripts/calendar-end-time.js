@@ -18,17 +18,9 @@
   let openBlock = null;
   let openTrigger = null;
 
-  // ---- Clock helpers ("HH:MM" <-> minutes since midnight) ----
-
-  function toMinutes(clock) {
-    const [hours, minutes] = clock.split(":").map(Number);
-    return hours * 60 + minutes;
-  }
-
+  // An end never goes past 23:59 of the block's day.
   function toClock(totalMinutes) {
-    const minutes = Math.max(0, Math.min(23 * 60 + 59, totalMinutes));
-    return String(Math.floor(minutes / 60)).padStart(2, "0") + ":" +
-      String(minutes % 60).padStart(2, "0");
+    return plannerClock.clock(Math.max(0, Math.min(23 * 60 + 59, totalMinutes)));
   }
 
   // ---- Sending a change ----
@@ -90,7 +82,7 @@
   function save() {
     if (!openBlock) return;
     const afterStart = input.value &&
-      toMinutes(input.value) > toMinutes(openBlock.dataset.displayStartClock);
+      plannerClock.minutes(input.value) > plannerClock.minutes(openBlock.dataset.displayStartClock);
     input.setCustomValidity(afterStart ? "" :
       plannerText("end_after_start", { time: openBlock.dataset.displayStartClock }));
     if (!input.reportValidity()) return;
@@ -115,7 +107,7 @@
     button.addEventListener("click", function () {
       if (!openBlock) return;
       const base = input.value || openBlock.dataset.endClock;
-      submitEnd(openBlock, { endClock: toClock(toMinutes(base) + Number(button.dataset.endTimeAdd)) });
+      submitEnd(openBlock, { endClock: toClock(plannerClock.minutes(base) + Number(button.dataset.endTimeAdd)) });
     });
   });
 
@@ -174,8 +166,8 @@
         label: block.querySelector("[data-end-time-trigger]"),
         originalLabel: block.dataset.endClock,
         originalHeight: block.style.height,
-        startMinutes: toMinutes(block.dataset.displayStartClock),
-        endMinutes: toMinutes(block.dataset.endClock),
+        startMinutes: plannerClock.minutes(block.dataset.displayStartClock),
+        endMinutes: plannerClock.minutes(block.dataset.endClock),
         pixelsPerMinute: day.getBoundingClientRect().height /
           ((Number(day.dataset.endHour) - Number(day.dataset.startHour)) * 60)
       };

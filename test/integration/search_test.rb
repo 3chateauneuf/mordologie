@@ -10,7 +10,7 @@ class SearchTest < ActionDispatch::IntegrationTest
     )
     post session_path, params: { email: @user.email, password: "test-password-1234" }
     @user.time_blocks.create!(
-      title: "Montage vidéo", category: "travail", tags: ["youtube"],
+      title: "Montage vidéo", category: "work", tags: ["youtube"],
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )

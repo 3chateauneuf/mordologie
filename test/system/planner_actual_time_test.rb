@@ -9,7 +9,7 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
       locale: "fr"
     )
     @block = @user.time_blocks.create!(
-      title: "Montage réel", category: "travail",
+      title: "Montage réel", category: "work",
       notes: "Version courte\npour Instagram", tags: ["video"],
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 11, 45)
@@ -88,7 +88,7 @@ class PlannerActualTimeTest < ApplicationSystemTestCase
 
   test "the icons stay inside a narrow block when blocks overlap" do
     @user.time_blocks.create!(
-      title: "Appel client", category: "travail",
+      title: "Appel client", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 30),
       end_at: Time.zone.local(2026, 11, 2, 11, 0)
     )

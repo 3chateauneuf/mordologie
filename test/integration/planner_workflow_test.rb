@@ -31,7 +31,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
       post time_blocks_path, params: {
         time_block: {
           title: "Préparer un épisode",
-          category: "travail",
+          category: "work",
           schedule_date: "2026-11-02",
           start_clock: "09:30",
           duration_minutes: "45",
@@ -59,7 +59,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
     patch time_block_path(block), params: {
       time_block: {
         title: "Monter un épisode",
-        category: "travail",
+        category: "work",
         schedule_date: "2026-11-02",
         start_clock: "10:00",
         duration_minutes: "30",
@@ -125,7 +125,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
   test "an early block is in the grid and the page still opens at the start hour" do
     @user.time_blocks.create!(
       title: "Livraison tôt",
-      category: "travail",
+      category: "work",
       start_at: Time.zone.local(2026, 11, 2, 1, 30),
       end_at: Time.zone.local(2026, 11, 2, 1, 45)
     )
@@ -169,7 +169,7 @@ class PlannerWorkflowTest < ActionDispatch::IntegrationTest
       post time_blocks_path, params: {
         time_block: {
           title: "Impossible",
-          category: "travail",
+          category: "work",
           schedule_date: "2026-11-02",
           start_clock: "23:45",
           duration_minutes: "60",

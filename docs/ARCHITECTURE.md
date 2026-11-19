@@ -22,8 +22,17 @@ Conservar el comportamiento y los datos durante refactorizaciones.
 - `app/views/time_blocks/_form.html.erb`: campos HTML del formulario compartido.
 - `app/views/time_blocks/{new,edit}.html.erb`: contenedores de diálogo.
 - `public/styles/foundation.css`: estilos generales y calendario base.
-- `public/styles/planner-toolbar.css`: barra de la agenda, menú de ajustes,
-  totales por día y línea de la hora actual.
+- `public/styles/planner-toolbar.css`: barra de la agenda, menú de ajustes y
+  atajos, totales por día y línea de la hora actual.
+- `public/styles/calendar-events.css`: lo que muestra un bloque (enlace,
+  horas, iconos, título en dos líneas, modo compacto) y la ficha al pasar el
+  ratón. Las alturas que deciden qué cabe tienen nombre en
+  `PlannerCalendar::DayLayout` (`ONE_LINE_BELOW`, `AREA_LABEL_FROM`…).
+- `app/views/planner/icons/`: los iconos SVG (reloj, nota, etiqueta).
+- `app/models/wall_clock.rb` y `public/scripts/wall-clock.js`: el único sitio
+  donde se pasa de «09:30» a minutos y al revés.
+- `app/services/time_blocks/schedule_form.rb`: las horas del diálogo
+  (previsto o real, minutos de reloj, cambio de hora, medianoche).
 - `public/scripts/calendar-now-line.js`: coloca la línea de la hora actual.
 - `public/scripts/calendar-scroll-anchor.js`: abre la cuadrícula de 24 h en la hora útil (hora actual − 1 en la semana en curso; si no, la hora de inicio).
 - `public/scripts/calendar-hovercard.js`: ficha de cada bloque al pasar el ratón.
@@ -93,11 +102,13 @@ vista y pruebas de forma conjunta. No guardar esta preferencia en localStorage.
 ## Áreas de vida
 
 `TimeBlock::CATEGORIES` define tres áreas fijas, cada una con su color:
-`travail` (Trabajo, azul), `vie` (Vida, verde) y `apprentissage`
+`work` (Trabajo, azul), `life` (Vida, verde) y `learning`
 (Aprendizaje, ámbar). Bloques y tareas pendientes tienen una sola área; los
 matices van en etiquetas. La migración `ConvertCategoriesToLifeAreas` pasó
 `reunion` a Trabajo con #reunión y `pause` a Vida con #pausa (etiqueta en el
-idioma del usuario), y `personnel` a Vida.
+idioma del usuario), y `personnel` a Vida. `RenameLifeAreasToEnglish` pasó
+después las claves al inglés y vació el historial de deshacer, cuyas copias
+guardadas llevaban las claves antiguas.
 
 ## Validación visual de la agenda
 
@@ -209,9 +220,9 @@ el diálogo) es lo real, y lo previsto se conserva tal como se creó.
 
 En el diálogo hay un solo inicio, duración y fin. El fin es editable y
 recalcula la duración (`public/scripts/time-block-form.js`); el servidor
-recibe la duración. Para un bloque empezado, el controlador solo escribe las
-horas reales si inicio o duración cambiaron, así que editar el título nunca
-inventa horas reales. Cambiar de día mueve también el plan, con las mismas
+recibe la duración. `TimeBlocks::ScheduleForm` aplica la regla. Para un
+bloque empezado, solo escribe las horas reales si inicio o duración
+cambiaron, así que editar el título nunca inventa horas reales. Cambiar de día mueve también el plan, con las mismas
 horas. Los campos reales no se aceptan directamente desde el formulario.
 Las duraciones se cuentan en minutos de reloj (01:00 + 180 min termina a las
 04:00 aunque ese día cambie la hora).

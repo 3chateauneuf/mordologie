@@ -10,7 +10,7 @@ class BlockHistoryTest < ActiveSupport::TestCase
     )
     @history = BlockHistory.new(@user)
     @block = @user.time_blocks.create!(
-      title: "Montage", category: "travail",
+      title: "Montage", category: "work",
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0)
     )
@@ -41,7 +41,7 @@ class BlockHistoryTest < ActiveSupport::TestCase
 
   test "undoing a creation removes the block and redo brings it back" do
     created = @user.time_blocks.create!(
-      title: "Nouveau", category: "vie", tags: ["projet"],
+      title: "Nouveau", category: "life", tags: ["projet"],
       start_at: Time.zone.local(2026, 11, 4, 9, 0),
       end_at: Time.zone.local(2026, 11, 4, 9, 30)
     )
@@ -58,7 +58,7 @@ class BlockHistoryTest < ActiveSupport::TestCase
 
   test "redo after undoing a creation keeps later form edits" do
     created = @user.time_blocks.create!(
-      title: "Nouveau", category: "travail",
+      title: "Nouveau", category: "work",
       start_at: Time.zone.local(2026, 11, 4, 9, 0),
       end_at: Time.zone.local(2026, 11, 4, 9, 30)
     )

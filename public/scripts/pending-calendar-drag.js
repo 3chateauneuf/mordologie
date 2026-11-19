@@ -9,12 +9,6 @@
   let preview = null;
   let previewDay = null;
 
-  function clock(minutes) {
-    const hours = String(Math.floor(minutes / 60)).padStart(2, "0");
-    const mins = String(minutes % 60).padStart(2, "0");
-    return hours + ":" + mins;
-  }
-
   function dropTime(event, day) {
     const rect = day.getBoundingClientRect();
     const startHour = Number(day.dataset.startHour);
@@ -63,7 +57,7 @@
 
     preview.textContent = crossesMidnight
       ? plannerText("past_midnight")
-      : clock(location.minutes) + " – " + clock(end);
+      : plannerClock.clock(location.minutes) + " – " + plannerClock.clock(end);
 
     return location;
   }
@@ -109,7 +103,7 @@
       if (!form) return;
 
       form.elements.schedule_date.value = day.dataset.day;
-      form.elements.start_clock.value = clock(location.minutes);
+      form.elements.start_clock.value = plannerClock.clock(location.minutes);
 
       clearPreview();
       form.requestSubmit();

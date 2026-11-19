@@ -1,9 +1,9 @@
-<div class="planner-dialog-overlay" data-planner-dialog data-dismiss-url="<%= root_path(week: @schedule_date, day: @schedule_date) %>">
+<div class="planner-dialog-overlay" data-planner-dialog data-dismiss-url="<%= root_path(week: @schedule.date, day: @schedule.date) %>">
   <section class="planner-dialog-panel editor-shell" data-planner-dialog-panel role="dialog" aria-labelledby="planner-dialog-title">
     <header class="editor-page-head">
-      <%= link_to t("time_blocks.dialog.back"), root_path(week: @schedule_date, day: @schedule_date), class: "editor-back planner-dialog-mobile-back" %>
+      <%= link_to t("time_blocks.dialog.back"), root_path(week: @schedule.date, day: @schedule.date), class: "editor-back planner-dialog-mobile-back" %>
       <h1 id="planner-dialog-title"><%= t(".title") %></h1>
-      <%= link_to "×", root_path(week: @schedule_date, day: @schedule_date), class: "planner-dialog-close", aria: { label: t("time_blocks.dialog.close") }, title: t("time_blocks.dialog.close_title") %>
+      <%= link_to "×", root_path(week: @schedule.date, day: @schedule.date), class: "planner-dialog-close", aria: { label: t("time_blocks.dialog.close") }, title: t("time_blocks.dialog.close_title") %>
     </header>
     <%= render "form" %>
   </section>

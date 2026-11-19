@@ -9,7 +9,7 @@ class DuplicatorTest < ActiveSupport::TestCase
       locale: "fr"
     )
     @block = @user.time_blocks.create!(
-      title: "Montage", category: "apprentissage", notes: "Notes", tags: ["vidéo"],
+      title: "Montage", category: "learning", notes: "Notes", tags: ["vidéo"],
       start_at: Time.zone.local(2026, 11, 2, 9, 0),
       end_at: Time.zone.local(2026, 11, 2, 10, 0),
       actual_start_clock: "09:00", actual_end_clock: "10:30"
@@ -22,7 +22,7 @@ class DuplicatorTest < ActiveSupport::TestCase
     assert result.success?
     copy = result.block
     assert_not_equal @block.id, copy.id
-    assert_equal ["Montage", "apprentissage", "Notes", ["vidéo"]],
+    assert_equal ["Montage", "learning", "Notes", ["vidéo"]],
                  [copy.title, copy.category, copy.notes, copy.tags]
     assert_equal Time.zone.local(2026, 11, 3, 14, 0), copy.start_at
     assert_equal 90, copy.duration_minutes

@@ -1,27 +1,7 @@
-/* Quick end-time editing in the calendar: visible end time, "Terminer
-   maintenant", resize handle, planned-slot outline and the shared editor. */
+/* Quick end-time editing in the calendar: the clickable end time, "finish
+   now", the resize handle, the planned-slot outline and the shared editor.
+   The block itself is styled in calendar-events.css. */
 
-/* The title link covers the whole block: a click anywhere edits it.
-   Controls that sit above it (z-index 1) keep their own action. */
-.event-link {
-  color:inherit;
-  text-decoration:none;
-  min-width:0;
-}
-.event-link::after {
-  content:"";
-  position:absolute;
-  inset:0;
-}
-.event-times {
-  position:relative;
-  z-index:1;
-  pointer-events:none;
-}
-/* The time range never breaks; the icons after it wrap when the lane is narrow. */
-.event-range {
-  white-space:nowrap;
-}
 .event-end-time {
   display:inline-flex;
   align-items:center;
@@ -52,22 +32,7 @@
   border-radius:3px;
 }
 
-/* Too short for two lines: title and times share one. */
-.event.is-compact {
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-start;
-  gap:6px;
-}
-.event.is-compact .event-link {
-  flex:1 1 auto;
-  overflow:hidden;
-}
-.event.is-compact .event-times {
-  flex:0 0 auto;
-}
-
-/* "Terminer maintenant" on the task in progress. */
+/* "Finish now" on the task in progress. */
 .event-finish-form {
   position:relative;
   z-index:1;
