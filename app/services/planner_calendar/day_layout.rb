@@ -115,13 +115,22 @@ module PlannerCalendar
       lane_of.each { |block, lane| result[block] = [lane, lane_ends.length] }
     end
 
-    # "Finish now" belongs to the task in progress: the last block
-    # of today that has started and has no real end yet.
+    # "Finish now" belongs to the task in progress, which is:
+    # 1. the block under the current-time line, if it has no real end yet;
+    # 2. otherwise the last block that has started today, if it has no real
+    #    end yet: a task that runs past its planned end. A block followed by
+    #    another one that has started is over, real end or not.
     def in_progress_block
       return nil unless @day == @now.to_date
 
-      @blocks.select { |block| block.started?(@now) && block.actual_end_clock.blank? }
-             .max_by(&:displayed_start_at)
+      under_line = @blocks.select do |block|
+        block.displayed_start_at <= @now && @now < block.displayed_end_at
+      end.max_by(&:displayed_start_at)
+      candidate = under_line || @blocks.select { |block| block.started?(@now) }
+                                       .max_by(&:displayed_start_at)
+      return nil if candidate.nil? || candidate.actual_end_clock.present?
+
+      candidate
     end
 
     def position(starts, ends)

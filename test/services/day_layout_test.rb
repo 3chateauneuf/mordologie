@@ -60,6 +60,31 @@ class DayLayoutTest < ActiveSupport::TestCase
     assert_equal ["En cours"], entries.select(&:finish_now?).map { |entry| entry.block.title }
   end
 
+  test "a finished block is not offered again once a later block has started" do
+    # Friday at 16:40: JJB never got a real end, the later block just did.
+    forgotten = block("JJB", "12:10", "14:30")
+    finished = block("Montage", "15:45", "16:40")
+    finished.update!(actual_start_clock: "15:45", actual_end_clock: "16:40")
+
+    entries = layout([forgotten, finished], now: Time.zone.local(2026, 11, 2, 16, 41)).entries
+    assert_empty entries.select(&:finish_now?)
+  end
+
+  test "the block under the current-time line offers to finish now" do
+    earlier = block("Avant", "09:00", "10:00")
+    current = block("Maintenant", "10:00", "12:00")
+
+    entries = layout([earlier, current], now: Time.zone.local(2026, 11, 2, 10, 30)).entries
+    assert_equal ["Maintenant"], entries.select(&:finish_now?).map { |entry| entry.block.title }
+  end
+
+  test "a task running past its planned end still offers to finish now" do
+    late = block("Débordement", "09:00", "10:00")
+
+    entries = layout([late], now: Time.zone.local(2026, 11, 2, 10, 45)).entries
+    assert_equal ["Débordement"], entries.select(&:finish_now?).map { |entry| entry.block.title }
+  end
+
   private
 
   def block(title, starts, ends)
